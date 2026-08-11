@@ -150,6 +150,14 @@
       "inherits": ["platform-linux", "toolchain-gcc", "config-release"]
     },
     {
+      "name": "linux-gcc-system-debug",
+      "displayName": "Linux GCC Debug（system allocator）",
+      "inherits": ["platform-linux", "toolchain-gcc", "config-debug"],
+      "cacheVariables": {
+        "SKYUV_ALLOCATOR": "system"
+      }
+    },
+    {
       "name": "macos-clang-debug",
       "displayName": "macOS Apple Clang Debug",
       "inherits": ["platform-macos", "toolchain-clang", "config-debug"]
@@ -179,6 +187,7 @@
     { "name": "linux-clang-release", "configurePreset": "linux-clang-release" },
     { "name": "linux-gcc-debug", "configurePreset": "linux-gcc-debug" },
     { "name": "linux-gcc-release", "configurePreset": "linux-gcc-release" },
+    { "name": "linux-gcc-system-debug", "configurePreset": "linux-gcc-system-debug" },
     { "name": "macos-clang-debug", "configurePreset": "macos-clang-debug" },
     { "name": "macos-clang-release", "configurePreset": "macos-clang-release" }
   ],
@@ -245,6 +254,11 @@
       "name": "linux-gcc-release",
       "inherits": "test-default",
       "configurePreset": "linux-gcc-release"
+    },
+    {
+      "name": "linux-gcc-system-debug",
+      "inherits": "test-default",
+      "configurePreset": "linux-gcc-system-debug"
     },
     {
       "name": "macos-clang-debug",

@@ -28,6 +28,15 @@ jobs:
           - name: Clang Debug
             compiler: clang
             preset: linux-clang-debug
+          - name: GCC Release
+            compiler: gcc
+            preset: linux-gcc-release
+          - name: Clang Release
+            compiler: clang
+            preset: linux-clang-release
+          - name: GCC System Allocator Debug
+            compiler: gcc
+            preset: linux-gcc-system-debug
 
     steps:
       - name: 检出源码
