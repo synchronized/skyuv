@@ -1,0 +1,185 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 23,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base-ninja",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "environment": {
+        "NINJA_STATUS": "[%f/%t] "
+      },
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+      }
+    },
+    {
+      "name": "config-debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "config-release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "toolchain-msvc",
+      "hidden": true,
+      "inherits": "base-ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "toolchain-clang-cl",
+      "hidden": true,
+      "inherits": "base-ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl"
+      }
+    },
+    {
+      "name": "toolchain-clang",
+      "hidden": true,
+      "inherits": "base-ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang"
+      }
+    },
+    {
+      "name": "toolchain-gcc",
+      "hidden": true,
+      "inherits": "base-ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc"
+      }
+    },
+    {
+      "name": "platform-windows",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "platform-linux",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "platform-macos",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "generator-vs2022",
+      "hidden": true,
+      "inherits": "platform-windows",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "architecture": "x64"
+    },
+    {
+      "name": "windows-vs2022-debug",
+      "displayName": "Windows x64 Visual Studio 2022 Debug",
+      "inherits": "generator-vs2022"
+    },
+    {
+      "name": "windows-vs2022-release",
+      "displayName": "Windows x64 Visual Studio 2022 Release",
+      "inherits": "generator-vs2022"
+    },
+    {
+      "name": "windows-msvc-debug",
+      "displayName": "Windows x64 MSVC Debug",
+      "inherits": ["platform-windows", "toolchain-msvc", "config-debug"]
+    },
+    {
+      "name": "windows-msvc-release",
+      "displayName": "Windows x64 MSVC Release",
+      "inherits": ["platform-windows", "toolchain-msvc", "config-release"]
+    },
+    {
+      "name": "windows-clang-cl-debug",
+      "displayName": "Windows x64 clang-cl Debug",
+      "inherits": ["platform-windows", "toolchain-clang-cl", "config-debug"]
+    },
+    {
+      "name": "windows-clang-cl-release",
+      "displayName": "Windows x64 clang-cl Release",
+      "inherits": ["platform-windows", "toolchain-clang-cl", "config-release"]
+    },
+    {
+      "name": "linux-clang-debug",
+      "displayName": "Linux Clang Debug",
+      "inherits": ["platform-linux", "toolchain-clang", "config-debug"]
+    },
+    {
+      "name": "linux-clang-release",
+      "displayName": "Linux Clang Release",
+      "inherits": ["platform-linux", "toolchain-clang", "config-release"]
+    },
+    {
+      "name": "linux-gcc-debug",
+      "displayName": "Linux GCC Debug",
+      "inherits": ["platform-linux", "toolchain-gcc", "config-debug"]
+    },
+    {
+      "name": "linux-gcc-release",
+      "displayName": "Linux GCC Release",
+      "inherits": ["platform-linux", "toolchain-gcc", "config-release"]
+    },
+    {
+      "name": "macos-clang-debug",
+      "displayName": "macOS Apple Clang Debug",
+      "inherits": ["platform-macos", "toolchain-clang", "config-debug"]
+    },
+    {
+      "name": "macos-clang-release",
+      "displayName": "macOS Apple Clang Release",
+      "inherits": ["platform-macos", "toolchain-clang", "config-release"]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-vs2022-debug",
+      "configurePreset": "windows-vs2022-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-vs2022-release",
+      "configurePreset": "windows-vs2022-release",
+      "configuration": "Release"
+    },
+    { "name": "windows-msvc-debug", "configurePreset": "windows-msvc-debug" },
+    { "name": "windows-msvc-release", "configurePreset": "windows-msvc-release" },
+    { "name": "windows-clang-cl-debug", "configurePreset": "windows-clang-cl-debug" },
+    { "name": "windows-clang-cl-release", "configurePreset": "windows-clang-cl-release" },
+    { "name": "linux-clang-debug", "configurePreset": "linux-clang-debug" },
+    { "name": "linux-clang-release", "configurePreset": "linux-clang-release" },
+    { "name": "linux-gcc-debug", "configurePreset": "linux-gcc-debug" },
+    { "name": "linux-gcc-release", "configurePreset": "linux-gcc-release" },
+    { "name": "macos-clang-debug", "configurePreset": "macos-clang-debug" },
+    { "name": "macos-clang-release", "configurePreset": "macos-clang-release" }
+  ]
+}
