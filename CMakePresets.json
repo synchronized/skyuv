@@ -181,5 +181,80 @@
     { "name": "linux-gcc-release", "configurePreset": "linux-gcc-release" },
     { "name": "macos-clang-debug", "configurePreset": "macos-clang-debug" },
     { "name": "macos-clang-release", "configurePreset": "macos-clang-release" }
+  ],
+  "testPresets": [
+    {
+      "name": "test-default",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "windows-vs2022-debug",
+      "inherits": "test-default",
+      "configurePreset": "windows-vs2022-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-vs2022-release",
+      "inherits": "test-default",
+      "configurePreset": "windows-vs2022-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-debug",
+      "inherits": "test-default",
+      "configurePreset": "windows-msvc-debug"
+    },
+    {
+      "name": "windows-msvc-release",
+      "inherits": "test-default",
+      "configurePreset": "windows-msvc-release"
+    },
+    {
+      "name": "windows-clang-cl-debug",
+      "inherits": "test-default",
+      "configurePreset": "windows-clang-cl-debug"
+    },
+    {
+      "name": "windows-clang-cl-release",
+      "inherits": "test-default",
+      "configurePreset": "windows-clang-cl-release"
+    },
+    {
+      "name": "linux-clang-debug",
+      "inherits": "test-default",
+      "configurePreset": "linux-clang-debug"
+    },
+    {
+      "name": "linux-clang-release",
+      "inherits": "test-default",
+      "configurePreset": "linux-clang-release"
+    },
+    {
+      "name": "linux-gcc-debug",
+      "inherits": "test-default",
+      "configurePreset": "linux-gcc-debug"
+    },
+    {
+      "name": "linux-gcc-release",
+      "inherits": "test-default",
+      "configurePreset": "linux-gcc-release"
+    },
+    {
+      "name": "macos-clang-debug",
+      "inherits": "test-default",
+      "configurePreset": "macos-clang-debug"
+    },
+    {
+      "name": "macos-clang-release",
+      "inherits": "test-default",
+      "configurePreset": "macos-clang-release"
+    }
   ]
 }
