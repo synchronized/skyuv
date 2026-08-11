@@ -1,4 +1,4 @@
-local skynet = require "skynet"
+local skynet = require "skynet.manager"
 
 local mode = ...
 
@@ -20,7 +20,6 @@ skynet.start(function()
 
 	skynet.timeout(2, function()
 		skynet.error("skyuv 定时器验证通过")
-		skynet.kill(worker)
 		skynet.error("skyuv 正常关闭验证开始")
 		skynet.abort()
 	end)
