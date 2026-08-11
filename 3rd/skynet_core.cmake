@@ -46,3 +46,32 @@ target_link_libraries(
     m
     rt
 )
+
+set(SKYUV_SKYNET_SERVICE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/skynet/service-src")
+set(SKYUV_SKYNET_CSERVICE_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/cservice")
+
+function(skyuv_add_skynet_service service_name)
+  add_library(
+    "skyuv_service_${service_name}"
+    MODULE
+    "${SKYUV_SKYNET_SERVICE_DIR}/service_${service_name}.c"
+  )
+  set_target_properties(
+    "skyuv_service_${service_name}"
+    PROPERTIES
+      C_EXTENSIONS TRUE
+      LIBRARY_OUTPUT_DIRECTORY "${SKYUV_SKYNET_CSERVICE_OUTPUT_DIR}"
+      OUTPUT_NAME "${service_name}"
+      PREFIX ""
+  )
+  target_include_directories(
+    "skyuv_service_${service_name}"
+    PRIVATE
+      "${SKYUV_SKYNET_SOURCE_DIR}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/skynet/3rd/lua"
+  )
+endfunction()
+
+# 最小启动链路首先需要 Lua 服务容器和日志服务。
+skyuv_add_skynet_service(snlua)
+skyuv_add_skynet_service(logger)

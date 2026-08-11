@@ -46,7 +46,8 @@ jobs:
       - name: 构建 skyuv Linux 基线
         run: >-
           cmake --build --preset "${{ matrix.preset }}" --target
-          uv_a cmocka skyuv_lua skyuv_skynet skyuv_test_lua skyuv_test_allocator
+          uv_a cmocka skyuv_lua skyuv_skynet skyuv_service_snlua
+          skyuv_service_logger skyuv_test_lua skyuv_test_allocator
 
       - name: 运行 skyuv 测试
         run: ctest --preset "${{ matrix.preset }}"
