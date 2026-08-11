@@ -75,3 +75,50 @@ endfunction()
 # 最小启动链路首先需要 Lua 服务容器和日志服务。
 skyuv_add_skynet_service(snlua)
 skyuv_add_skynet_service(logger)
+
+set(SKYUV_SKYNET_LUALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/skynet/lualib-src")
+set(
+  SKYUV_SKYNET_LUA_MODULE_SOURCES
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-skynet.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-seri.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-socket.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-mongo.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-netpack.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-memory.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-multicast.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-cluster.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-crypt.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lsha1.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-sharedata.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-stm.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-debugchannel.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-datasheet.c"
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-sharetable.c"
+)
+
+add_library(skyuv_lua_module_skynet MODULE ${SKYUV_SKYNET_LUA_MODULE_SOURCES})
+set_target_properties(
+  skyuv_lua_module_skynet
+  PROPERTIES
+    C_EXTENSIONS TRUE
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/luaclib"
+    OUTPUT_NAME skynet
+    PREFIX ""
+)
+target_include_directories(
+  skyuv_lua_module_skynet
+  PRIVATE
+    "${SKYUV_SKYNET_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/skynet/3rd/lua"
+    "${SKYUV_SKYNET_SERVICE_DIR}"
+    "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}"
+)
+
+file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/skynet" SKYUV_SKYNET_RUNTIME_SOURCE_DIR)
+file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/examples" SKYUV_EXAMPLE_SOURCE_DIR)
+file(TO_CMAKE_PATH "${CMAKE_CURRENT_BINARY_DIR}" SKYUV_SKYNET_RUNTIME_BINARY_DIR)
+configure_file(
+  "${CMAKE_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/skyuv-smoke.conf"
+  @ONLY
+)

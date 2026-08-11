@@ -47,10 +47,24 @@ jobs:
         run: >-
           cmake --build --preset "${{ matrix.preset }}" --target
           uv_a cmocka skyuv_lua skyuv_skynet skyuv_service_snlua
-          skyuv_service_logger skyuv_test_lua skyuv_test_allocator
+          skyuv_service_logger skyuv_lua_module_skynet
+          skyuv_test_lua skyuv_test_allocator
 
       - name: 运行 skyuv 测试
         run: ctest --preset "${{ matrix.preset }}"
+
+      - name: 运行 CMake 版 Skynet 启动测试
+        shell: bash
+        run: |
+          set +e
+          timeout 5s "build/${{ matrix.preset }}/3rd/skynet" \
+            "build/${{ matrix.preset }}/3rd/skyuv-smoke.conf" 2>&1 | tee skyuv-smoke.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [[ $status -ne 0 && $status -ne 124 ]]; then
+            exit $status
+          fi
+          grep -F "skyuv CMake 启动验证通过" skyuv-smoke.log
 
       - name: 复制原版 Skynet 到临时目录
         run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"

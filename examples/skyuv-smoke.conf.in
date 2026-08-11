@@ -1,0 +1,11 @@
+thread = 2
+logger = nil
+harbor = 0
+bootstrap = "snlua bootstrap"
+start = "skyuv_smoke"
+
+cpath = "@SKYUV_SKYNET_RUNTIME_BINARY_DIR@/cservice/?.so"
+lua_path = "@SKYUV_SKYNET_RUNTIME_SOURCE_DIR@/lualib/?.lua;@SKYUV_SKYNET_RUNTIME_SOURCE_DIR@/lualib/?/init.lua"
+lua_cpath = "@SKYUV_SKYNET_RUNTIME_BINARY_DIR@/luaclib/?.so"
+luaservice = "@SKYUV_SKYNET_RUNTIME_SOURCE_DIR@/service/?.lua;@SKYUV_EXAMPLE_SOURCE_DIR@/?.lua"
+lualoader = "@SKYUV_SKYNET_RUNTIME_SOURCE_DIR@/lualib/loader.lua"

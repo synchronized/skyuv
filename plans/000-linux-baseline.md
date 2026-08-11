@@ -310,3 +310,4 @@ Skynet 核心接入进展：
 - 保留主程序动态符号导出能力，为后续加载 C service 做准备；
 - system allocator 会向 Skynet 传递 `NOUSE_JEMALLOC`，保持上游回退语义。
 - 以无前缀的模块目标构建 `snlua.so` 和 `logger.so`，输出到独立的 `cservice` 目录。
+- 构建启动链路所需的 `luaclib/skynet.so`，并生成不依赖当前工作目录的冒烟测试配置。
