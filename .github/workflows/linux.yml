@@ -82,7 +82,7 @@ jobs:
             "build/${{ matrix.preset }}/3rd/skyuv-echo.conf" >skyuv-echo.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          python3 tests/echo_client.py
+          python3 tests/echo_client.py | tee "$RUNNER_TEMP/cmake-echo-result.txt"
           grep -F "skyuv echo 已就绪" skyuv-echo.log
           kill "$server_pid" 2>/dev/null || true
           wait "$server_pid" || true
@@ -113,6 +113,26 @@ jobs:
       - name: 构建原版 Skynet
         working-directory: ${{ runner.temp }}/skynet
         run: make linux CC="${{ matrix.compiler }}" -j2
+
+      - name: 准备原版 Skynet echo 环境
+        run: |
+          cmake -E copy examples/skyuv_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_echo.lua"
+          cmake -E copy examples/upstream-echo.conf "$RUNNER_TEMP/skynet/examples/skyuv-echo.conf"
+
+      - name: 运行原版 Skynet TCP echo 对照测试
+        working-directory: ${{ runner.temp }}/skynet
+        shell: bash
+        run: |
+          timeout 10s ./skynet examples/skyuv-echo.conf >upstream-echo.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          python3 "$GITHUB_WORKSPACE/tests/echo_client.py" \
+            | tee "$RUNNER_TEMP/upstream-echo-result.txt"
+          grep -F "skyuv echo 已就绪" upstream-echo.log
+          diff -u "$RUNNER_TEMP/cmake-echo-result.txt" "$RUNNER_TEMP/upstream-echo-result.txt"
+          kill "$server_pid" 2>/dev/null || true
+          wait "$server_pid" || true
+          trap - EXIT
 
       - name: 运行原版 Skynet 启动冒烟测试
         working-directory: ${{ runner.temp }}/skynet
