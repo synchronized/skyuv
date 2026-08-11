@@ -130,3 +130,9 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/skyuv-echo.conf"
   @ONLY
 )
+set(SKYUV_SKYNET_START_SERVICE skyuv_baseline)
+configure_file(
+  "${CMAKE_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/skyuv-baseline.conf"
+  @ONLY
+)

@@ -79,6 +79,18 @@ jobs:
           wait "$server_pid" || true
           trap - EXIT
 
+      - name: 运行消息、定时器与关闭基线测试
+        shell: bash
+        run: |
+          timeout 10s "build/${{ matrix.preset }}/3rd/skynet" \
+            "build/${{ matrix.preset }}/3rd/skyuv-baseline.conf" \
+            >skyuv-baseline.log 2>&1
+          message_line=$(grep -nF "skyuv Actor 消息验证通过" skyuv-baseline.log | head -1 | cut -d: -f1)
+          timer_line=$(grep -nF "skyuv 定时器验证通过" skyuv-baseline.log | head -1 | cut -d: -f1)
+          shutdown_line=$(grep -nF "skyuv 正常关闭验证开始" skyuv-baseline.log | head -1 | cut -d: -f1)
+          test "$message_line" -lt "$timer_line"
+          test "$timer_line" -lt "$shutdown_line"
+
       - name: 复制原版 Skynet 到临时目录
         run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
 

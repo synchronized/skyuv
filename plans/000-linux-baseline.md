@@ -312,3 +312,4 @@ Skynet 核心接入进展：
 - 以无前缀的模块目标构建 `snlua.so`、`logger.so` 和 bootstrap 实际依赖的 `harbor.so`，输出到独立的 `cservice` 目录。
 - 构建启动链路所需的 `luaclib/skynet.so`，并生成不依赖当前工作目录的冒烟测试配置。
 - 增加 TCP echo 服务和独立客户端驱动，覆盖 listen、accept、read、write 与 close 基线行为。
+- 增加双 Actor 请求响应、timeout 顺序和框架主动退出测试，固定消息调度与定时器基线。
