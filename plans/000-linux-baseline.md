@@ -2,7 +2,7 @@
 
 ## 状态
 
-进行中。
+已完成。
 
 ## 背景
 
@@ -315,3 +315,13 @@ Skynet 核心接入进展：
 - 增加双 Actor 请求响应、timeout 顺序和框架主动退出测试，固定消息调度与定时器基线。
 - CI 覆盖 GCC/Clang 的 Debug 与 Release，并增加 GCC Debug + system allocator 回退组合。
 - 使用同一 Lua echo 服务、客户端和固定负载，对照 CMake 与上游 Makefile 产物的 TCP 响应结果。
+
+阶段验收结果：
+
+- CMake 可构建并启动 Skynet 核心、Lua、jemalloc、`snlua`、`logger`、`harbor` 和 `luaclib/skynet.so`；
+- TCP echo、双 Actor 请求响应、timeout 顺序和主动关闭测试通过；
+- GCC/Clang 的 Debug、Release 以及 system allocator 回退组合均通过；
+- CMake 与上游 Makefile 产物对同一 echo 输入返回完全一致的结果；
+- CI 构建不会修改主仓库或第三方 submodule；
+- 最终验收运行：GitHub Actions `31508368251`；
+- 阶段 0 于 2026-08-11 完成，后续平台替换以此行为基线为回归依据。

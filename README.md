@@ -38,7 +38,7 @@ skyuv/
 └── tests/               # 跨平台测试
 ```
 
-当前项目处于基础设施和技术方案建设阶段，尚未提供可运行版本。
+当前已完成 Linux 兼容基线：可以通过 CMake 构建并启动未经跨平台替换的 Skynet，并具备 TCP echo、Actor 消息、定时器和关闭行为测试。Windows 与 macOS 上的完整 Skynet 运行仍在开发中。
 
 ## 获取源码
 
@@ -62,9 +62,23 @@ libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。默认构建并�
 - 支持 C11 的 C 编译器
 - Windows、macOS 或 Linux
 
-后续将在核心模块接入后提供完整的 skyuv 构建和运行命令。
+Linux 上可以使用 GCC Debug preset 配置、构建和测试：
 
-当前可以通过 CMake Presets 配置和构建工程，例如：
+```shell
+cmake --preset linux-gcc-debug
+cmake --build --preset linux-gcc-debug
+ctest --preset linux-gcc-debug
+```
+
+运行 CMake 版 Skynet 最小启动示例：
+
+```shell
+build/linux-gcc-debug/3rd/skynet build/linux-gcc-debug/3rd/skyuv-smoke.conf
+```
+
+Linux 还提供 `linux-clang-debug`、`linux-gcc-release`、`linux-clang-release` 和 `linux-gcc-system-debug` preset。最后一个组合使用系统分配器，其余组合默认使用 jemalloc。
+
+Windows 当前用于验证跨平台依赖、构建设施和已完成的平台代码。Visual Studio 生成器可以直接运行：
 
 ```shell
 cmake --preset windows-vs2022-debug
