@@ -15,6 +15,7 @@ function(skyuv_target_compile_warnings target)
   target_compile_options(
     ${target}
     PRIVATE
+      $<$<COMPILE_LANG_AND_ID:C,MSVC>:/utf-8>
       $<$<COMPILE_LANG_AND_ID:C,MSVC>:/W4>
       $<$<COMPILE_LANG_AND_ID:C,GNU,Clang,AppleClang>:-Wall>
       $<$<COMPILE_LANG_AND_ID:C,GNU,Clang,AppleClang>:-Wextra>

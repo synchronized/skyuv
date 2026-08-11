@@ -4,3 +4,6 @@
 [submodule "3rd/libuv"]
 	path = 3rd/libuv
 	url = https://github.com/libuv/libuv.git
+[submodule "3rd/cmocka"]
+	path = 3rd/cmocka
+	url = https://gitlab.com/cmocka/cmocka.git

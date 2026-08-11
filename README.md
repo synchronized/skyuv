@@ -20,6 +20,9 @@ skyuv 旨在使用 libuv 替换 Skynet 中依赖 Linux 的底层能力，使这�
 - **逐步替换**：网络与并发平台层分别设计、实现和验证。
 - **行为一致**：除平台本身差异外，各系统上的可观察行为应尽可能一致。
 
+完整的技术路线、阶段目标和验收标准见 [项目路线图](docs/ROADMAP.md)。
+第三方库的选型、用途和引入时机见 [依赖决策](docs/DEPENDENCIES.md)。
+
 ## 计划中的目录结构
 
 ```text
@@ -50,7 +53,7 @@ git clone --recurse-submodules https://github.com/synchronized/skyuv.git
 git submodule update --init --recursive
 ```
 
-libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。默认构建并链接静态 libuv；需要动态版本时可设置 `SKYUV_USE_SHARED_LIBUV=ON`。Skynet 上游没有 CMake 构建入口，后续将在不修改其源码的前提下选择性接入所需核心模块。
+libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。默认构建并链接静态 libuv；需要动态版本时可设置 `SKYUV_USE_SHARED_LIBUV=ON`。启用 `SKYUV_BUILD_TESTS` 时会提供测试依赖 `cmocka::cmocka`。Skynet 上游没有 CMake 构建入口，后续将在不修改其源码的前提下选择性接入所需核心模块。
 
 ## 构建要求
 

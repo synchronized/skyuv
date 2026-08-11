@@ -12,5 +12,14 @@ else()
   add_library(skyuv::libuv ALIAS uv_a)
 endif()
 
+if(SKYUV_BUILD_TESTS)
+  # CMocka 只用于 skyuv 测试，不构建其示例、自测或动态库。
+  set(BUILD_SHARED_LIBS OFF)
+  set(WITH_EXAMPLES OFF)
+  set(UNIT_TESTING OFF)
+  set(PICKY_DEVELOPER OFF)
+  add_subdirectory(cmocka EXCLUDE_FROM_ALL)
+endif()
+
 # Skynet 当前没有 CMake 构建入口。待适配层边界确定后，在 skyuv 自有目标中
 # 选择性编译其核心源码，避免直接修改上游构建系统。
