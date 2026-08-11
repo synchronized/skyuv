@@ -1,0 +1,12 @@
+#ifndef SKYUV_ERROR_H
+#define SKYUV_ERROR_H
+
+enum skyuv_error {
+	SKYUV_OK = 0,
+	SKYUV_ERROR_INVALID_ARGUMENT = -1,
+	SKYUV_ERROR_INVALID_STATE = -2,
+	SKYUV_ERROR_OUT_OF_MEMORY = -3,
+	SKYUV_ERROR_SYSTEM = -4,
+};
+
+#endif

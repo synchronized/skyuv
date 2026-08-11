@@ -7,6 +7,11 @@ target_link_libraries(skyuv_test_allocator PRIVATE skyuv::allocator cmocka::cmoc
 skyuv_target_compile_warnings(skyuv_test_allocator)
 add_test(NAME allocator.basic COMMAND skyuv_test_allocator)
 
+add_executable(skyuv_test_thread test_thread.c)
+target_link_libraries(skyuv_test_thread PRIVATE skyuv::platform cmocka::cmocka)
+skyuv_target_compile_warnings(skyuv_test_thread)
+add_test(NAME platform.thread COMMAND skyuv_test_thread)
+
 if(TARGET skyuv_lua)
   add_executable(skyuv_test_lua test_lua.c)
   target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)
