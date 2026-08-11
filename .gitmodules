@@ -1,0 +1,6 @@
+[submodule "3rd/skynet"]
+	path = 3rd/skynet
+	url = https://github.com/cloudwu/skynet.git
+[submodule "3rd/libuv"]
+	path = 3rd/libuv
+	url = https://github.com/libuv/libuv.git

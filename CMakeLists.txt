@@ -8,6 +8,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 option(SKYUV_BUILD_TESTS "构建 skyuv 测试" ON)
 option(SKYUV_BUILD_SHARED "将 skyuv 构建为动态库" OFF)
+option(SKYUV_USE_SHARED_LIBUV "链接动态版本的 libuv" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(skyuv_warnings)
@@ -15,6 +16,8 @@ include(skyuv_warnings)
 if(PROJECT_IS_TOP_LEVEL AND SKYUV_BUILD_TESTS)
   include(CTest)
 endif()
+
+add_subdirectory(3rd)
 
 # 实现代码加入后，由各目录维护自己的构建目标。
 foreach(directory IN ITEMS src tests)

@@ -36,13 +36,29 @@ skyuv/
 
 当前项目处于基础设施和技术方案建设阶段，尚未提供可运行版本。
 
+## 获取源码
+
+Skynet 和 libuv 以 Git submodule 固定版本，克隆时需要同时初始化子模块：
+
+```shell
+git clone --recurse-submodules https://github.com/synchronized/skyuv.git
+```
+
+已有工作副本可以执行：
+
+```shell
+git submodule update --init --recursive
+```
+
+libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。默认构建并链接静态 libuv；需要动态版本时可设置 `SKYUV_USE_SHARED_LIBUV=ON`。Skynet 上游没有 CMake 构建入口，后续将在不修改其源码的前提下选择性接入所需核心模块。
+
 ## 构建要求
 
 - CMake 3.23 或更高版本
 - 支持 C11 的 C 编译器
 - Windows、macOS 或 Linux
 
-后续将提供 Skynet 与 libuv 的固定版本及完整构建命令。
+后续将在核心模块接入后提供完整的 skyuv 构建和运行命令。
 
 当前可以通过 CMake Presets 配置和构建工程，例如：
 
