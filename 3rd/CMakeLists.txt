@@ -12,6 +12,8 @@ else()
   add_library(skyuv::libuv ALIAS uv_a)
 endif()
 
+include(skynet_lua.cmake)
+
 if(SKYUV_BUILD_TESTS)
   # CMocka 只用于 skyuv 测试，不构建其示例、自测或动态库。
   set(BUILD_SHARED_LIBS OFF)

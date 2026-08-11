@@ -286,3 +286,11 @@ Linux arm64、musl 和其他 Unix 系统不作为本阶段强制验收环境。
 - 原版 Skynet 能够完成启动冒烟测试；
 - libuv 和 CMocka 能够通过 skyuv CMake Presets 构建；
 - 构建后主仓库及三个直接 submodule 均保持干净。
+
+Lua 接入进展：
+
+- 按上游 Makefile 的 `CORE_O` 和 `LIB_O` 建立显式 CMake 源码清单；
+- 提供静态目标 `skyuv::lua`；
+- 按平台保持上游 Lua 编译定义；
+- 增加创建 Lua 状态并执行表达式的 CMocka 测试。
+- Windows/MSVC 暂不构建定制 Lua；其上游原子操作分支不兼容 MSVC，将由阶段 1 的 `skyuv_atomic` 解决。

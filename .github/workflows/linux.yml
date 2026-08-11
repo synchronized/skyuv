@@ -44,7 +44,10 @@ jobs:
         run: cmake --preset "${{ matrix.preset }}"
 
       - name: 构建 skyuv 第三方依赖
-        run: cmake --build --preset "${{ matrix.preset }}" --target uv_a cmocka
+        run: cmake --build --preset "${{ matrix.preset }}" --target uv_a cmocka skyuv_lua skyuv_test_lua
+
+      - name: 运行 skyuv 测试
+        run: ctest --preset "${{ matrix.preset }}"
 
       - name: 复制原版 Skynet 到临时目录
         run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
