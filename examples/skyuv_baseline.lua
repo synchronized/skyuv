@@ -21,6 +21,8 @@ skynet.start(function()
 	skynet.timeout(2, function()
 		skynet.error("skyuv 定时器验证通过")
 		skynet.error("skyuv 正常关闭验证开始")
+		-- 日志消息是异步发送的，关闭前让 logger 完成刷新。
+		skynet.sleep(2)
 		skynet.abort()
 	end)
 end)
