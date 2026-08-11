@@ -1,4 +1,9 @@
-add_library(skyuv_platform STATIC platform/dynamic.c platform/thread.c platform/time.c)
+add_library(skyuv_platform STATIC
+  platform/atomic.c
+  platform/dynamic.c
+  platform/thread.c
+  platform/time.c
+)
 add_library(skyuv::platform ALIAS skyuv_platform)
 
 target_include_directories(

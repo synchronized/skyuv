@@ -31,6 +31,11 @@ add_dependencies(skyuv_test_dynamic skyuv_test_dynamic_module)
 skyuv_target_compile_warnings(skyuv_test_dynamic)
 add_test(NAME platform.dynamic COMMAND skyuv_test_dynamic)
 
+add_executable(skyuv_test_atomic test_atomic.c)
+target_link_libraries(skyuv_test_atomic PRIVATE skyuv::platform cmocka::cmocka)
+skyuv_target_compile_warnings(skyuv_test_atomic)
+add_test(NAME platform.atomic COMMAND skyuv_test_atomic)
+
 if(TARGET skyuv_lua)
   add_executable(skyuv_test_lua test_lua.c)
   target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)
