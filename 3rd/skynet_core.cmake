@@ -31,6 +31,7 @@ add_executable(skyuv_skynet ${SKYUV_SKYNET_CORE_SOURCES})
 set_target_properties(
   skyuv_skynet
   PROPERTIES
+    C_EXTENSIONS TRUE
     ENABLE_EXPORTS TRUE
     OUTPUT_NAME skynet
 )

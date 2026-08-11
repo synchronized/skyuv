@@ -54,7 +54,7 @@ git clone --recurse-submodules https://github.com/synchronized/skyuv.git
 git submodule update --init --recursive
 ```
 
-libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。默认构建并链接静态 libuv；需要动态版本时可设置 `SKYUV_USE_SHARED_LIBUV=ON`。启用 `SKYUV_BUILD_TESTS` 时会提供测试依赖 `cmocka::cmocka`。Skynet 上游没有 CMake 构建入口，后续将在不修改其源码的前提下选择性接入所需核心模块。
+libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。默认构建并链接静态 libuv；需要动态版本时可设置 `SKYUV_USE_SHARED_LIBUV=ON`。启用 `SKYUV_BUILD_TESTS` 时会提供测试依赖 `cmocka::cmocka`。Linux 上已开始在不修改 Skynet 源码的前提下，通过 CMake 选择性构建其核心模块。
 
 ## 构建要求
 
@@ -72,6 +72,14 @@ cmake --build --preset windows-vs2022-debug
 ```
 
 使用 `cmake --list-presets` 查看当前平台可用的配置。项目自有目标默认启用严格编译警告，并将警告作为错误处理；这些选项不会应用到 `3rd/` 中的第三方目标。
+
+在普通 PowerShell 中使用 Ninja + MSVC 时，通过包装脚本自动加载 Visual Studio 开发环境：
+
+```powershell
+.\scripts\msvc.ps1 -Preset windows-msvc-debug
+```
+
+不要在未初始化的普通终端中直接调用 `windows-msvc-*` preset。也可以改用能够自行定位工具链的 `windows-vs2022-*` preset。
 
 ## 参与开发
 
