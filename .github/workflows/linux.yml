@@ -43,10 +43,10 @@ jobs:
       - name: 配置 skyuv
         run: cmake --preset "${{ matrix.preset }}"
 
-      - name: 构建 skyuv 第三方依赖
+      - name: 构建 skyuv Linux 基线
         run: >-
           cmake --build --preset "${{ matrix.preset }}" --target
-          uv_a cmocka skyuv_lua skyuv_test_lua skyuv_test_allocator
+          uv_a cmocka skyuv_lua skyuv_skynet skyuv_test_lua skyuv_test_allocator
 
       - name: 运行 skyuv 测试
         run: ctest --preset "${{ matrix.preset }}"

@@ -302,3 +302,10 @@ Lua 接入进展：
 - jemalloc 在构建目录的源码副本中执行 Autotools，不修改 submodule；
 - 两种模式统一提供 `skyuv::allocator`；
 - 增加分配、写入、重分配和释放测试。
+
+Skynet 核心接入进展：
+
+- 按上游 Makefile 的 `SKYNET_SRC` 建立显式 CMake 源码清单；
+- Linux 基线目标链接 Lua、分配器、线程、动态加载、数学和实时库；
+- 保留主程序动态符号导出能力，为后续加载 C service 做准备；
+- system allocator 会向 Skynet 传递 `NOUSE_JEMALLOC`，保持上游回退语义。

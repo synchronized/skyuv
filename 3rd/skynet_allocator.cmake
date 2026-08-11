@@ -20,6 +20,7 @@ add_library(skyuv_allocator INTERFACE)
 add_library(skyuv::allocator ALIAS skyuv_allocator)
 
 if(SKYUV_ALLOCATOR STREQUAL "system")
+  target_compile_definitions(skyuv_allocator INTERFACE NOUSE_JEMALLOC=1)
   return()
 endif()
 

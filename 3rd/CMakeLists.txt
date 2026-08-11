@@ -14,6 +14,7 @@ endif()
 
 include(skynet_lua.cmake)
 include(skynet_allocator.cmake)
+include(skynet_core.cmake)
 
 if(SKYUV_BUILD_TESTS)
   # CMocka 只用于 skyuv 测试，不构建其示例、自测或动态库。
