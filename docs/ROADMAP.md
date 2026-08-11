@@ -193,6 +193,8 @@ skyuv 提供自己的接口，内部映射到 libuv：
 
 ## 7. 分阶段路线图
 
+各阶段进入实施前会在 [`plans/`](../plans/README.md) 中形成可执行计划。当前详细计划为 [000：Linux 兼容基线](../plans/000-linux-baseline.md)。
+
 ### 阶段 0：建立 Linux 兼容基线
 
 目标：通过 CMake 构建并运行未经跨平台改造的 Skynet，形成行为对照基线。

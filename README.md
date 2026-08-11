@@ -22,6 +22,7 @@ skyuv 旨在使用 libuv 替换 Skynet 中依赖 Linux 的底层能力，使这�
 
 完整的技术路线、阶段目标和验收标准见 [项目路线图](docs/ROADMAP.md)。
 第三方库的选型、用途和引入时机见 [依赖决策](docs/DEPENDENCIES.md)。
+当前阶段的具体实施步骤和验收项见 [开发计划](plans/README.md)。
 
 ## 计划中的目录结构
 
