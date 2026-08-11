@@ -8,6 +8,7 @@ enum skyuv_error {
 	SKYUV_ERROR_OUT_OF_MEMORY = -3,
 	SKYUV_ERROR_SYSTEM = -4,
 	SKYUV_ERROR_TIMEOUT = -5,
+	SKYUV_ERROR_NOT_SUPPORTED = -6,
 };
 
 #endif

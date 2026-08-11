@@ -12,6 +12,11 @@ target_link_libraries(skyuv_test_thread PRIVATE skyuv::platform cmocka::cmocka)
 skyuv_target_compile_warnings(skyuv_test_thread)
 add_test(NAME platform.thread COMMAND skyuv_test_thread)
 
+add_executable(skyuv_test_time test_time.c)
+target_link_libraries(skyuv_test_time PRIVATE skyuv::platform cmocka::cmocka)
+skyuv_target_compile_warnings(skyuv_test_time)
+add_test(NAME platform.time COMMAND skyuv_test_time)
+
 if(TARGET skyuv_lua)
   add_executable(skyuv_test_lua test_lua.c)
   target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)
