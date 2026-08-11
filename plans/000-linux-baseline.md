@@ -2,7 +2,7 @@
 
 ## 状态
 
-草案。
+进行中。
 
 ## 背景
 
@@ -257,24 +257,24 @@ Linux arm64、musl 和其他 Unix 系统不作为本阶段强制验收环境。
 
 回退方式：只比较协议数据和关键状态事件，对时间戳、线程号、地址和无序日志做归一化。
 
+## 已确认事项
+
+- 使用 GitHub Actions Ubuntu 24.04 作为首个 Linux CI 和权威验证环境。
+- 日常开发在 Windows 进行；Linux 构建和运行暂时通过 CI 反馈，后续可增加 WSL2 缩短调试周期。
+- jemalloc 为主要组合，system allocator 至少保留一个 Debug 组合。
+- 新增最小、确定性的 skyuv echo 示例，不把交互式上游示例作为自动化基线。
+- 兼容性任务同时构建上游 Makefile 和 skyuv CMake 产物。
+- gate 只在最小示例实际需要时纳入，否则后移。
+
 ## 未决问题
 
-进入“就绪”状态前需要确认：
-
-1. Linux CI 选择的发行版和最低 glibc 基线。
-2. 阶段 0 是否要求 jemalloc 与 system allocator 都作为强制 CI 组合。
-3. echo 基线使用 Skynet 自带示例还是新增 skyuv 最小示例。
-4. 上游 Makefile 基线产物是否由 CI 每次重建，还是只在兼容性任务中构建。
-5. 首期是否将 `gate` 纳入最小启动闭环；如果 echo 实现不依赖 gate，可将其后移。
-
-建议默认值：
-
-- 使用 GitHub Actions 当前 Ubuntu LTS 作为首个 CI 环境；
-- jemalloc 为主组合，system allocator 至少保留一个 Debug 组合；
-- 新增最小、确定性的 skyuv echo 示例；
-- 兼容性任务同时构建 Makefile 和 CMake 产物；
-- gate 仅在实际最小示例需要时纳入。
+当前没有阻塞阶段 0 实施的未决问题。最低 glibc 兼容范围将在获得 Ubuntu 24.04 基线后，根据实际发布需求单独确定。
 
 ## 完成记录
 
-尚未开始。
+已开始：
+
+- 建立 Ubuntu 24.04 的 GCC/Clang CI；
+- CI 在临时目录构建原版 Skynet，避免污染 submodule；
+- 增加原版 Skynet 启动冒烟测试；
+- 增加 skyuv CMake 配置和 libuv、CMocka 构建验证。

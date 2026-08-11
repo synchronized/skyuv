@@ -1,0 +1,74 @@
+name: Linux
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baseline:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC Debug
+            compiler: gcc
+            preset: linux-gcc-debug
+          - name: Clang Debug
+            compiler: clang
+            preset: linux-clang-debug
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 安装构建工具
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes autoconf automake libtool ninja-build
+
+      - name: 配置 skyuv
+        run: cmake --preset "${{ matrix.preset }}"
+
+      - name: 构建 skyuv 第三方依赖
+        run: cmake --build --preset "${{ matrix.preset }}" --target uv_a cmocka
+
+      - name: 复制原版 Skynet 到临时目录
+        run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
+
+      - name: 构建原版 Skynet
+        working-directory: ${{ runner.temp }}/skynet
+        run: make linux CC="${{ matrix.compiler }}" -j2
+
+      - name: 运行原版 Skynet 启动冒烟测试
+        working-directory: ${{ runner.temp }}/skynet
+        shell: bash
+        run: |
+          set +e
+          timeout 5s ./skynet examples/config
+          status=$?
+          set -e
+          if [[ $status -ne 0 && $status -ne 124 ]]; then
+            exit $status
+          fi
+
+      - name: 检查第三方源码状态
+        shell: bash
+        run: |
+          test -z "$(git status --short --untracked-files=no)"
+          test -z "$(git -C 3rd/skynet status --short --untracked-files=no)"
+          test -z "$(git -C 3rd/libuv status --short --untracked-files=no)"
+          test -z "$(git -C 3rd/cmocka status --short --untracked-files=no)"
