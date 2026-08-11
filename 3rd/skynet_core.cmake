@@ -75,6 +75,7 @@ endfunction()
 # 最小启动链路首先需要 Lua 服务容器和日志服务。
 skyuv_add_skynet_service(snlua)
 skyuv_add_skynet_service(logger)
+skyuv_add_skynet_service(harbor)
 
 set(SKYUV_SKYNET_LUALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/skynet/lualib-src")
 set(
