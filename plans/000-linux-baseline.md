@@ -278,3 +278,11 @@ Linux arm64、musl 和其他 Unix 系统不作为本阶段强制验收环境。
 - CI 在临时目录构建原版 Skynet，避免污染 submodule；
 - 增加原版 Skynet 启动冒烟测试；
 - 增加 skyuv CMake 配置和 libuv、CMocka 构建验证。
+
+首次基线结果：
+
+- 提交 `f6be8cf` 的 GitHub Actions 运行 `31489707911` 通过；
+- GCC Debug 与 Clang Debug 均成功构建；
+- 原版 Skynet 能够完成启动冒烟测试；
+- libuv 和 CMocka 能够通过 skyuv CMake Presets 构建；
+- 构建后主仓库及三个直接 submodule 均保持干净。
