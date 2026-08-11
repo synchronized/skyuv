@@ -66,6 +66,19 @@ jobs:
           fi
           grep -F "skyuv CMake 启动验证通过" skyuv-smoke.log
 
+      - name: 运行 CMake 版 Skynet TCP echo 测试
+        shell: bash
+        run: |
+          timeout 10s "build/${{ matrix.preset }}/3rd/skynet" \
+            "build/${{ matrix.preset }}/3rd/skyuv-echo.conf" >skyuv-echo.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          python3 tests/echo_client.py
+          grep -F "skyuv echo 已就绪" skyuv-echo.log
+          kill "$server_pid" 2>/dev/null || true
+          wait "$server_pid" || true
+          trap - EXIT
+
       - name: 复制原版 Skynet 到临时目录
         run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
 

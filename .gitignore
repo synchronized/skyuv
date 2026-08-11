@@ -46,6 +46,8 @@ Desktop.ini
 *~
 
 # 测试与覆盖率产物
+__pycache__/
+*.pyc
 *.gcda
 *.gcno
 *.gcov
