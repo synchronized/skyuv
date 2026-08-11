@@ -82,9 +82,16 @@ jobs:
       - name: 运行消息、定时器与关闭基线测试
         shell: bash
         run: |
+          set +e
           timeout 10s "build/${{ matrix.preset }}/3rd/skynet" \
             "build/${{ matrix.preset }}/3rd/skyuv-baseline.conf" \
             >skyuv-baseline.log 2>&1
+          status=$?
+          set -e
+          cat skyuv-baseline.log
+          if [[ $status -ne 0 ]]; then
+            exit $status
+          fi
           message_line=$(grep -nF "skyuv Actor 消息验证通过" skyuv-baseline.log | head -1 | cut -d: -f1)
           timer_line=$(grep -nF "skyuv 定时器验证通过" skyuv-baseline.log | head -1 | cut -d: -f1)
           shutdown_line=$(grep -nF "skyuv 正常关闭验证开始" skyuv-baseline.log | head -1 | cut -d: -f1)
