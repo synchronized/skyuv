@@ -72,5 +72,6 @@ set_target_properties(
 )
 add_dependencies(skyuv_jemalloc skyuv_jemalloc_external)
 
-target_link_libraries(skyuv_allocator INTERFACE skyuv_jemalloc)
+# jemalloc 的性能分析实现会调用 log、exp 和 round，静态链接时需显式传递 libm。
+target_link_libraries(skyuv_allocator INTERFACE skyuv_jemalloc m)
 target_compile_definitions(skyuv_allocator INTERFACE SKYUV_USE_JEMALLOC=1)
