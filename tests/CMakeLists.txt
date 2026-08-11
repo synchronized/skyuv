@@ -2,12 +2,14 @@ if(NOT SKYUV_BUILD_TESTS OR NOT BUILD_TESTING)
   return()
 endif()
 
-if(NOT TARGET skyuv_lua)
-  return()
+add_executable(skyuv_test_allocator test_allocator.c)
+target_link_libraries(skyuv_test_allocator PRIVATE skyuv::allocator cmocka::cmocka)
+skyuv_target_compile_warnings(skyuv_test_allocator)
+add_test(NAME allocator.basic COMMAND skyuv_test_allocator)
+
+if(TARGET skyuv_lua)
+  add_executable(skyuv_test_lua test_lua.c)
+  target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)
+  skyuv_target_compile_warnings(skyuv_test_lua)
+  add_test(NAME lua.basic COMMAND skyuv_test_lua)
 endif()
-
-add_executable(skyuv_test_lua test_lua.c)
-target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)
-skyuv_target_compile_warnings(skyuv_test_lua)
-
-add_test(NAME lua.basic COMMAND skyuv_test_lua)

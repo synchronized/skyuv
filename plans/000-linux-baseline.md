@@ -294,3 +294,11 @@ Lua 接入进展：
 - 按平台保持上游 Lua 编译定义；
 - 增加创建 Lua 状态并执行表达式的 CMocka 测试。
 - Windows/MSVC 暂不构建定制 Lua；其上游原子操作分支不兼容 MSVC，将由阶段 1 的 `skyuv_atomic` 解决。
+
+分配器接入进展：
+
+- 提供 `SKYUV_ALLOCATOR=jemalloc/system` 选择；
+- Linux 默认使用 jemalloc，其他平台在完成适配前默认使用 system；
+- jemalloc 在构建目录的源码副本中执行 Autotools，不修改 submodule；
+- 两种模式统一提供 `skyuv::allocator`；
+- 增加分配、写入、重分配和释放测试。
