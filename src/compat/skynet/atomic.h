@@ -1,5 +1,5 @@
-#ifndef SKYUV_COMPAT_SKYNET_ATOMIC_H
-#define SKYUV_COMPAT_SKYNET_ATOMIC_H
+#ifndef SKYNET_ATOMIC_H
+#define SKYNET_ATOMIC_H
 
 #include <skyuv/atomic.h>
 

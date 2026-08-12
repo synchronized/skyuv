@@ -1,5 +1,5 @@
-#ifndef SKYUV_COMPAT_SKYNET_SPINLOCK_H
-#define SKYUV_COMPAT_SKYNET_SPINLOCK_H
+#ifndef SKYNET_SPINLOCK_H
+#define SKYNET_SPINLOCK_H
 
 #include "atomic.h"
 

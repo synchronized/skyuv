@@ -35,11 +35,24 @@ set_target_properties(
     ENABLE_EXPORTS TRUE
     OUTPUT_NAME skynet
 )
-target_include_directories(skyuv_skynet PRIVATE "${SKYUV_SKYNET_SOURCE_DIR}")
+set(SKYUV_SKYNET_COMPAT_DIR "${PROJECT_SOURCE_DIR}/src/compat/skynet")
+target_include_directories(
+  skyuv_skynet
+  PRIVATE
+    "${SKYUV_SKYNET_COMPAT_DIR}"
+    "${SKYUV_SKYNET_SOURCE_DIR}"
+)
+target_compile_options(
+  skyuv_skynet
+  PRIVATE
+    -include "${SKYUV_SKYNET_COMPAT_DIR}/atomic.h"
+    -include "${SKYUV_SKYNET_COMPAT_DIR}/spinlock.h"
+)
 target_link_libraries(
   skyuv_skynet
   PRIVATE
     skyuv::lua
+    skyuv::platform
     skyuv::allocator
     Threads::Threads
     ${CMAKE_DL_LIBS}
