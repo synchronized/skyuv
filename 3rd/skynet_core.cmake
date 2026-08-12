@@ -38,6 +38,11 @@ set_source_files_properties(
   PROPERTIES
     COMPILE_OPTIONS "-I${PROJECT_SOURCE_DIR}/src/compat/skynet/tls"
 )
+set_source_files_properties(
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_start.c"
+  PROPERTIES
+    COMPILE_OPTIONS "-I${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
+)
 set_target_properties(
   skyuv_skynet
   PROPERTIES
