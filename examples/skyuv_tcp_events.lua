@@ -1,4 +1,4 @@
-local skynet = require "skynet"
+local skynet = require "skynet.manager"
 local skynet_core = require "skynet.core"
 local driver = require "skynet.socketdriver"
 
@@ -44,7 +44,7 @@ local function finish_if_ready()
 	require_before("client_data", "accepted_close")
 	driver.close(listener)
 	skynet.error("skyuv TCP 原始事件基线验证通过")
-	skynet.timeout(10, skynet.abort)
+	skynet.timeout(2, skynet.abort)
 end
 
 skynet.register_protocol {
@@ -54,8 +54,10 @@ skynet.register_protocol {
 	dispatch = function(_, _, event_type, id, ud, data)
 		if event_type == TYPE_CONNECT then
 			if id == listener then
-				record("listener_open")
-				client = assert(driver.connect("127.0.0.1", 25282))
+				if not events.listener_open then
+					record("listener_open")
+					client = assert(driver.connect("127.0.0.1", 25282))
+				end
 			elseif id == client then
 				record("client_open")
 				assert(driver.send(client, "client-payload"))
@@ -110,6 +112,8 @@ skynet.start(function()
 	driver.start(listener)
 	failed = assert(driver.connect("127.0.0.1", 1))
 	skynet.timeout(500, function()
-		error("TCP 原始事件基线超时")
+		if not closing then
+			error("TCP 原始事件基线超时")
+		end
 	end)
 end)

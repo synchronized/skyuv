@@ -168,3 +168,4 @@
 - 基线覆盖 listener open、accept、accepted start、双向 data、主动 close、对端 close 和 connect error；
 - 在服务内部断言关键字段、负载内容和每条连接的因果顺序；
 - Linux 完整矩阵同时运行 CMake 版和原版 Skynet 基线。
+- 首次运行确认 listener 在建立和 start/resume 时可能收到重复 `SOCKET_OPEN`；基线记录该语义，但只启动一个测试客户端。
