@@ -3,6 +3,7 @@ add_library(skyuv_platform STATIC
   platform/dynamic.c
   platform/thread.c
   platform/time.c
+  compat/skynet/pthread.c
 )
 add_library(skyuv::platform ALIAS skyuv_platform)
 
