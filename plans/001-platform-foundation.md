@@ -103,3 +103,4 @@
 - 单独将 `skynet_server.c` 的线程局部存储映射到 skyuv TLS 接口，不扩大到调度线程和同步原语。
 - 将 `skynet_start.c` 的线程、互斥锁和条件变量映射到 skyuv 平台接口，保持调度循环与唤醒条件不变。
 - 按上游模块组成新增 `client.so` CMake 目标，并将 `lua-clientsocket.c` 的线程与互斥锁映射到 skyuv 平台接口。
+- 移除 Skynet 核心对 `Threads::Threads`、`${CMAKE_DL_LIBS}` 和 `rt` 的直接链接，平台依赖由 skyuv/libuv 目标边界传递。

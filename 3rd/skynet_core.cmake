@@ -2,8 +2,6 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
   return()
 endif()
 
-find_package(Threads REQUIRED)
-
 set(SKYUV_SKYNET_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/skynet/skynet-src")
 set(
   SKYUV_SKYNET_CORE_SOURCES
@@ -70,10 +68,6 @@ target_link_libraries(
     skyuv::lua
     skyuv::platform
     skyuv::allocator
-    Threads::Threads
-    ${CMAKE_DL_LIBS}
-    m
-    rt
 )
 
 set(SKYUV_SKYNET_SERVICE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/skynet/service-src")
