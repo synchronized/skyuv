@@ -25,15 +25,24 @@ typedef struct skyuv_rwlock {
 	void *implementation;
 } skyuv_rwlock;
 
+#define SKYUV_TLS_STORAGE_SIZE 16
+
+typedef union skyuv_tls_storage {
+	void *pointer_alignment;
+	uint64_t integer_alignment;
+	unsigned char data[SKYUV_TLS_STORAGE_SIZE];
+} skyuv_tls_storage;
+
 typedef struct skyuv_tls {
-	void *implementation;
+	skyuv_tls_storage storage;
+	bool initialized;
 } skyuv_tls;
 
 #define SKYUV_THREAD_INITIALIZER {NULL}
 #define SKYUV_MUTEX_INITIALIZER {NULL}
 #define SKYUV_COND_INITIALIZER {NULL}
 #define SKYUV_RWLOCK_INITIALIZER {NULL}
-#define SKYUV_TLS_INITIALIZER {NULL}
+#define SKYUV_TLS_INITIALIZER {0}
 
 int skyuv_thread_create(skyuv_thread *thread, skyuv_thread_entry entry, void *argument);
 int skyuv_thread_join(skyuv_thread *thread);

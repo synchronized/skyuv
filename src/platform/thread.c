@@ -213,13 +213,42 @@ void skyuv_rwlock_wrunlock(skyuv_rwlock *rwlock) {
 	uv_rwlock_wrunlock(rwlock->implementation);
 }
 
-DEFINE_PLATFORM_INIT(skyuv_tls_init, skyuv_tls, uv_key_t, uv_key_create)
-DEFINE_PLATFORM_DESTROY(skyuv_tls_destroy, skyuv_tls, uv_key_t, uv_key_delete)
+_Static_assert(sizeof(uv_key_t) <= SKYUV_TLS_STORAGE_SIZE, "skyuv TLS 存储空间不足");
+_Static_assert(_Alignof(uv_key_t) <= _Alignof(skyuv_tls_storage), "skyuv TLS 存储对齐不足");
+
+static uv_key_t *tls_implementation(skyuv_tls *tls) {
+	return (uv_key_t *)tls->storage.data;
+}
+
+int skyuv_tls_init(skyuv_tls *tls) {
+	int result;
+
+	if (tls == NULL) {
+		return SKYUV_ERROR_INVALID_ARGUMENT;
+	}
+	if (tls->initialized) {
+		return SKYUV_ERROR_INVALID_STATE;
+	}
+	result = uv_key_create(tls_implementation(tls));
+	if (result != 0) {
+		return SKYUV_ERROR_SYSTEM;
+	}
+	tls->initialized = true;
+	return SKYUV_OK;
+}
+
+void skyuv_tls_destroy(skyuv_tls *tls) {
+	if (tls == NULL || !tls->initialized) {
+		return;
+	}
+	uv_key_delete(tls_implementation(tls));
+	tls->initialized = false;
+}
 
 void *skyuv_tls_get(skyuv_tls *tls) {
-	return uv_key_get(tls->implementation);
+	return uv_key_get(tls_implementation(tls));
 }
 
 void skyuv_tls_set(skyuv_tls *tls, void *value) {
-	uv_key_set(tls->implementation, value);
+	uv_key_set(tls_implementation(tls), value);
 }
