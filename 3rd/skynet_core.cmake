@@ -156,6 +156,34 @@ target_include_directories(
 )
 target_link_libraries(skyuv_lua_module_skynet PRIVATE skyuv::platform)
 
+add_library(
+  skyuv_lua_module_client
+  MODULE
+    "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-clientsocket.c"
+    "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-crypt.c"
+    "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lsha1.c"
+)
+set_source_files_properties(
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-clientsocket.c"
+  PROPERTIES
+    COMPILE_OPTIONS "-I${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
+)
+set_target_properties(
+  skyuv_lua_module_client
+  PROPERTIES
+    C_EXTENSIONS TRUE
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/luaclib"
+    OUTPUT_NAME client
+    PREFIX ""
+)
+target_include_directories(
+  skyuv_lua_module_client
+  PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/skynet/3rd/lua"
+    "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}"
+)
+target_link_libraries(skyuv_lua_module_client PRIVATE skyuv::platform)
+
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/skynet" SKYUV_SKYNET_RUNTIME_SOURCE_DIR)
 file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/examples" SKYUV_EXAMPLE_SOURCE_DIR)
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_BINARY_DIR}" SKYUV_SKYNET_RUNTIME_BINARY_DIR)

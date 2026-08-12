@@ -102,3 +102,4 @@
 - 将 skyuv TLS 改为内嵌不透明存储，初始化和销毁不再动态分配，并以编译期断言约束后端大小与对齐。
 - 单独将 `skynet_server.c` 的线程局部存储映射到 skyuv TLS 接口，不扩大到调度线程和同步原语。
 - 将 `skynet_start.c` 的线程、互斥锁和条件变量映射到 skyuv 平台接口，保持调度循环与唤醒条件不变。
+- 按上游模块组成新增 `client.so` CMake 目标，并将 `lua-clientsocket.c` 的线程与互斥锁映射到 skyuv 平台接口。

@@ -57,6 +57,7 @@ jobs:
           cmake --build --preset "${{ matrix.preset }}" --target
           uv_a cmocka skyuv_lua skyuv_skynet skyuv_service_snlua
           skyuv_service_logger skyuv_service_harbor skyuv_lua_module_skynet
+          skyuv_lua_module_client
           skyuv_test_lua skyuv_test_allocator skyuv_test_thread skyuv_test_time
           skyuv_test_dynamic skyuv_test_atomic
 
