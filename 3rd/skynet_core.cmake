@@ -33,6 +33,11 @@ set_source_files_properties(
   PROPERTIES
     COMPILE_OPTIONS "-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
 )
+set_source_files_properties(
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_server.c"
+  PROPERTIES
+    COMPILE_OPTIONS "-I${PROJECT_SOURCE_DIR}/src/compat/skynet/tls"
+)
 set_target_properties(
   skyuv_skynet
   PROPERTIES

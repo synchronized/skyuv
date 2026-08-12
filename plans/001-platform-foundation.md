@@ -99,3 +99,4 @@
 - 将 `skynet_timer.c` 的实时、单调和线程 CPU 时钟映射到 skyuv 时间接口，保持原有单位换算。
 - 将 `service_snlua.c` 和 `lua-skynet.c` 的线程 CPU、单调时钟映射到 skyuv 时间接口，完成 Skynet 当前 `clock_gettime` 调用迁移。
 - 通过兼容头将 `skynet_module.c` 的动态库打开、符号查询和错误信息迁移到 skyuv 动态加载接口，保持原有模块句柄 ABI。
+- 单独将 `skynet_server.c` 的线程局部存储映射到 skyuv TLS 接口，不扩大到调度线程和同步原语。
