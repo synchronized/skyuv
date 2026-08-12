@@ -36,6 +36,12 @@ target_link_libraries(skyuv_test_atomic PRIVATE skyuv::platform cmocka::cmocka)
 skyuv_target_compile_warnings(skyuv_test_atomic)
 add_test(NAME platform.atomic COMMAND skyuv_test_atomic)
 
+add_executable(skyuv_test_socket_internal test_socket_internal.c)
+target_include_directories(skyuv_test_socket_internal PRIVATE "${PROJECT_SOURCE_DIR}/src/socket")
+target_link_libraries(skyuv_test_socket_internal PRIVATE skyuv::socket_core cmocka::cmocka)
+skyuv_target_compile_warnings(skyuv_test_socket_internal)
+add_test(NAME socket.internal COMMAND skyuv_test_socket_internal)
+
 if(TARGET skyuv_lua)
   add_executable(skyuv_test_lua test_lua.c)
   target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)

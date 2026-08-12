@@ -6,6 +6,11 @@ add_library(skyuv_platform STATIC
 )
 add_library(skyuv::platform ALIAS skyuv_platform)
 
+add_library(skyuv_socket_core STATIC socket/socket_internal.c)
+add_library(skyuv::socket_core ALIAS skyuv_socket_core)
+target_include_directories(skyuv_socket_core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/socket")
+skyuv_target_compile_warnings(skyuv_socket_core)
+
 target_include_directories(
   skyuv_platform
   PUBLIC

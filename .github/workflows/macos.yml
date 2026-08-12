@@ -38,9 +38,10 @@ jobs:
       - name: 构建平台层与 Actor 基础子集
         run: >-
           cmake --build --preset "${{ matrix.preset }}" --target
-          uv_a cmocka skyuv_lua skyuv_skynet_portable_core
+          uv_a cmocka skyuv_lua skyuv_skynet_portable_core skyuv_socket_core
           skyuv_test_lua skyuv_test_allocator skyuv_test_thread
           skyuv_test_time skyuv_test_dynamic skyuv_test_atomic
+          skyuv_test_socket_internal
 
       - name: 运行测试
         run: ctest --preset "${{ matrix.preset }}"
