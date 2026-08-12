@@ -47,6 +47,7 @@ target_compile_options(
   PRIVATE
     "-include${SKYUV_SKYNET_COMPAT_DIR}/atomic.h"
     "-include${SKYUV_SKYNET_COMPAT_DIR}/spinlock.h"
+    "-include${SKYUV_SKYNET_COMPAT_DIR}/skyuv_pthread.h"
 )
 target_link_libraries(
   skyuv_skynet

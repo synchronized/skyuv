@@ -1,5 +1,5 @@
 #define SKYUV_COMPAT_PTHREAD_IMPLEMENTATION
-#include "pthread.h"
+#include "skyuv_pthread.h"
 
 #include <stdlib.h>
 
