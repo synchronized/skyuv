@@ -98,3 +98,4 @@
 - 增加动态库加载、符号查询、错误文本和安全关闭接口，并使用测试模块验证成功与失败路径。
 - 将 `skynet_timer.c` 的实时、单调和线程 CPU 时钟映射到 skyuv 时间接口，保持原有单位换算。
 - 将 `service_snlua.c` 和 `lua-skynet.c` 的线程 CPU、单调时钟映射到 skyuv 时间接口，完成 Skynet 当前 `clock_gettime` 调用迁移。
+- 通过兼容头将 `skynet_module.c` 的动态库打开、符号查询和错误信息迁移到 skyuv 动态加载接口，保持原有模块句柄 ABI。
