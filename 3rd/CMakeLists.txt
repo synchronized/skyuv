@@ -9,6 +9,8 @@ add_subdirectory(libuv EXCLUDE_FROM_ALL)
 if(SKYUV_USE_SHARED_LIBUV)
   add_library(skyuv::libuv ALIAS uv)
 else()
+  # skyuv 平台层会被 Skynet 动态模块链接，静态 libuv 必须生成位置无关代码。
+  set_target_properties(uv_a PROPERTIES POSITION_INDEPENDENT_CODE ON)
   add_library(skyuv::libuv ALIAS uv_a)
 endif()
 
