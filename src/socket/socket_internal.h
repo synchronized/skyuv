@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <skyuv/error.h>
+#include <skyuv/thread.h>
+
 #define SKYUV_SOCKET_SLOT_BITS 16U
 #define SKYUV_SOCKET_SLOT_COUNT (UINT32_C(1) << SKYUV_SOCKET_SLOT_BITS)
 #define SKYUV_SOCKET_GENERATION_MAX UINT16_C(0x7fff)
@@ -80,6 +83,33 @@ struct skyuv_socket_event {
 	void *data;
 	size_t size;
 };
+
+struct skyuv_socket_command_queue {
+	skyuv_mutex mutex;
+	struct skyuv_socket_command *head;
+	struct skyuv_socket_command *tail;
+	bool accepting;
+};
+
+struct skyuv_socket_runtime;
+
+int skyuv_socket_command_queue_init(struct skyuv_socket_command_queue *queue);
+void skyuv_socket_command_queue_destroy(struct skyuv_socket_command_queue *queue);
+int skyuv_socket_command_queue_push(struct skyuv_socket_command_queue *queue,
+									struct skyuv_socket_command *command);
+int skyuv_socket_command_queue_stop(struct skyuv_socket_command_queue *queue,
+									struct skyuv_socket_command *exit_command);
+struct skyuv_socket_command *
+skyuv_socket_command_queue_pop(struct skyuv_socket_command_queue *queue);
+void skyuv_socket_command_destroy(struct skyuv_socket_command *command);
+
+int skyuv_socket_runtime_create(struct skyuv_socket_runtime **runtime);
+int skyuv_socket_runtime_submit(struct skyuv_socket_runtime *runtime,
+								struct skyuv_socket_command *command);
+int skyuv_socket_runtime_exit(struct skyuv_socket_runtime *runtime);
+int skyuv_socket_runtime_poll(struct skyuv_socket_runtime *runtime,
+							  struct skyuv_socket_event *event);
+void skyuv_socket_runtime_release(struct skyuv_socket_runtime **runtime);
 
 uint16_t skyuv_socket_id_slot(int id);
 uint16_t skyuv_socket_id_generation(int id);
