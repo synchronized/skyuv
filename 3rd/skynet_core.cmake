@@ -44,6 +44,7 @@ set(SKYUV_SKYNET_COMPAT_DIR "${PROJECT_SOURCE_DIR}/src/compat/skynet")
 target_include_directories(
   skyuv_skynet
   PRIVATE
+    "${SKYUV_SKYNET_COMPAT_DIR}/dynamic"
     "${SKYUV_SKYNET_COMPAT_DIR}"
     "${SKYUV_SKYNET_SOURCE_DIR}"
 )
