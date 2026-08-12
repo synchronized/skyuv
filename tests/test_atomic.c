@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include <cmocka.h>
 
@@ -56,6 +57,10 @@ static void test_i32_operations(void **state) {
 	assert_int_equal(skyuv_atomic_i32_load(&atomic, SKYUV_MEMORY_ACQUIRE), 2);
 	skyuv_atomic_i32_init(&atomic, -1);
 	assert_int_equal(skyuv_atomic_i32_load(&atomic, SKYUV_MEMORY_RELAXED), -1);
+	skyuv_atomic_i32_init(&atomic, INT32_MIN);
+	assert_int_equal(skyuv_atomic_i32_fetch_sub(&atomic, INT32_MIN, SKYUV_MEMORY_SEQ_CST),
+					 INT32_MIN);
+	assert_int_equal(skyuv_atomic_i32_load(&atomic, SKYUV_MEMORY_RELAXED), 0);
 }
 
 static void test_uintptr_operations(void **state) {
@@ -134,11 +139,48 @@ static void test_release_acquire(void **state) {
 	assert_int_equal(skyuv_thread_join(&thread), SKYUV_OK);
 }
 
+static void test_size_operations(void **state) {
+	skyuv_atomic_size atomic = SKYUV_ATOMIC_SIZE_INITIALIZER(SIZE_MAX);
+	size_t expected;
+
+	(void)state;
+	assert_int_equal(skyuv_atomic_size_fetch_add(&atomic, 1, SKYUV_MEMORY_SEQ_CST), SIZE_MAX);
+	assert_int_equal(skyuv_atomic_size_load(&atomic, SKYUV_MEMORY_RELAXED), 0);
+	skyuv_atomic_size_store(&atomic, 7, SKYUV_MEMORY_RELEASE);
+	assert_int_equal(skyuv_atomic_size_fetch_sub(&atomic, 2, SKYUV_MEMORY_ACQ_REL), 7);
+	assert_int_equal(skyuv_atomic_size_fetch_and(&atomic, 3, SKYUV_MEMORY_SEQ_CST), 5);
+	expected = 2;
+	assert_false(skyuv_atomic_size_compare_exchange(&atomic, &expected, 9, SKYUV_MEMORY_ACQ_REL,
+													SKYUV_MEMORY_ACQUIRE));
+	assert_int_equal(expected, 1);
+	assert_int_equal(skyuv_atomic_size_exchange(&atomic, SIZE_MAX, SKYUV_MEMORY_SEQ_CST), 1);
+	skyuv_atomic_size_init(&atomic, 0);
+}
+
+static void test_ulong_operations(void **state) {
+	skyuv_atomic_ulong atomic = SKYUV_ATOMIC_ULONG_INITIALIZER(ULONG_MAX);
+	unsigned long expected;
+
+	(void)state;
+	assert_int_equal(skyuv_atomic_ulong_fetch_add(&atomic, 1, SKYUV_MEMORY_SEQ_CST), ULONG_MAX);
+	assert_int_equal(skyuv_atomic_ulong_load(&atomic, SKYUV_MEMORY_RELAXED), 0);
+	skyuv_atomic_ulong_store(&atomic, 7, SKYUV_MEMORY_RELEASE);
+	assert_int_equal(skyuv_atomic_ulong_fetch_sub(&atomic, 2, SKYUV_MEMORY_ACQ_REL), 7);
+	assert_int_equal(skyuv_atomic_ulong_fetch_and(&atomic, 3, SKYUV_MEMORY_SEQ_CST), 5);
+	expected = 2;
+	assert_false(skyuv_atomic_ulong_compare_exchange(&atomic, &expected, 9, SKYUV_MEMORY_ACQ_REL,
+													 SKYUV_MEMORY_ACQUIRE));
+	assert_int_equal(expected, 1);
+	assert_int_equal(skyuv_atomic_ulong_exchange(&atomic, ULONG_MAX, SKYUV_MEMORY_SEQ_CST), 1);
+	skyuv_atomic_ulong_init(&atomic, 0);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_i32_operations),	   cmocka_unit_test(test_uintptr_operations),
 		cmocka_unit_test(test_concurrent_counter), cmocka_unit_test(test_pointer_operations),
-		cmocka_unit_test(test_release_acquire),
+		cmocka_unit_test(test_release_acquire),	   cmocka_unit_test(test_size_operations),
+		cmocka_unit_test(test_ulong_operations),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
