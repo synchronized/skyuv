@@ -2,7 +2,7 @@
 
 ## 状态
 
-进行中。
+已完成。
 
 ## 背景
 
@@ -84,11 +84,11 @@
 
 ## 未决问题
 
-当前没有阻塞实现的问题。具体错误码类型在第一个平台接口提交前确定，并保持所有平台接口一致。
+无。平台接口统一使用 `skyuv/error.h` 中的错误码；线程 CPU 时间不可用时返回明确的“不支持”错误。
 
 ## 完成记录
 
-已开始：
+已完成：
 
 - 建立 `skyuv::platform` 静态库；
 - 增加不暴露 libuv 类型的 thread 与 mutex 接口；
@@ -104,7 +104,10 @@
 - 将 `skynet_start.c` 的线程、互斥锁和条件变量映射到 skyuv 平台接口，保持调度循环与唤醒条件不变。
 - 按上游模块组成新增 `client.so` CMake 目标，并将 `lua-clientsocket.c` 的线程与互斥锁映射到 skyuv 平台接口。
 - 移除 Skynet 核心对 `Threads::Threads`、`${CMAKE_DL_LIBS}` 和 `rt` 的直接链接，平台依赖由 skyuv/libuv 目标边界传递。
-- 增加可在 Windows 和 macOS 编译的 Actor 基础子集目标；上游 VLA 源文件、旧 socket、daemon 和 Unix 入口暂不纳入该目标。
+- 增加可在 Windows 和 macOS 编译的 Actor 基础子集目标；旧 socket、daemon 和 Unix 入口暂不纳入该目标。
 - 增加 macOS Apple Clang Debug/Release CI，以及使用 system allocator 的 Linux Clang ThreadSanitizer 并发测试。
 - 修正读写锁测试对同线程递归加锁结果的非可移植假设，避免依赖 POSIX 允许实现自行决定的 `EDEADLK`/busy 差异。
-- 以独立可重复补丁将 `skynet_module.c`、`skynet_server.c` 和 `skynet_log.c` 的 VLA 改为等生命周期栈缓冲区，Windows portable core 恢复编译这些模块。
+- 以独立可重复补丁将 `skynet_module.c`、`skynet_server.c` 和 `skynet_log.c` 的 7 个 VLA 改为具有明确所有权、溢出检查和失败处理的堆缓冲区，Windows portable core 恢复编译这些模块。
+- 完成阶段 1 验收：Windows MSVC 本机构建与 6 项测试通过，Linux GCC/Clang、system allocator、ThreadSanitizer 及 macOS Apple Clang Debug/Release 手动 CI 通过。
+- 核对上游源码中的 `pthread_*`、`clock_gettime`、`dlopen` 与原子内建调用：Linux 完整目标及跨平台 Actor 子集均在目标或源文件级强制包含 skyuv 兼容头，平台实现细节没有泄漏到公共接口。
+- Windows `clang-cl` 自动验证未在单人开发阶段引入；Windows 当前由本机 MSVC 验证，完整 Windows CI 留到跨平台交付阶段统一建设。

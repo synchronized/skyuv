@@ -193,7 +193,7 @@ skyuv 提供自己的接口，内部映射到 libuv：
 
 ## 7. 分阶段路线图
 
-各阶段进入实施前会在 [`plans/`](../plans/README.md) 中形成可执行计划。阶段 0 已完成，当前计划为 [001：平台基础层](../plans/001-platform-foundation.md) 和 [002：原子操作抽象](../plans/002-atomic.md)。
+各阶段进入实施前会在 [`plans/`](../plans/README.md) 中形成可执行计划。阶段 0 和阶段 1 已完成，下一步为阶段 2：libuv TCP 最小闭环。
 
 ### 阶段 0：建立 Linux 兼容基线
 
