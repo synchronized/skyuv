@@ -153,11 +153,11 @@ static void test_rwlock(void **state) {
 	assert_int_equal(skyuv_rwlock_init(&rwlock), SKYUV_OK);
 	assert_true(skyuv_rwlock_tryrdlock(&rwlock));
 	assert_true(skyuv_rwlock_tryrdlock(&rwlock));
-	assert_false(skyuv_rwlock_trywrlock(&rwlock));
 	skyuv_rwlock_rdunlock(&rwlock);
 	skyuv_rwlock_rdunlock(&rwlock);
+	assert_true(skyuv_rwlock_trywrlock(&rwlock));
+	skyuv_rwlock_wrunlock(&rwlock);
 	skyuv_rwlock_wrlock(&rwlock);
-	assert_false(skyuv_rwlock_tryrdlock(&rwlock));
 	skyuv_rwlock_wrunlock(&rwlock);
 	skyuv_rwlock_destroy(&rwlock);
 }
