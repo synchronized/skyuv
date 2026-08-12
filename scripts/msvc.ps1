@@ -60,6 +60,9 @@ foreach ($line in $environmentLines) {
     }
 }
 
+# CMake 会优先采用外部 LD；清除 Scoop/MSYS 等环境遗留，确保 MSVC 使用 link.exe。
+Remove-Item -Path Env:LD -ErrorAction SilentlyContinue
+
 $configureArguments = @("--preset", $Preset)
 $buildArguments = @("--build", "--preset", $Preset)
 if ($Fresh) {
