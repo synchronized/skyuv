@@ -89,6 +89,14 @@ jobs:
           wait "$server_pid" || true
           trap - EXIT
 
+      - name: 运行 CMake 版 TCP 原始事件基线
+        shell: bash
+        run: |
+          timeout 15s "build/${{ matrix.preset }}/3rd/skynet" \
+            "build/${{ matrix.preset }}/3rd/tcp-events.conf" \
+            2>&1 | tee cmake-tcp-events.log
+          grep -F "skyuv TCP 原始事件基线验证通过" cmake-tcp-events.log
+
       - name: 运行消息、定时器与关闭基线测试
         shell: bash
         run: |
@@ -118,7 +126,9 @@ jobs:
       - name: 准备原版 Skynet echo 环境
         run: |
           cmake -E copy examples/skyuv_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_echo.lua"
+          cmake -E copy examples/skyuv_tcp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_tcp_events.lua"
           cmake -E copy examples/upstream-echo.conf "$RUNNER_TEMP/skynet/examples/skyuv-echo.conf"
+          cmake -E copy examples/upstream-tcp-events.conf "$RUNNER_TEMP/skynet/examples/tcp-events.conf"
 
       - name: 运行原版 Skynet TCP echo 对照测试
         working-directory: ${{ runner.temp }}/skynet
@@ -134,6 +144,13 @@ jobs:
           kill "$server_pid" 2>/dev/null || true
           wait "$server_pid" || true
           trap - EXIT
+
+      - name: 运行原版 Skynet TCP 原始事件基线
+        working-directory: ${{ runner.temp }}/skynet
+        shell: bash
+        run: |
+          timeout 15s ./skynet examples/tcp-events.conf 2>&1 | tee upstream-tcp-events.log
+          grep -F "skyuv TCP 原始事件基线验证通过" upstream-tcp-events.log
 
       - name: 运行原版 Skynet 启动冒烟测试
         working-directory: ${{ runner.temp }}/skynet

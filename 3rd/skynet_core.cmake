@@ -199,3 +199,8 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/skyuv-baseline.conf"
   @ONLY
 )
+configure_file(
+  "${CMAKE_SOURCE_DIR}/examples/tcp-events.conf.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/tcp-events.conf"
+  @ONLY
+)

@@ -162,4 +162,9 @@
 
 ## 完成记录
 
-尚未开始实现。
+已开始：
+
+- 新增直接注册 `PTYPE_SOCKET` 的原始 TCP 事件基线服务，不经过高层 `skynet.socket` 状态封装；
+- 基线覆盖 listener open、accept、accepted start、双向 data、主动 close、对端 close 和 connect error；
+- 在服务内部断言关键字段、负载内容和每条连接的因果顺序；
+- Linux 完整矩阵同时运行 CMake 版和原版 Skynet 基线。
