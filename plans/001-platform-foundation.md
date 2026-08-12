@@ -107,3 +107,4 @@
 - 增加可在 Windows 和 macOS 编译的 Actor 基础子集目标；上游 VLA 源文件、旧 socket、daemon 和 Unix 入口暂不纳入该目标。
 - 增加 macOS Apple Clang Debug/Release CI，以及使用 system allocator 的 Linux Clang ThreadSanitizer 并发测试。
 - 修正读写锁测试对同线程递归加锁结果的非可移植假设，避免依赖 POSIX 允许实现自行决定的 `EDEADLK`/busy 差异。
+- 以独立可重复补丁将 `skynet_module.c`、`skynet_server.c` 和 `skynet_log.c` 的 VLA 改为等生命周期栈缓冲区，Windows portable core 恢复编译这些模块。

@@ -59,4 +59,7 @@ git -C 3rd/skynet status --short
 
 ## 当前状态
 
-当前没有 Skynet 补丁。
+- `0001-Fix-C11-portability-for-variable-stack-buffers.patch`：将 Actor 核心中
+  MSVC 不支持的 VLA 改为同生命周期的 `alloca` 栈缓冲区。对应 Skynet 提交
+  `2251550a785480fb04c343da1eb8b42f9a8484fd`；仅应用到构建目录的源码副本，
+  计划整理后提交上游。
