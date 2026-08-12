@@ -5,10 +5,10 @@
 
 #if (defined(__GNUC__) || defined(__clang__)) && !defined(SKYUV_COMPAT_PTHREAD_IMPLEMENTATION)
 #include <pthread.h>
+#define pthread_t skyuv_thread
 #define pthread_mutex_t skyuv_mutex
 #define pthread_cond_t skyuv_cond
 #define pthread_key_t skyuv_tls
-#define SKYUV_COMPAT_USES_NATIVE_THREAD 1
 #else
 typedef skyuv_thread pthread_t;
 typedef skyuv_mutex pthread_mutex_t;
@@ -16,12 +16,11 @@ typedef skyuv_cond pthread_cond_t;
 typedef skyuv_tls pthread_key_t;
 #endif
 
-#if !defined(SKYUV_COMPAT_USES_NATIVE_THREAD)
 int skyuv_compat_pthread_create(pthread_t *thread, const void *attributes, void *(*entry)(void *),
 								void *argument);
+
 #define pthread_create skyuv_compat_pthread_create
 #define pthread_join skyuv_compat_pthread_join
-#endif
 #define pthread_mutex_init skyuv_compat_pthread_mutex_init
 #define pthread_mutex_destroy skyuv_compat_pthread_mutex_destroy
 #define pthread_mutex_lock skyuv_compat_pthread_mutex_lock
@@ -36,12 +35,10 @@ int skyuv_compat_pthread_create(pthread_t *thread, const void *attributes, void 
 #define pthread_getspecific skyuv_compat_pthread_getspecific
 #define pthread_setspecific skyuv_compat_pthread_setspecific
 
-#if !defined(SKYUV_COMPAT_USES_NATIVE_THREAD)
 static inline int skyuv_compat_pthread_join(pthread_t thread, void **result) {
 	(void)result;
 	return skyuv_thread_join(&thread) == SKYUV_OK ? 0 : -1;
 }
-#endif
 
 static inline int skyuv_compat_pthread_mutex_init(pthread_mutex_t *mutex, const void *attributes) {
 	(void)attributes;
