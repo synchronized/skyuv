@@ -94,6 +94,12 @@ endfunction()
 skyuv_add_skynet_service(snlua)
 skyuv_add_skynet_service(logger)
 skyuv_add_skynet_service(harbor)
+set_source_files_properties(
+  "${SKYUV_SKYNET_SERVICE_DIR}/service_snlua.c"
+  PROPERTIES
+    COMPILE_OPTIONS "-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+)
+target_link_libraries(skyuv_service_snlua PRIVATE skyuv::platform)
 
 set(SKYUV_SKYNET_LUALIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/skynet/lualib-src")
 set(
@@ -116,6 +122,11 @@ set(
 )
 
 add_library(skyuv_lua_module_skynet MODULE ${SKYUV_SKYNET_LUA_MODULE_SOURCES})
+set_source_files_properties(
+  "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-skynet.c"
+  PROPERTIES
+    COMPILE_OPTIONS "-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+)
 set_target_properties(
   skyuv_lua_module_skynet
   PROPERTIES
@@ -132,6 +143,7 @@ target_include_directories(
     "${SKYUV_SKYNET_SERVICE_DIR}"
     "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}"
 )
+target_link_libraries(skyuv_lua_module_skynet PRIVATE skyuv::platform)
 
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/skynet" SKYUV_SKYNET_RUNTIME_SOURCE_DIR)
 file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/examples" SKYUV_EXAMPLE_SOURCE_DIR)
