@@ -5,7 +5,7 @@
 
 #include <skyuv/thread.h>
 
-typedef skyuv_tls pthread_key_t;
+#define pthread_key_t skyuv_tls
 
 static int
 skyuv_compat_pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
