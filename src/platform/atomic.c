@@ -8,23 +8,23 @@
 _Static_assert(sizeof(int32_t) == sizeof(long), "MSVC long 必须为 32 位");
 
 void skyuv_atomic_i32_init(skyuv_atomic_i32 *atomic, int32_t value) {
-	atomic->value = value;
+	*atomic = value;
 }
 
 int32_t skyuv_atomic_i32_load(const skyuv_atomic_i32 *atomic, skyuv_memory_order order) {
 	(void)order;
-	return (int32_t)_InterlockedCompareExchange((volatile long *)&atomic->value, 0, 0);
+	return (int32_t)_InterlockedCompareExchange((volatile long *)atomic, 0, 0);
 }
 
 void skyuv_atomic_i32_store(skyuv_atomic_i32 *atomic, int32_t value, skyuv_memory_order order) {
 	(void)order;
-	(void)_InterlockedExchange((volatile long *)&atomic->value, (long)value);
+	(void)_InterlockedExchange((volatile long *)atomic, (long)value);
 }
 
 int32_t skyuv_atomic_i32_exchange(skyuv_atomic_i32 *atomic, int32_t value,
 								  skyuv_memory_order order) {
 	(void)order;
-	return (int32_t)_InterlockedExchange((volatile long *)&atomic->value, (long)value);
+	return (int32_t)_InterlockedExchange((volatile long *)atomic, (long)value);
 }
 
 bool skyuv_atomic_i32_compare_exchange(skyuv_atomic_i32 *atomic, int32_t *expected, int32_t desired,
@@ -33,8 +33,7 @@ bool skyuv_atomic_i32_compare_exchange(skyuv_atomic_i32 *atomic, int32_t *expect
 
 	(void)success;
 	(void)failure;
-	previous = _InterlockedCompareExchange((volatile long *)&atomic->value, (long)desired,
-										   (long)*expected);
+	previous = _InterlockedCompareExchange((volatile long *)atomic, (long)desired, (long)*expected);
 	if ((int32_t)previous == *expected) {
 		return true;
 	}
@@ -45,7 +44,7 @@ bool skyuv_atomic_i32_compare_exchange(skyuv_atomic_i32 *atomic, int32_t *expect
 int32_t skyuv_atomic_i32_fetch_add(skyuv_atomic_i32 *atomic, int32_t value,
 								   skyuv_memory_order order) {
 	(void)order;
-	return (int32_t)_InterlockedExchangeAdd((volatile long *)&atomic->value, (long)value);
+	return (int32_t)_InterlockedExchangeAdd((volatile long *)atomic, (long)value);
 }
 
 int32_t skyuv_atomic_i32_fetch_sub(skyuv_atomic_i32 *atomic, int32_t value,
@@ -53,13 +52,13 @@ int32_t skyuv_atomic_i32_fetch_sub(skyuv_atomic_i32 *atomic, int32_t value,
 	long delta = (long)(int32_t)(UINT32_C(0) - (uint32_t)value);
 
 	(void)order;
-	return (int32_t)_InterlockedExchangeAdd((volatile long *)&atomic->value, delta);
+	return (int32_t)_InterlockedExchangeAdd((volatile long *)atomic, delta);
 }
 
 int32_t skyuv_atomic_i32_fetch_and(skyuv_atomic_i32 *atomic, int32_t value,
 								   skyuv_memory_order order) {
 	(void)order;
-	return (int32_t)_InterlockedAnd((volatile long *)&atomic->value, (long)value);
+	return (int32_t)_InterlockedAnd((volatile long *)atomic, (long)value);
 }
 
 #if UINTPTR_MAX == UINT64_MAX
@@ -75,19 +74,19 @@ typedef long skyuv_interlocked_uintptr;
 #endif
 
 void skyuv_atomic_uintptr_init(skyuv_atomic_uintptr *atomic, uintptr_t value) {
-	atomic->value = value;
+	*atomic = value;
 }
 
 uintptr_t skyuv_atomic_uintptr_load(const skyuv_atomic_uintptr *atomic, skyuv_memory_order order) {
 	(void)order;
 	return (uintptr_t)SKYUV_INTERLOCKED_COMPARE_EXCHANGE_UINTPTR(
-		(volatile skyuv_interlocked_uintptr *)&atomic->value, 0, 0);
+		(volatile skyuv_interlocked_uintptr *)atomic, 0, 0);
 }
 
 void skyuv_atomic_uintptr_store(skyuv_atomic_uintptr *atomic, uintptr_t value,
 								skyuv_memory_order order) {
 	(void)order;
-	(void)SKYUV_INTERLOCKED_EXCHANGE_UINTPTR((volatile skyuv_interlocked_uintptr *)&atomic->value,
+	(void)SKYUV_INTERLOCKED_EXCHANGE_UINTPTR((volatile skyuv_interlocked_uintptr *)atomic,
 											 (skyuv_interlocked_uintptr)value);
 }
 
@@ -95,7 +94,7 @@ uintptr_t skyuv_atomic_uintptr_exchange(skyuv_atomic_uintptr *atomic, uintptr_t 
 										skyuv_memory_order order) {
 	(void)order;
 	return (uintptr_t)SKYUV_INTERLOCKED_EXCHANGE_UINTPTR(
-		(volatile skyuv_interlocked_uintptr *)&atomic->value, (skyuv_interlocked_uintptr)value);
+		(volatile skyuv_interlocked_uintptr *)atomic, (skyuv_interlocked_uintptr)value);
 }
 
 bool skyuv_atomic_uintptr_compare_exchange(skyuv_atomic_uintptr *atomic, uintptr_t *expected,
@@ -106,7 +105,7 @@ bool skyuv_atomic_uintptr_compare_exchange(skyuv_atomic_uintptr *atomic, uintptr
 	(void)success;
 	(void)failure;
 	previous = SKYUV_INTERLOCKED_COMPARE_EXCHANGE_UINTPTR(
-		(volatile skyuv_interlocked_uintptr *)&atomic->value, (skyuv_interlocked_uintptr)desired,
+		(volatile skyuv_interlocked_uintptr *)atomic, (skyuv_interlocked_uintptr)desired,
 		(skyuv_interlocked_uintptr)*expected);
 	if ((uintptr_t)previous == *expected) {
 		return true;
@@ -119,7 +118,7 @@ uintptr_t skyuv_atomic_uintptr_fetch_add(skyuv_atomic_uintptr *atomic, uintptr_t
 										 skyuv_memory_order order) {
 	(void)order;
 	return (uintptr_t)SKYUV_INTERLOCKED_EXCHANGE_ADD_UINTPTR(
-		(volatile skyuv_interlocked_uintptr *)&atomic->value, (skyuv_interlocked_uintptr)value);
+		(volatile skyuv_interlocked_uintptr *)atomic, (skyuv_interlocked_uintptr)value);
 }
 
 uintptr_t skyuv_atomic_uintptr_fetch_sub(skyuv_atomic_uintptr *atomic, uintptr_t value,
@@ -138,24 +137,24 @@ uintptr_t skyuv_atomic_uintptr_fetch_and(skyuv_atomic_uintptr *atomic, uintptr_t
 }
 
 void skyuv_atomic_ulong_init(skyuv_atomic_ulong *atomic, unsigned long value) {
-	atomic->value = value;
+	*atomic = value;
 }
 
 unsigned long skyuv_atomic_ulong_load(const skyuv_atomic_ulong *atomic, skyuv_memory_order order) {
 	(void)order;
-	return (unsigned long)_InterlockedCompareExchange((volatile long *)&atomic->value, 0, 0);
+	return (unsigned long)_InterlockedCompareExchange((volatile long *)atomic, 0, 0);
 }
 
 void skyuv_atomic_ulong_store(skyuv_atomic_ulong *atomic, unsigned long value,
 							  skyuv_memory_order order) {
 	(void)order;
-	(void)_InterlockedExchange((volatile long *)&atomic->value, (long)value);
+	(void)_InterlockedExchange((volatile long *)atomic, (long)value);
 }
 
 unsigned long skyuv_atomic_ulong_exchange(skyuv_atomic_ulong *atomic, unsigned long value,
 										  skyuv_memory_order order) {
 	(void)order;
-	return (unsigned long)_InterlockedExchange((volatile long *)&atomic->value, (long)value);
+	return (unsigned long)_InterlockedExchange((volatile long *)atomic, (long)value);
 }
 
 bool skyuv_atomic_ulong_compare_exchange(skyuv_atomic_ulong *atomic, unsigned long *expected,
@@ -165,8 +164,8 @@ bool skyuv_atomic_ulong_compare_exchange(skyuv_atomic_ulong *atomic, unsigned lo
 
 	(void)success;
 	(void)failure;
-	previous = (unsigned long)_InterlockedCompareExchange((volatile long *)&atomic->value,
-														  (long)desired, (long)*expected);
+	previous = (unsigned long)_InterlockedCompareExchange((volatile long *)atomic, (long)desired,
+														  (long)*expected);
 	if (previous == *expected) {
 		return true;
 	}
@@ -177,7 +176,7 @@ bool skyuv_atomic_ulong_compare_exchange(skyuv_atomic_ulong *atomic, unsigned lo
 unsigned long skyuv_atomic_ulong_fetch_add(skyuv_atomic_ulong *atomic, unsigned long value,
 										   skyuv_memory_order order) {
 	(void)order;
-	return (unsigned long)_InterlockedExchangeAdd((volatile long *)&atomic->value, (long)value);
+	return (unsigned long)_InterlockedExchangeAdd((volatile long *)atomic, (long)value);
 }
 
 unsigned long skyuv_atomic_ulong_fetch_sub(skyuv_atomic_ulong *atomic, unsigned long value,
@@ -188,7 +187,7 @@ unsigned long skyuv_atomic_ulong_fetch_sub(skyuv_atomic_ulong *atomic, unsigned 
 unsigned long skyuv_atomic_ulong_fetch_and(skyuv_atomic_ulong *atomic, unsigned long value,
 										   skyuv_memory_order order) {
 	(void)order;
-	return (unsigned long)_InterlockedAnd((volatile long *)&atomic->value, (long)value);
+	return (unsigned long)_InterlockedAnd((volatile long *)atomic, (long)value);
 }
 
 #else
@@ -211,33 +210,33 @@ static int native_memory_order(skyuv_memory_order order) {
 
 #define DEFINE_ATOMIC_FUNCTIONS(suffix, atomic_type, value_type)                                   \
 	void skyuv_atomic_##suffix##_init(atomic_type *atomic, value_type value) {                     \
-		__atomic_store_n(&atomic->value, value, __ATOMIC_RELAXED);                                 \
+		__atomic_store_n(atomic, value, __ATOMIC_RELAXED);                                         \
 	}                                                                                              \
 	value_type skyuv_atomic_##suffix##_load(const atomic_type *atomic, skyuv_memory_order order) { \
-		return __atomic_load_n(&atomic->value, native_memory_order(order));                        \
+		return __atomic_load_n(atomic, native_memory_order(order));                                \
 	}                                                                                              \
 	void skyuv_atomic_##suffix##_store(atomic_type *atomic, value_type value,                      \
 									   skyuv_memory_order order) {                                 \
-		__atomic_store_n(&atomic->value, value, native_memory_order(order));                       \
+		__atomic_store_n(atomic, value, native_memory_order(order));                               \
 	}                                                                                              \
 	value_type skyuv_atomic_##suffix##_exchange(atomic_type *atomic, value_type value,             \
 												skyuv_memory_order order) {                        \
-		return __atomic_exchange_n(&atomic->value, value, native_memory_order(order));             \
+		return __atomic_exchange_n(atomic, value, native_memory_order(order));                     \
 	}                                                                                              \
 	bool skyuv_atomic_##suffix##_compare_exchange(atomic_type *atomic, value_type *expected,       \
 												  value_type desired, skyuv_memory_order success,  \
 												  skyuv_memory_order failure) {                    \
-		return __atomic_compare_exchange_n(&atomic->value, expected, desired, false,               \
+		return __atomic_compare_exchange_n(atomic, expected, desired, false,                       \
 										   native_memory_order(success),                           \
 										   native_memory_order(failure));                          \
 	}                                                                                              \
 	value_type skyuv_atomic_##suffix##_fetch_add(atomic_type *atomic, value_type value,            \
 												 skyuv_memory_order order) {                       \
-		return __atomic_fetch_add(&atomic->value, value, native_memory_order(order));              \
+		return __atomic_fetch_add(atomic, value, native_memory_order(order));                      \
 	}                                                                                              \
 	value_type skyuv_atomic_##suffix##_fetch_sub(atomic_type *atomic, value_type value,            \
 												 skyuv_memory_order order) {                       \
-		return __atomic_fetch_sub(&atomic->value, value, native_memory_order(order));              \
+		return __atomic_fetch_sub(atomic, value, native_memory_order(order));                      \
 	}
 
 DEFINE_ATOMIC_FUNCTIONS(i32, skyuv_atomic_i32, int32_t)
@@ -246,17 +245,17 @@ DEFINE_ATOMIC_FUNCTIONS(ulong, skyuv_atomic_ulong, unsigned long)
 
 int32_t skyuv_atomic_i32_fetch_and(skyuv_atomic_i32 *atomic, int32_t value,
 								   skyuv_memory_order order) {
-	return __atomic_fetch_and(&atomic->value, value, native_memory_order(order));
+	return __atomic_fetch_and(atomic, value, native_memory_order(order));
 }
 
 uintptr_t skyuv_atomic_uintptr_fetch_and(skyuv_atomic_uintptr *atomic, uintptr_t value,
 										 skyuv_memory_order order) {
-	return __atomic_fetch_and(&atomic->value, value, native_memory_order(order));
+	return __atomic_fetch_and(atomic, value, native_memory_order(order));
 }
 
 unsigned long skyuv_atomic_ulong_fetch_and(skyuv_atomic_ulong *atomic, unsigned long value,
 										   skyuv_memory_order order) {
-	return __atomic_fetch_and(&atomic->value, value, native_memory_order(order));
+	return __atomic_fetch_and(atomic, value, native_memory_order(order));
 }
 
 #endif

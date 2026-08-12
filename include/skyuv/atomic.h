@@ -13,26 +13,19 @@ typedef enum skyuv_memory_order {
 	SKYUV_MEMORY_SEQ_CST,
 } skyuv_memory_order;
 
-typedef struct skyuv_atomic_i32 {
-	int32_t value;
-} skyuv_atomic_i32;
-
-typedef struct skyuv_atomic_uintptr {
-	uintptr_t value;
-} skyuv_atomic_uintptr;
+typedef int32_t skyuv_atomic_i32;
+typedef uintptr_t skyuv_atomic_uintptr;
 
 typedef skyuv_atomic_uintptr skyuv_atomic_pointer;
 typedef skyuv_atomic_uintptr skyuv_atomic_size;
 
-typedef struct skyuv_atomic_ulong {
-	unsigned long value;
-} skyuv_atomic_ulong;
+typedef unsigned long skyuv_atomic_ulong;
 
-#define SKYUV_ATOMIC_I32_INITIALIZER(value) {(value)}
-#define SKYUV_ATOMIC_UINTPTR_INITIALIZER(value) {(value)}
-#define SKYUV_ATOMIC_POINTER_INITIALIZER(value) {(uintptr_t)(value)}
-#define SKYUV_ATOMIC_SIZE_INITIALIZER(value) {(uintptr_t)(value)}
-#define SKYUV_ATOMIC_ULONG_INITIALIZER(value) {(value)}
+#define SKYUV_ATOMIC_I32_INITIALIZER(value) (value)
+#define SKYUV_ATOMIC_UINTPTR_INITIALIZER(value) (value)
+#define SKYUV_ATOMIC_POINTER_INITIALIZER(value) ((uintptr_t)(value))
+#define SKYUV_ATOMIC_SIZE_INITIALIZER(value) ((uintptr_t)(value))
+#define SKYUV_ATOMIC_ULONG_INITIALIZER(value) (value)
 
 void skyuv_atomic_i32_init(skyuv_atomic_i32 *atomic, int32_t value);
 int32_t skyuv_atomic_i32_load(const skyuv_atomic_i32 *atomic, skyuv_memory_order order);

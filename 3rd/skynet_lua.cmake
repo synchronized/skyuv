@@ -1,8 +1,3 @@
-if(WIN32)
-  # Skynet 定制 Lua 依赖其 atomic.h 和 spinlock.h；MSVC 后端将在阶段 1 提供。
-  return()
-endif()
-
 set(SKYUV_LUA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/skynet/3rd/lua")
 
 # 与 Skynet 自带 Lua Makefile 中的 CORE_O 和 LIB_O 保持一致。
@@ -47,9 +42,13 @@ add_library(skyuv::lua ALIAS skyuv_lua)
 
 target_include_directories(
   skyuv_lua
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/skynet/skynet-src
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/compat/skynet
+    ${CMAKE_CURRENT_SOURCE_DIR}/skynet/skynet-src
   PUBLIC ${SKYUV_LUA_SOURCE_DIR}
 )
+
+target_link_libraries(skyuv_lua PRIVATE skyuv::platform)
 
 target_compile_features(skyuv_lua PUBLIC c_std_99)
 set_target_properties(
