@@ -10,17 +10,17 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/skynet/skynet-src" DESTINATION "${SKYUV_S
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0001-Fix-C11-portability-for-variable-stack-buffers.patch"
+    "${PROJECT_SOURCE_DIR}/patches/skynet/0001-Fix-ownership-of-variable-temporary-buffers.patch"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_PATCH_ERROR
 )
 if(NOT SKYUV_SKYNET_PATCH_RESULT EQUAL 0)
-  message(FATAL_ERROR "应用 Skynet VLA 可移植性补丁失败：${SKYUV_SKYNET_PATCH_ERROR}")
+  message(FATAL_ERROR "应用 Skynet 可变缓冲区所有权补丁失败：${SKYUV_SKYNET_PATCH_ERROR}")
 endif()
 file(READ "${SKYUV_SKYNET_SOURCE_DIR}/skynet_module.c" SKYUV_SKYNET_MODULE_SOURCE)
-if(NOT SKYUV_SKYNET_MODULE_SOURCE MATCHES "alloca\\(sz\\)")
-  message(FATAL_ERROR "Skynet VLA 可移植性补丁未生效")
+if(NOT SKYUV_SKYNET_MODULE_SOURCE MATCHES "skynet_malloc\\(sz\\)")
+  message(FATAL_ERROR "Skynet 可变缓冲区所有权补丁未生效")
 endif()
 
 set(
@@ -66,16 +66,8 @@ set_source_files_properties(
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_server.c"
   PROPERTIES
     COMPILE_OPTIONS
-      "-I${SKYUV_SKYNET_COMPAT_DIR}/tls;$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/skyuv_alloca.h>;$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/skyuv_string.h>;$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${SKYUV_SKYNET_COMPAT_DIR}/skyuv_alloca.h>"
+      "-I${SKYUV_SKYNET_COMPAT_DIR}/tls;$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/skyuv_string.h>"
 )
-foreach(vla_source IN ITEMS skynet_module.c skynet_log.c)
-  set_property(
-    SOURCE "${SKYUV_SKYNET_SOURCE_DIR}/${vla_source}"
-    APPEND PROPERTY COMPILE_OPTIONS
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/skyuv_alloca.h>"
-      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${SKYUV_SKYNET_COMPAT_DIR}/skyuv_alloca.h>"
-  )
-endforeach()
 target_link_libraries(
   skyuv_skynet_portable_core
   PRIVATE skyuv::lua skyuv::platform skyuv::allocator

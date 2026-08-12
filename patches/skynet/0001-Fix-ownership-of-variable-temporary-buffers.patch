@@ -1,0 +1,223 @@
+From 4260028321b4c2e5b3f09d149216ebd65a2b0bb3 Mon Sep 17 00:00:00 2001
+From: synchronized <synchronized@yeah.net>
+Date: Wed, 12 Aug 2026 17:56:29 +0800
+Subject: [PATCH] Fix ownership of variable temporary buffers
+
+---
+ skynet-src/skynet_log.c    |  9 +++++-
+ skynet-src/skynet_module.c | 35 ++++++++++++++++-------
+ skynet-src/skynet_server.c | 58 ++++++++++++++++++++++++++++++--------
+ 3 files changed, 79 insertions(+), 23 deletions(-)
+
+diff --git a/skynet-src/skynet_log.c b/skynet-src/skynet_log.c
+index 4ce106f..1eeeb6b 100644
+--- a/skynet-src/skynet_log.c
++++ b/skynet-src/skynet_log.c
+@@ -11,7 +11,13 @@ skynet_log_open(struct skynet_context * ctx, uint32_t handle) {
+ 	if (logpath == NULL)
+ 		return NULL;
+ 	size_t sz = strlen(logpath);
+-	char tmp[sz + 16];
++	if (sz > SIZE_MAX - 16) {
++		return NULL;
++	}
++	char *tmp = skynet_malloc(sz + 16);
++	if (tmp == NULL) {
++		return NULL;
++	}
+ 	sprintf(tmp, "%s/%08x.log", logpath, handle);
+ 	FILE *f = fopen(tmp, "ab");
+ 	if (f) {
+@@ -24,6 +30,7 @@ skynet_log_open(struct skynet_context * ctx, uint32_t handle) {
+ 	} else {
+ 		skynet_error(ctx, "Open log file %s fail", tmp);
+ 	}
++	skynet_free(tmp);
+ 	return f;
+ }
+ 
+diff --git a/skynet-src/skynet_module.c b/skynet-src/skynet_module.c
+index 9a8d618..65d0a8e 100644
+--- a/skynet-src/skynet_module.c
++++ b/skynet-src/skynet_module.c
+@@ -29,10 +29,16 @@ _try_open(struct modules *m, const char * name) {
+ 	size_t path_size = strlen(path);
+ 	size_t name_size = strlen(name);
+ 
+-	int sz = path_size + name_size;
++	if (name_size > SIZE_MAX - path_size) {
++		return NULL;
++	}
++	size_t sz = path_size + name_size;
+ 	//search path
+ 	void * dl = NULL;
+-	char tmp[sz];
++	char *tmp = skynet_malloc(sz);
++	if (tmp == NULL) {
++		return NULL;
++	}
+ 	do
+ 	{
+ 		memset(tmp,0,sz);
+@@ -40,8 +46,8 @@ _try_open(struct modules *m, const char * name) {
+ 		if (*path == '\0') break;
+ 		l = strchr(path, ';');
+ 		if (l == NULL) l = path + strlen(path);
+-		int len = l - path;
+-		int i;
++		size_t len = l - path;
++		size_t i;
+ 		for (i=0;path[i]!='?' && i < len ;i++) {
+ 			tmp[i] = path[i];
+ 		}
+@@ -60,6 +66,7 @@ _try_open(struct modules *m, const char * name) {
+ 		fprintf(stderr, "try open %s failed : %s\n",name,dlerror());
+ 	}
+ 
++	skynet_free(tmp);
+ 	return dl;
+ }
+ 
+@@ -75,10 +82,9 @@ _query(const char * name) {
+ }
+ 
+ static void *
+-get_api(struct skynet_module *mod, const char *api_name) {
++get_api(struct skynet_module *mod, const char *api_name, char *tmp) {
+ 	size_t name_size = strlen(mod->name);
+ 	size_t api_size = strlen(api_name);
+-	char tmp[name_size + api_size + 1];
+ 	memcpy(tmp, mod->name, name_size);
+ 	memcpy(tmp+name_size, api_name, api_size+1);
+ 	char *ptr = strrchr(tmp, '.');
+@@ -92,10 +98,19 @@ get_api(struct skynet_module *mod, const char *api_name) {
+ 
+ static int
+ open_sym(struct skynet_module *mod) {
+-	mod->create = get_api(mod, "_create");
+-	mod->init = get_api(mod, "_init");
+-	mod->release = get_api(mod, "_release");
+-	mod->signal = get_api(mod, "_signal");
++	size_t name_size = strlen(mod->name);
++	if (name_size > SIZE_MAX - sizeof("_release")) {
++		return 1;
++	}
++	char *tmp = skynet_malloc(name_size + sizeof("_release"));
++	if (tmp == NULL) {
++		return 1;
++	}
++	mod->create = get_api(mod, "_create", tmp);
++	mod->init = get_api(mod, "_init", tmp);
++	mod->release = get_api(mod, "_release", tmp);
++	mod->signal = get_api(mod, "_signal", tmp);
++	skynet_free(tmp);
+ 
+ 	return mod->init == NULL;
+ }
+diff --git a/skynet-src/skynet_server.c b/skynet-src/skynet_server.c
+index 782abff..e91996a 100644
+--- a/skynet-src/skynet_server.c
++++ b/skynet-src/skynet_server.c
+@@ -427,23 +427,44 @@ cmd_query(struct skynet_context * context, const char * param) {
+ 
+ static const char *
+ cmd_name(struct skynet_context * context, const char * param) {
+-	int size = strlen(param);
+-	char name[size+1];
+-	char handle[size+1];
+-	sscanf(param,"%s %s",name,handle);
++	size_t size = strlen(param);
++	if (size == SIZE_MAX) {
++		return NULL;
++	}
++	char *name = skynet_malloc(size + 1);
++	if (name == NULL) {
++		return NULL;
++	}
++	memcpy(name, param, size + 1);
++	char *handle = name;
++	while (*handle != '\0' && *handle != ' ' && *handle != '\t' && *handle != '\r' && *handle != '\n') {
++		++handle;
++	}
++	if (*handle == '\0') {
++		skynet_free(name);
++		return NULL;
++	}
++	*handle++ = '\0';
++	while (*handle == ' ' || *handle == '\t' || *handle == '\r' || *handle == '\n') {
++		++handle;
++	}
+ 	if (handle[0] != ':') {
++		skynet_free(name);
+ 		return NULL;
+ 	}
+ 	uint32_t handle_id = strtoul(handle+1, NULL, 16);
+ 	if (handle_id == 0) {
++		skynet_free(name);
+ 		return NULL;
+ 	}
++	const char *result = NULL;
+ 	if (name[0] == '.') {
+-		return skynet_handle_namehandle(handle_id, name + 1);
++		result = skynet_handle_namehandle(handle_id, name + 1);
+ 	} else {
+ 		skynet_error(context, "error: Can't set global name %s in C", name);
+ 	}
+-	return NULL;
++	skynet_free(name);
++	return result;
+ }
+ 
+ static const char *
+@@ -478,12 +499,19 @@ cmd_kill(struct skynet_context * context, const char * param) {
+ static const char *
+ cmd_launch(struct skynet_context * context, const char * param) {
+ 	size_t sz = strlen(param);
+-	char tmp[sz+1];
+-	strcpy(tmp,param);
++	if (sz == SIZE_MAX) {
++		return NULL;
++	}
++	char *tmp = skynet_malloc(sz + 1);
++	if (tmp == NULL) {
++		return NULL;
++	}
++	memcpy(tmp, param, sz + 1);
+ 	char * args = tmp;
+ 	char * mod = strsep(&args, " \t\r\n");
+ 	args = strsep(&args, "\r\n");
+ 	const uint32_t handle = skynet_context_new(mod,args);
++	skynet_free(tmp);
+ 	if (handle == 0) {
+ 		return NULL;
+ 	} else {
+@@ -499,19 +527,25 @@ cmd_getenv(struct skynet_context * context, const char * param) {
+ 
+ static const char *
+ cmd_setenv(struct skynet_context * context, const char * param) {
+-	size_t sz = strlen(param);
+-	char key[sz+1];
+-	int i;
++	size_t i;
+ 	for (i=0;param[i] != ' ' && param[i];i++) {
+-		key[i] = param[i];
+ 	}
+ 	if (param[i] == '\0')
+ 		return NULL;
+ 
++	if (i == SIZE_MAX) {
++		return NULL;
++	}
++	char *key = skynet_malloc(i + 1);
++	if (key == NULL) {
++		return NULL;
++	}
++	memcpy(key, param, i);
+ 	key[i] = '\0';
+ 	param += i+1;
+ 
+ 	skynet_setenv(key,param);
++	skynet_free(key);
+ 	return NULL;
+ }
+ 
