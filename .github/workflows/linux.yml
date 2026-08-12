@@ -1,11 +1,10 @@
 name: Linux
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
   workflow_dispatch:
+  schedule:
+    # 每周一北京时间 02:00 执行完整矩阵。
+    - cron: "0 18 * * 0"
 
 permissions:
   contents: read
