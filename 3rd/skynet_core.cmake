@@ -28,6 +28,11 @@ set(
 
 # 此目标用于建立未经平台替换的 Linux 行为基线，不修改第三方源码。
 add_executable(skyuv_skynet ${SKYUV_SKYNET_CORE_SOURCES})
+set_source_files_properties(
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_timer.c"
+  PROPERTIES
+    COMPILE_OPTIONS "-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+)
 set_target_properties(
   skyuv_skynet
   PROPERTIES
