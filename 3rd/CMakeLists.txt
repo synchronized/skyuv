@@ -16,6 +16,7 @@ endif()
 
 include(skynet_lua.cmake)
 include(skynet_allocator.cmake)
+include(skynet_portable_core.cmake)
 include(skynet_core.cmake)
 
 if(SKYUV_BUILD_TESTS)

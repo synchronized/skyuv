@@ -155,3 +155,23 @@ jobs:
           test -z "$(git -C 3rd/skynet status --short --untracked-files=no)"
           test -z "$(git -C 3rd/libuv status --short --untracked-files=no)"
           test -z "$(git -C 3rd/cmocka status --short --untracked-files=no)"
+
+  thread-sanitizer:
+    name: Clang ThreadSanitizer
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: 配置 ThreadSanitizer
+        run: cmake --preset linux-clang-tsan
+
+      - name: 构建并发测试
+        run: >-
+          cmake --build --preset linux-clang-tsan --target
+          skyuv_test_thread skyuv_test_atomic
+
+      - name: 运行并发测试
+        run: ctest --preset linux-clang-tsan -R "platform\\.(thread|atomic)"

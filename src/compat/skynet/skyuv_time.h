@@ -6,6 +6,12 @@
 
 #include <skyuv/time.h>
 
+#ifndef CLOCK_REALTIME
+#define CLOCK_REALTIME 0
+#define CLOCK_MONOTONIC 1
+#define CLOCK_THREAD_CPUTIME_ID 2
+#endif
+
 static inline int skyuv_compat_clock_gettime(int clock_id, struct timespec *time) {
 	uint64_t time_ns;
 	int result;

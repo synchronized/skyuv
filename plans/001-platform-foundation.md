@@ -104,3 +104,5 @@
 - 将 `skynet_start.c` 的线程、互斥锁和条件变量映射到 skyuv 平台接口，保持调度循环与唤醒条件不变。
 - 按上游模块组成新增 `client.so` CMake 目标，并将 `lua-clientsocket.c` 的线程与互斥锁映射到 skyuv 平台接口。
 - 移除 Skynet 核心对 `Threads::Threads`、`${CMAKE_DL_LIBS}` 和 `rt` 的直接链接，平台依赖由 skyuv/libuv 目标边界传递。
+- 增加可在 Windows 和 macOS 编译的 Actor 基础子集目标；上游 VLA 源文件、旧 socket、daemon 和 Unix 入口暂不纳入该目标。
+- 增加 macOS Apple Clang Debug/Release CI，以及使用 system allocator 的 Linux Clang ThreadSanitizer 并发测试。

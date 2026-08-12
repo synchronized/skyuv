@@ -1,0 +1,47 @@
+name: macOS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Apple Clang Debug
+            preset: macos-clang-debug
+          - name: Apple Clang Release
+            preset: macos-clang-release
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: 配置 skyuv
+        run: cmake --preset "${{ matrix.preset }}"
+
+      - name: 构建平台层与 Actor 基础子集
+        run: >-
+          cmake --build --preset "${{ matrix.preset }}" --target
+          uv_a cmocka skyuv_lua skyuv_skynet_portable_core
+          skyuv_test_lua skyuv_test_allocator skyuv_test_thread
+          skyuv_test_time skyuv_test_dynamic skyuv_test_atomic
+
+      - name: 运行测试
+        run: ctest --preset "${{ matrix.preset }}"
