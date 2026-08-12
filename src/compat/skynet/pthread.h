@@ -3,11 +3,8 @@
 
 #include <skyuv/thread.h>
 
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(SKYUV_COMPAT_PTHREAD_IMPLEMENTATION)
 #include_next <pthread.h>
-#pragma GCC diagnostic pop
 #define pthread_t skyuv_thread
 #define pthread_mutex_t skyuv_mutex
 #define pthread_cond_t skyuv_cond
