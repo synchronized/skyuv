@@ -420,6 +420,21 @@ if(WIN32 AND BUILD_TESTING)
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   add_test(
+    NAME skynet.portable.paths
+    COMMAND
+      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-paths.ps1"
+      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -PortableDirectory "${PROJECT_BINARY_DIR}/3rd/portable"
+      -SkynetSource "${PROJECT_SOURCE_DIR}/3rd/skynet"
+      -FixtureSource "${PROJECT_SOURCE_DIR}/tests/fixtures"
+  )
+  set_tests_properties(
+    skynet.portable.paths
+    PROPERTIES
+      TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
     NAME skynet.portable.cluster_core
     COMMAND
       pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"

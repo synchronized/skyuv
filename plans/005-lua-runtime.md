@@ -180,3 +180,10 @@
   `skynet.db.mongo` 高层模块加载；独立 Linux 手动/每周工作流使用固定 MongoDB
   8.0 服务容器验证连接、插入、查询、更新、唯一索引、删除和资源关闭。由于
   GitHub Actions 服务容器仅支持 Linux，macOS 当前只承担构建回归。
+- `client.socket` 回环测试已扩大到 connect、send/recv、写 shutdown、对端关闭、
+  拒绝连接和无效 shutdown 模式，并改为成功后执行 Skynet 正常 ABORT；stdin
+  测试同样等待节点正常退出，不再以强制终止作为成功条件。Linux 使用同一 Lua
+  夹具和回环驱动对照上游与便携版的可观察行为。
+- Windows 路径测试会从含空格的临时目录加载 C 服务和 Lua C 模块。非 ASCII DLL
+  路径受内置 Lua `package.loadlib` 的 ANSI Windows 接口限制，当前明确记录为不支持；
+  若后续消除此限制，应以独立 Lua 补丁或自定义模块搜索器处理。

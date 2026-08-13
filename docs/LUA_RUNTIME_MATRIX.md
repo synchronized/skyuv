@@ -29,7 +29,7 @@
 |---|---|---|
 | 动态库加载 | 已通过 skyuv 动态加载接口接入 | 扩展名、搜索路径和错误文本仍需矩阵测试 |
 | 模块输出目录 | Windows VS 多配置与单配置已统一 | Linux/macOS 继续使用同一无配置子目录布局 |
-| Lua 搜索路径 | 最小配置可加载 `cservice`、`lualib`、`luaclib` | 需覆盖空格和非 ASCII 工作路径 |
+| Lua 搜索路径 | 最小配置可加载 `cservice`、`lualib`、`luaclib`；Windows 自动测试覆盖含空格的 Lua C 模块目录 | Windows 内置 Lua 的 `package.loadlib` 仍使用 ANSI 系统接口，非 ASCII DLL 路径暂不支持；普通 Lua 源码路径不受该动态库限制 |
 | stdin | 便携构建未接入 `client.socket` | Unix 与 Windows 管道/控制台 EOF、编码不同；不得直接 `exit(1)` |
 | signal | Unix 保留上游行为；Windows 使用最小兼容定义 | Windows 不伪造 POSIX 信号 |
 | daemon | Unix 使用上游能力；Windows 明确不支持 | Windows Service 不在本阶段范围 |

@@ -58,7 +58,7 @@ jobs:
           skyuv_service_logger skyuv_service_harbor skyuv_lua_module_skynet
           skyuv_skynet_portable skyuv_portable_service_snlua
           skyuv_portable_service_logger skyuv_portable_service_harbor
-          skyuv_portable_lua_module_skynet
+          skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
           skyuv_lua_module_client skyuv_socket_core skyuv_test_socket_internal
           skyuv_test_lua skyuv_test_allocator skyuv_test_thread skyuv_test_time
           skyuv_test_dynamic skyuv_test_atomic
@@ -132,10 +132,19 @@ jobs:
           cmake -E copy tests/fixtures/skyuv_tcp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_tcp_events.lua"
           cmake -E copy tests/fixtures/skyuv_socket_controls.lua "$RUNNER_TEMP/skynet/service/skyuv_socket_controls.lua"
           cmake -E copy tests/fixtures/skyuv_udp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_udp_events.lua"
+          cmake -E copy tests/fixtures/skyuv_client_socket.lua "$RUNNER_TEMP/skynet/service/skyuv_client_socket.lua"
           cmake -E copy examples/upstream-echo.conf "$RUNNER_TEMP/skynet/examples/skyuv-echo.conf"
           cmake -E copy examples/upstream-tcp-events.conf "$RUNNER_TEMP/skynet/examples/tcp-events.conf"
           cmake -E copy examples/upstream-socket-controls.conf "$RUNNER_TEMP/skynet/examples/socket-controls.conf"
           cmake -E copy examples/upstream-udp-events.conf "$RUNNER_TEMP/skynet/examples/udp-events.conf"
+          cmake -E copy examples/upstream-client-socket.conf "$RUNNER_TEMP/skynet/examples/client-socket.conf"
+
+      - name: 运行原版 client.socket 行为基线
+        shell: bash
+        run: |
+          python3 tests/scripts/client_socket_harness.py \
+            "$RUNNER_TEMP/skynet/skynet" examples/client-socket.conf \
+            --cwd "$RUNNER_TEMP/skynet" | tee "$RUNNER_TEMP/upstream-client-socket.txt"
 
       - name: 运行原版 Skynet TCP echo 对照测试
         working-directory: ${{ runner.temp }}/skynet
@@ -191,6 +200,15 @@ jobs:
           grep -F "TCP_EVENT " portable-tcp-events.log \
             | sed 's/^.*TCP_EVENT /TCP_EVENT /' | sort >portable-events.txt
           diff -u upstream-events.txt portable-events.txt
+
+      - name: 对照便携版 client.socket 行为
+        shell: bash
+        run: |
+          python3 tests/scripts/client_socket_harness.py \
+            "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
+            "build/${{ matrix.preset }}/3rd/skyuv-portable-client-socket.conf" \
+            | tee portable-client-socket.txt
+          diff -u "$RUNNER_TEMP/upstream-client-socket.txt" portable-client-socket.txt
 
       - name: 验证 libuv 版 TCP pause/start 语义
         shell: bash

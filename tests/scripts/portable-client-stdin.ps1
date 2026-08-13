@@ -40,6 +40,9 @@ try {
 		}
 		throw "client.socket stdin 验证未观察到成功标志。`n$output`n$errorOutput"
 	}
+	if (-not $process.WaitForExit(5000)) {
+		throw "client.socket stdin 验证成功后节点未正常退出。"
+	}
 } finally {
 	if ($null -ne $process -and -not $process.HasExited) {
 		Stop-Process -Id $process.Id -Force

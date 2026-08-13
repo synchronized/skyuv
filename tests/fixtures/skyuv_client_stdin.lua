@@ -1,4 +1,4 @@
-local skynet = require "skynet"
+local skynet = require "skynet.manager"
 local socket = require "client.socket"
 
 skynet.start(function()
@@ -22,5 +22,6 @@ skynet.start(function()
 	assert(status == "eof", "stdin 未报告 EOF")
 	skynet.error("skyuv client.socket stdin 验证通过")
 	skynet.error("skyuv CMake 启动验证通过")
-	skynet.exit()
+	skynet.sleep(2)
+	skynet.abort()
 end)

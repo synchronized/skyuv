@@ -35,6 +35,11 @@ try {
 		throw "client.socket 未发送测试数据。"
 	}
 	$stream.Write($buffer, 0, $count)
+	# 等待客户端执行写关闭，再关闭服务端，使客户端观察到 recv 返回空串。
+	while ($stream.Read($buffer, 0, $buffer.Length) -gt 0) {
+	}
+	$client.Dispose()
+	$client = $null
 
 	$deadline = [DateTime]::UtcNow.AddSeconds(5)
 	$matched = $false
@@ -52,6 +57,9 @@ try {
 			""
 		}
 		throw "client.socket 回环验证未观察到成功标志。`n$output`n$errorOutput"
+	}
+	if (-not $process.WaitForExit(5000)) {
+		throw "client.socket 验证成功后节点未正常退出。"
 	}
 } finally {
 	if ($null -ne $client) {
