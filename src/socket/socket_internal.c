@@ -14,14 +14,26 @@ struct skyuv_socket_entry {
 	int id;
 	uintptr_t opaque;
 	bool initialized;
+	struct skyuv_socket_write *high_head;
+	struct skyuv_socket_write *high_tail;
+	struct skyuv_socket_write *low_head;
+	struct skyuv_socket_write *low_tail;
+	bool writing;
+	bool pump_pending;
+	struct skyuv_socket_entry *pump_next;
 };
 
 struct skyuv_socket_write {
+	struct skyuv_socket_write *next;
 	uv_write_t request;
 	struct skyuv_socket_entry *entry;
 	void *data;
+	size_t size;
 	void (*release)(void *data);
 };
+
+static void pump_write(struct skyuv_socket_entry *entry);
+static void release_write(struct skyuv_socket_write *write);
 
 struct skyuv_socket_runtime {
 	uv_loop_t loop;
@@ -33,6 +45,8 @@ struct skyuv_socket_runtime {
 	uint32_t next_slot;
 	struct skyuv_socket_event *event_head;
 	struct skyuv_socket_event *event_tail;
+	struct skyuv_socket_entry *pump_head;
+	struct skyuv_socket_entry *pump_tail;
 	uint32_t entry_count;
 	bool exiting;
 	bool exit_ready;
@@ -150,6 +164,16 @@ static void close_entry(uv_handle_t *handle) {
 	struct skyuv_socket_entry *entry = handle->data;
 	struct skyuv_socket_runtime *runtime = entry->runtime;
 	uint16_t slot = skyuv_socket_id_slot(entry->id);
+	struct skyuv_socket_write *write;
+
+	while ((write = entry->high_head) != NULL) {
+		entry->high_head = write->next;
+		release_write(write);
+	}
+	while ((write = entry->low_head) != NULL) {
+		entry->low_head = write->next;
+		release_write(write);
+	}
 
 	skyuv_mutex_lock(&runtime->slots_mutex);
 	if (runtime->slots[slot] == entry) {
@@ -246,6 +270,51 @@ static void write_completed(uv_write_t *request, int status) {
 		}
 	}
 	release_write(write);
+	entry->writing = false;
+	if (entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
+		pump_write(entry);
+	}
+}
+
+static void pump_write(struct skyuv_socket_entry *entry) {
+	struct skyuv_socket_write *write;
+	uv_buf_t buffer;
+	int result;
+
+	if (entry->writing) {
+		return;
+	}
+	write = entry->high_head;
+	if (write != NULL) {
+		entry->high_head = write->next;
+		if (entry->high_head == NULL) {
+			entry->high_tail = NULL;
+		}
+	} else {
+		write = entry->low_head;
+		if (write == NULL) {
+			return;
+		}
+		entry->low_head = write->next;
+		if (entry->low_head == NULL) {
+			entry->low_tail = NULL;
+		}
+	}
+	write->next = NULL;
+	write->request.data = write;
+	buffer = uv_buf_init(write->data, (unsigned int)write->size);
+	result = uv_write(&write->request, (uv_stream_t *)&entry->tcp, &buffer, 1, write_completed);
+	if (result == 0) {
+		entry->writing = true;
+		return;
+	}
+	release_write(write);
+	if (entry_state(entry) == SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
+		set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
+		uv_close((uv_handle_t *)&entry->tcp, close_entry);
+	} else {
+		finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, result);
+	}
 }
 
 static void connect_completed(uv_connect_t *request, int status) {
@@ -456,9 +525,9 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 						 struct skyuv_socket_command *command) {
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
 	struct skyuv_socket_write *write;
+	struct skyuv_socket_write **head;
+	struct skyuv_socket_write **tail;
 	enum skyuv_socket_state state;
-	uv_buf_t buffer;
-	int result;
 
 	state = entry == NULL ? SKYUV_SOCKET_STATE_INVALID : entry_state(entry);
 	if (state != SKYUV_SOCKET_STATE_CONNECTED &&
@@ -474,21 +543,31 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 	}
 	write->entry = entry;
 	write->data = command->payload.send.data;
+	write->size = command->payload.send.size;
 	write->release = command->payload.send.release;
-	write->request.data = write;
-	buffer = uv_buf_init(write->data, (unsigned int)command->payload.send.size);
-	result = uv_write(&write->request, (uv_stream_t *)&entry->tcp, &buffer, 1, write_completed);
-	if (result != 0) {
-		free(write);
-		if (state == SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
-			set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
-			uv_close((uv_handle_t *)&entry->tcp, close_entry);
-		} else {
-			push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
-		}
-		return;
+	if (command->type == SKYUV_SOCKET_COMMAND_SEND_LOW) {
+		head = &entry->low_head;
+		tail = &entry->low_tail;
+	} else {
+		head = &entry->high_head;
+		tail = &entry->high_tail;
 	}
-	/* uv_write 成功后，请求成为缓冲区的唯一所有者。 */
+	if (*tail == NULL) {
+		*head = write;
+	} else {
+		(*tail)->next = write;
+	}
+	*tail = write;
+	if (!entry->writing && !entry->pump_pending) {
+		entry->pump_pending = true;
+		if (runtime->pump_tail == NULL) {
+			runtime->pump_head = entry;
+		} else {
+			runtime->pump_tail->pump_next = entry;
+		}
+		runtime->pump_tail = entry;
+	}
+	/* 入队后 write 节点成为缓冲区的唯一所有者。 */
 	command->payload.send.ownership = SKYUV_SOCKET_BUFFER_BORROWED;
 }
 
@@ -549,7 +628,8 @@ static void consume_commands(uv_async_t *async) {
 			process_pause(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_NODELAY) {
 			process_nodelay(runtime, command);
-		} else if (command->type == SKYUV_SOCKET_COMMAND_SEND) {
+		} else if (command->type == SKYUV_SOCKET_COMMAND_SEND ||
+				   command->type == SKYUV_SOCKET_COMMAND_SEND_LOW) {
 			process_send(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_CLOSE ||
 				   command->type == SKYUV_SOCKET_COMMAND_SHUTDOWN) {
@@ -558,6 +638,19 @@ static void consume_commands(uv_async_t *async) {
 			process_exit(runtime);
 		}
 		skyuv_socket_command_destroy(command);
+	}
+	while (runtime->pump_head != NULL) {
+		struct skyuv_socket_entry *entry = runtime->pump_head;
+
+		runtime->pump_head = entry->pump_next;
+		if (runtime->pump_head == NULL) {
+			runtime->pump_tail = NULL;
+		}
+		entry->pump_next = NULL;
+		entry->pump_pending = false;
+		if (entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
+			pump_write(entry);
+		}
 	}
 }
 
@@ -858,9 +951,9 @@ int skyuv_socket_runtime_nodelay(struct skyuv_socket_runtime *runtime, int id) {
 	return result;
 }
 
-int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
-							  enum skyuv_socket_buffer_ownership ownership,
-							  void (*release)(void *data)) {
+static int runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
+						enum skyuv_socket_buffer_ownership ownership,
+						void (*release)(void *data), bool low_priority) {
 	struct skyuv_socket_command *command;
 	void *queued_data = data;
 	int result;
@@ -885,7 +978,8 @@ int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void
 		}
 		return SKYUV_ERROR_OUT_OF_MEMORY;
 	}
-	command->type = SKYUV_SOCKET_COMMAND_SEND;
+	command->type =
+		low_priority ? SKYUV_SOCKET_COMMAND_SEND_LOW : SKYUV_SOCKET_COMMAND_SEND;
 	command->id = id;
 	command->payload.send.data = queued_data;
 	command->payload.send.size = size;
@@ -899,6 +993,18 @@ int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void
 		skyuv_socket_command_destroy(command);
 	}
 	return result;
+}
+
+int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
+							  enum skyuv_socket_buffer_ownership ownership,
+							  void (*release)(void *data)) {
+	return runtime_send(runtime, id, data, size, ownership, release, false);
+}
+
+int skyuv_socket_runtime_send_low(struct skyuv_socket_runtime *runtime, int id, void *data,
+								  size_t size, enum skyuv_socket_buffer_ownership ownership,
+								  void (*release)(void *data)) {
+	return runtime_send(runtime, id, data, size, ownership, release, true);
 }
 
 int skyuv_socket_runtime_connect(struct skyuv_socket_runtime *runtime, const char *host, int port,

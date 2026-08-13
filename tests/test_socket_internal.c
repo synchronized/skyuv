@@ -850,6 +850,39 @@ static void test_runtime_remote_eof_keeps_halfclose_until_local_close(void **sta
 	assert_int_equal(released_buffers, 1);
 }
 
+static void test_runtime_write_priority(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	char received[3];
+	size_t received_size = 0;
+	int connection;
+	int accepted;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	assert_int_equal(skyuv_socket_runtime_send_low(runtime, connection, "l", 1,
+											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, "h", 1,
+										 SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_send_low(runtime, connection, "x", 1,
+											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+					 SKYUV_OK);
+	while (received_size < sizeof(received)) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+		assert_int_equal(event.id, accepted);
+		assert_true(event.size <= sizeof(received) - received_size);
+		memcpy(received + received_size, event.data, event.size);
+		received_size += event.size;
+		free(event.data);
+	}
+	assert_memory_equal(received, "hlx", sizeof(received));
+	skyuv_socket_runtime_release(&runtime);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -877,6 +910,7 @@ int main(void) {
 		cmocka_unit_test(test_runtime_pause_and_resume),
 		cmocka_unit_test(test_runtime_nodelay_and_shutdown),
 		cmocka_unit_test(test_runtime_remote_eof_keeps_halfclose_until_local_close),
+		cmocka_unit_test(test_runtime_write_priority),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

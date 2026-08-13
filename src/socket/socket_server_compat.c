@@ -95,7 +95,8 @@ static void release_sendbuffer(struct socket_server *server, struct socket_sendb
 	}
 }
 
-int socket_server_send(struct socket_server *server, struct socket_sendbuffer *buffer) {
+static int send_buffer(struct socket_server *server, struct socket_sendbuffer *buffer,
+					   bool low_priority) {
 	const void *data;
 	size_t size;
 	void *copy;
@@ -118,26 +119,39 @@ int socket_server_send(struct socket_server *server, struct socket_sendbuffer *b
 		}
 		memcpy(copy, data, size);
 		release_sendbuffer(server, buffer);
-		result = skyuv_socket_runtime_send(server->runtime, buffer->id, copy, size,
-										   SKYUV_SOCKET_BUFFER_OWNED, NULL);
+		result = low_priority
+					 ? skyuv_socket_runtime_send_low(server->runtime, buffer->id, copy, size,
+												 SKYUV_SOCKET_BUFFER_OWNED, NULL)
+					 : skyuv_socket_runtime_send(server->runtime, buffer->id, copy, size,
+											 SKYUV_SOCKET_BUFFER_OWNED, NULL);
 		if (result != SKYUV_OK) {
 			free(copy);
 		}
 		return result == SKYUV_OK ? 0 : -1;
 	}
-	result = skyuv_socket_runtime_send(
-		server->runtime, buffer->id, (void *)buffer->buffer, buffer->sz,
-		buffer->type == SOCKET_BUFFER_MEMORY ? SKYUV_SOCKET_BUFFER_OWNED
-											 : SKYUV_SOCKET_BUFFER_BORROWED,
-		NULL);
+	result = low_priority
+				 ? skyuv_socket_runtime_send_low(
+					   server->runtime, buffer->id, (void *)buffer->buffer, buffer->sz,
+					   buffer->type == SOCKET_BUFFER_MEMORY ? SKYUV_SOCKET_BUFFER_OWNED
+													 : SKYUV_SOCKET_BUFFER_BORROWED,
+					   NULL)
+				 : skyuv_socket_runtime_send(
+					   server->runtime, buffer->id, (void *)buffer->buffer, buffer->sz,
+					   buffer->type == SOCKET_BUFFER_MEMORY ? SKYUV_SOCKET_BUFFER_OWNED
+													 : SKYUV_SOCKET_BUFFER_BORROWED,
+					   NULL);
 	if (result != SKYUV_OK && buffer->type == SOCKET_BUFFER_MEMORY) {
 		release_sendbuffer(server, buffer);
 	}
 	return result == SKYUV_OK ? 0 : -1;
 }
 
+int socket_server_send(struct socket_server *server, struct socket_sendbuffer *buffer) {
+	return send_buffer(server, buffer, false);
+}
+
 int socket_server_send_lowpriority(struct socket_server *server, struct socket_sendbuffer *buffer) {
-	return socket_server_send(server, buffer);
+	return send_buffer(server, buffer, true);
 }
 
 int socket_server_listen(struct socket_server *server, uintptr_t opaque, const char *address,

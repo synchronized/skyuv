@@ -32,6 +32,7 @@ enum skyuv_socket_command_type {
 	SKYUV_SOCKET_COMMAND_PAUSE,
 	SKYUV_SOCKET_COMMAND_NODELAY,
 	SKYUV_SOCKET_COMMAND_SEND,
+	SKYUV_SOCKET_COMMAND_SEND_LOW,
 	SKYUV_SOCKET_COMMAND_CLOSE,
 	SKYUV_SOCKET_COMMAND_SHUTDOWN,
 	SKYUV_SOCKET_COMMAND_EXIT,
@@ -121,6 +122,9 @@ int skyuv_socket_runtime_nodelay(struct skyuv_socket_runtime *runtime, int id);
 int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
 							  enum skyuv_socket_buffer_ownership ownership,
 							  void (*release)(void *data));
+int skyuv_socket_runtime_send_low(struct skyuv_socket_runtime *runtime, int id, void *data,
+								  size_t size, enum skyuv_socket_buffer_ownership ownership,
+								  void (*release)(void *data));
 int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_shutdown(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 enum skyuv_socket_state skyuv_socket_runtime_state(struct skyuv_socket_runtime *runtime, int id);
