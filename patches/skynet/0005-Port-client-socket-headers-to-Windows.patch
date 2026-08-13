@@ -1,0 +1,114 @@
+diff --git a/lualib-src/lua-clientsocket.c b/lualib-src/lua-clientsocket.c
+index c411fa1..3b38cf0 100644
+--- a/lualib-src/lua-clientsocket.c
++++ b/lualib-src/lua-clientsocket.c
+@@ -10,13 +10,18 @@
+ #include <stdint.h>
+ #include <pthread.h>
+ #include <stdlib.h>
+ 
++#ifdef _WIN32
++#include <winsock2.h>
++#include <ws2tcpip.h>
++#define SHUT_RD SD_RECEIVE
++#define SHUT_WR SD_SEND
++#define SHUT_RDWR SD_BOTH
++#else
+ #include <netinet/in.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <arpa/inet.h>
+-#include <unistd.h>
+ #include <errno.h>
+ #include <fcntl.h>
++#endif
++#include <unistd.h>
+ 
+ #define CACHE_SIZE 0x1000	
+@@ -32,8 +37,17 @@ lconnect(lua_State *L) {
+ 	if (r == -1) {
+ 		return luaL_error(L, "Connect %s %d failed", addr, port);
+ 	}
+ 
++#ifdef _WIN32
++	u_long nonblocking = 1;
++	if (ioctlsocket(fd, FIONBIO, &nonblocking) != 0) {
++		closesocket(fd);
++		return luaL_error(L, "Set nonblocking failed: %d", WSAGetLastError());
++	}
++#else
+ 	int flag = fcntl(fd, F_GETFL, 0);
+ 	fcntl(fd, F_SETFL, flag | O_NONBLOCK);
++#endif
+ 
+ 	lua_pushinteger(L, fd);
+@@ -44,7 +58,11 @@ static int
+ lclose(lua_State *L) {
+ 	int fd = luaL_checkinteger(L, 1);
++#ifdef _WIN32
++	closesocket((SOCKET)(uintptr_t)fd);
++#else
+ 	close(fd);
++#endif
+ 
+ 	return 0;
+@@ -56,9 +74,17 @@ block_send(lua_State *L, int fd, const char * buffer, int sz) {
+ 		int r = send(fd, buffer, sz, 0);
+ 		if (r < 0) {
++#ifdef _WIN32
++			int error = WSAGetLastError();
++			if (error == WSAEWOULDBLOCK || error == WSAEINTR)
++				continue;
++			luaL_error(L, "socket error: %d", error);
++#else
+ 			if (errno == EAGAIN || errno == EINTR)
+ 				continue;
+ 			luaL_error(L, "socket error: %s", strerror(errno));
++#endif
+ 		}
+ 		buffer += r;
+@@ -98,10 +124,18 @@ lrecv(lua_State *L) {
+ 		return 1;
+ 	}
+ 	if (r < 0) {
++#ifdef _WIN32
++		int error = WSAGetLastError();
++		if (error == WSAEWOULDBLOCK || error == WSAEINTR) {
++			return 0;
++		}
++		luaL_error(L, "socket error: %d", error);
++#else
+ 		if (errno == EAGAIN || errno == EINTR) {
+ 			return 0;
+ 		}
+ 		luaL_error(L, "socket error: %s", strerror(errno));
++#endif
+ 	}
+ 	lua_pushlstring(L, buffer, r);
+@@ -133,6 +167,7 @@ struct queue {
+ 	pthread_mutex_t lock;
++	int started;
+ 	int head;
+ 	int tail;
+ 	char * queue[QUEUE_SIZE];
+@@ -169,6 +204,11 @@ readline_stdin(void * arg) {
+ static int
+ lreadstdin(lua_State *L) {
+ 	struct queue *q = lua_touserdata(L, lua_upvalueindex(1));
++	if (!q->started) {
++		pthread_t pid;
++		q->started = 1;
++		pthread_create(&pid, NULL, readline_stdin, q);
++	}
+ 	pthread_mutex_lock(&q->lock);
+ 	if (q->head == q->tail) {
+ 		pthread_mutex_unlock(&q->lock);
+@@ -239,9 +279,5 @@ luaopen_client_socket(lua_State *L) {
+ 	lua_pushcclosure(L, lreadstdin, 1);
+ 	lua_setfield(L, -2, "readstdin");
+ 
+-	pthread_t pid ;
+-	pthread_create(&pid, NULL, readline_stdin, q);
+-
+ 	return 1;
+ }

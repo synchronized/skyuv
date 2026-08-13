@@ -63,3 +63,8 @@ git -C 3rd/skynet status --short
   7 个无上限 VLA 改为具有明确生命周期和失败处理的堆缓冲区，同时消除
   `_try_open` 的长度截断风险。对应 Skynet 提交
   `2251550a785480fb04c343da1eb8b42f9a8484fd`；仅应用到构建目录的源码副本。
+- `0005-Port-client-socket-headers-to-Windows.patch`：为示例客户端 socket
+  增加 Winsock 头文件、非阻塞设置、关闭和错误处理，并把 stdin 线程延迟到
+  首次调用 `readstdin` 时创建，避免仅加载模块就在无控制台环境中提前退出。
+  补丁只应用到构建目录副本；句柄宽度和 stdin 完整退出协议仍由计划 005
+  后续步骤处理。

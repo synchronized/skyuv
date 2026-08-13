@@ -136,6 +136,39 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   )
   target_link_libraries(skyuv_portable_service_harbor PRIVATE skyuv::libuv)
 
+  add_library(
+    skyuv_portable_lua_module_client
+    MODULE
+      "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-clientsocket.c"
+  )
+  set_target_properties(
+    skyuv_portable_lua_module_client
+    PROPERTIES
+      C_EXTENSIONS TRUE
+      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
+      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
+      OUTPUT_NAME socket
+      PREFIX ""
+      WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+  )
+  foreach(config IN ITEMS DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+    set_target_properties(
+      skyuv_portable_lua_module_client
+      PROPERTIES
+        "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
+        "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
+    )
+  endforeach()
+  target_include_directories(
+    skyuv_portable_lua_module_client
+    PRIVATE
+      "${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
+      "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua"
+  )
+  target_link_libraries(
+    skyuv_portable_lua_module_client PRIVATE skyuv::lua skyuv::platform skyuv::libuv
+  )
+
   set(
     SKYUV_PORTABLE_LUA_MODULE_SOURCES
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-skynet.c"
@@ -222,6 +255,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-udp-events.conf"
     @ONLY
   )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_client_module)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-client-module.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
@@ -242,6 +281,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
         pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-echo.ps1"
         -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
         -Config "3rd/skyuv-portable-echo.conf"
+    )
+    add_test(
+      NAME skynet.portable.client_module
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-smoke.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Config "3rd/skyuv-portable-client-module.conf"
+    )
+    set_tests_properties(
+      skynet.portable.client_module
+      PROPERTIES
+        TIMEOUT 10
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
     set_tests_properties(
       skynet.portable.echo

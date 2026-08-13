@@ -111,3 +111,7 @@
 
 - 已完成上游默认 C 服务、Lua C 模块和运行环境能力清单，见 [`docs/LUA_RUNTIME_MATRIX.md`](../docs/LUA_RUNTIME_MATRIX.md)；
 - 清单确认 `snlua`、`logger`、`harbor` 和最小 `skynet` 模块已有可运行基础，首个实现缺口为 `client` 模块。
+- 已增加独立 `client.socket` 动态模块目标，统一三平台输出为
+  `luaclib/client/socket`；Windows 已完成编译、动态加载和 API 表面验证；
+- stdin 后台线程改为首次调用 `readstdin` 时才启动，仅 `require` 模块不再因
+  重定向 stdin 的 EOF 直接终止 Skynet。网络功能和完整线程退出协议仍待后续验证。
