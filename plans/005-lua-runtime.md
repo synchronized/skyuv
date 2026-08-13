@@ -138,3 +138,6 @@
 - `skynet` 聚合模块已补入 `skynet.sharetable.core`，使用内置 Lua 的共享对象
   扩展；Windows 实际测试覆盖嵌套只读表、UTF-8、从 Lua 源码加载、选择性
   批量查询以及保留既有代理引用的版本替换。
+- `skynet` 聚合模块已补入 `skynet.sharedata.core`；Windows 实际测试覆盖共享
+  对象新建与查询、嵌套只读代理、深拷贝隔离、两轮更新传播、被删除子节点的
+  旧代理失效、对象删除及刷新回收。
