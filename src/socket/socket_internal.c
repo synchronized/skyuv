@@ -7,6 +7,7 @@
 
 struct skyuv_socket_entry {
 	uv_tcp_t tcp;
+	uv_connect_t connect;
 	struct skyuv_socket_runtime *runtime;
 	enum skyuv_socket_state state;
 	int id;
@@ -133,6 +134,21 @@ static void reject_entry(struct skyuv_socket_entry *entry, int error) {
 	uv_close((uv_handle_t *)&entry->tcp, close_entry);
 }
 
+static void connect_completed(uv_connect_t *request, int status) {
+	struct skyuv_socket_entry *entry = request->data;
+	enum skyuv_socket_state state = entry_state(entry);
+
+	if (state == SKYUV_SOCKET_STATE_CLOSING) {
+		return;
+	}
+	if (status != 0) {
+		reject_entry(entry, status);
+		return;
+	}
+	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED);
+	push_event(entry->runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
+}
+
 static void accept_connection(uv_stream_t *server, int status) {
 	struct skyuv_socket_entry *listener = server->data;
 	struct skyuv_socket_runtime *runtime = listener->runtime;
@@ -226,6 +242,61 @@ static void process_start(struct skyuv_socket_runtime *runtime,
 	push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
 }
 
+static void process_connect(struct skyuv_socket_runtime *runtime,
+							struct skyuv_socket_command *command) {
+	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+	struct sockaddr_storage address;
+	int result;
+
+	if (entry == NULL || entry_state(entry) != SKYUV_SOCKET_STATE_RESERVED) {
+		return;
+	}
+	result = uv_ip4_addr(command->payload.connect.host, command->payload.connect.port,
+						 (struct sockaddr_in *)&address);
+	if (result != 0) {
+		result = uv_ip6_addr(command->payload.connect.host, command->payload.connect.port,
+							 (struct sockaddr_in6 *)&address);
+	}
+	if (result != 0) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
+		discard_uninitialized_entry(entry);
+		return;
+	}
+	result = uv_tcp_init(&runtime->loop, &entry->tcp);
+	if (result != 0) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
+		discard_uninitialized_entry(entry);
+		return;
+	}
+	entry->initialized = true;
+	entry->tcp.data = entry;
+	entry->connect.data = entry;
+	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTING);
+	result = uv_tcp_connect(&entry->connect, &entry->tcp, (const struct sockaddr *)&address,
+							connect_completed);
+	if (result != 0) {
+		reject_entry(entry, result);
+		return;
+	}
+}
+
+static void process_close(struct skyuv_socket_runtime *runtime,
+						  struct skyuv_socket_command *command) {
+	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+
+	if (entry == NULL || entry_state(entry) == SKYUV_SOCKET_STATE_CLOSING) {
+		return;
+	}
+	entry->opaque = command->opaque;
+	push_event(runtime, SKYUV_SOCKET_EVENT_CLOSE, entry->id, entry->opaque, 0);
+	if (!entry->initialized) {
+		discard_uninitialized_entry(entry);
+		return;
+	}
+	set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
+	uv_close((uv_handle_t *)&entry->tcp, close_entry);
+}
+
 static void consume_commands(uv_async_t *async) {
 	struct skyuv_socket_runtime *runtime = async->data;
 	struct skyuv_socket_command *command;
@@ -233,8 +304,12 @@ static void consume_commands(uv_async_t *async) {
 	while ((command = skyuv_socket_command_queue_pop(&runtime->commands)) != NULL) {
 		if (command->type == SKYUV_SOCKET_COMMAND_LISTEN) {
 			process_listen(runtime, command);
+		} else if (command->type == SKYUV_SOCKET_COMMAND_CONNECT) {
+			process_connect(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_START) {
 			process_start(runtime, command);
+		} else if (command->type == SKYUV_SOCKET_COMMAND_CLOSE) {
+			process_close(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_EXIT) {
 			runtime->exit_ready = true;
 			uv_close((uv_handle_t *)&runtime->async, NULL);
@@ -497,6 +572,63 @@ int skyuv_socket_runtime_start(struct skyuv_socket_runtime *runtime, int id, uin
 		return SKYUV_ERROR_INVALID_STATE;
 	}
 	return SKYUV_OK;
+}
+
+int skyuv_socket_runtime_connect(struct skyuv_socket_runtime *runtime, const char *host, int port,
+								 uintptr_t opaque, int *id) {
+	struct skyuv_socket_command *command;
+	struct skyuv_socket_entry *entry;
+	int result;
+
+	if (runtime == NULL || host == NULL || port < 0 || port > 65535 || id == NULL) {
+		return SKYUV_ERROR_INVALID_ARGUMENT;
+	}
+	result = reserve_entry(runtime, opaque, &entry);
+	if (result != SKYUV_OK) {
+		return result;
+	}
+	command = calloc(1, sizeof(*command));
+	if (command != NULL) {
+		command->payload.connect.host = copy_string(host);
+	}
+	if (command == NULL || command->payload.connect.host == NULL) {
+		free(command);
+		discard_uninitialized_entry(entry);
+		return SKYUV_ERROR_OUT_OF_MEMORY;
+	}
+	command->type = SKYUV_SOCKET_COMMAND_CONNECT;
+	command->id = entry->id;
+	command->opaque = opaque;
+	command->payload.connect.port = port;
+	result = skyuv_socket_runtime_submit(runtime, command);
+	if (result != SKYUV_OK) {
+		skyuv_socket_command_destroy(command);
+		discard_uninitialized_entry(entry);
+		return result;
+	}
+	*id = entry->id;
+	return SKYUV_OK;
+}
+
+int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque) {
+	struct skyuv_socket_command *command;
+	int result;
+
+	if (runtime == NULL || id <= 0) {
+		return SKYUV_ERROR_INVALID_ARGUMENT;
+	}
+	command = calloc(1, sizeof(*command));
+	if (command == NULL) {
+		return SKYUV_ERROR_OUT_OF_MEMORY;
+	}
+	command->type = SKYUV_SOCKET_COMMAND_CLOSE;
+	command->id = id;
+	command->opaque = opaque;
+	result = skyuv_socket_runtime_submit(runtime, command);
+	if (result != SKYUV_OK) {
+		free(command);
+	}
+	return result;
 }
 
 enum skyuv_socket_state skyuv_socket_runtime_state(struct skyuv_socket_runtime *runtime, int id) {

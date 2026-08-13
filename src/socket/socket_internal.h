@@ -108,7 +108,10 @@ int skyuv_socket_runtime_submit(struct skyuv_socket_runtime *runtime,
 								struct skyuv_socket_command *command);
 int skyuv_socket_runtime_listen(struct skyuv_socket_runtime *runtime, const char *host, int port,
 								int backlog, uintptr_t opaque, int *id);
+int skyuv_socket_runtime_connect(struct skyuv_socket_runtime *runtime, const char *host, int port,
+								 uintptr_t opaque, int *id);
 int skyuv_socket_runtime_start(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
+int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 enum skyuv_socket_state skyuv_socket_runtime_state(struct skyuv_socket_runtime *runtime, int id);
 int skyuv_socket_runtime_exit(struct skyuv_socket_runtime *runtime);
 int skyuv_socket_runtime_poll(struct skyuv_socket_runtime *runtime,

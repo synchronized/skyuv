@@ -176,3 +176,5 @@
 - 增加 4 个生产者共 4000 条命令、逐生产者 FIFO、拒绝停止后命令、待处理缓冲区释放和 100 次运行时启停测试。
 - 实现跨线程 ID 预留、IPv4/IPv6 字面量监听、accept 和显式 start；accepted socket 在 start 前保持暂停状态。
 - 使用独立 libuv 客户端验证真实回环连接、动态端口、监听与 accepted 状态，以及非法地址、端口占用和无效 start 的异步错误。
+- 实现 IPv4/IPv6 字面量 connect、内嵌请求生命周期和连接中 close；取消后的迟到 connect 回调不再产生重复事件。
+- 增加同一 loop 回环连接、连接拒绝、非法地址和 connect 命令后立即 close 测试。

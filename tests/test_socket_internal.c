@@ -360,6 +360,102 @@ static void test_runtime_start_invalid_socket(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void test_runtime_connect_success(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	int listener;
+	int connection;
+	int port;
+	bool saw_open = false;
+	bool saw_accept = false;
+	int index;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_listen(runtime, "127.0.0.1", 0, 16, 0, &listener),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
+	port = event.value;
+	assert_int_equal(
+		skyuv_socket_runtime_connect(runtime, "127.0.0.1", port, (uintptr_t)123, &connection),
+		SKYUV_OK);
+	for (index = 0; index < 2; ++index) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		if (event.type == SKYUV_SOCKET_EVENT_OPEN && event.id == connection) {
+			saw_open = true;
+			assert_int_equal(event.opaque, (uintptr_t)123);
+		} else if (event.type == SKYUV_SOCKET_EVENT_ACCEPT && event.id == listener) {
+			saw_accept = true;
+		} else {
+			fail_msg("收到非预期的 connect 事件");
+		}
+	}
+	assert_true(saw_open);
+	assert_true(saw_accept);
+	assert_int_equal(skyuv_socket_runtime_state(runtime, connection), SKYUV_SOCKET_STATE_CONNECTED);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_connect_refused(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	int listener;
+	int connection;
+	int port;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_listen(runtime, "127.0.0.1", 0, 16, 0, &listener),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	port = event.value;
+	assert_int_equal(skyuv_socket_runtime_close(runtime, listener, 0), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(skyuv_socket_runtime_connect(runtime, "127.0.0.1", port, 0, &connection),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_ERROR);
+	assert_int_equal(event.id, connection);
+	assert_true(event.value < 0);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_connect_invalid_address(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	int connection;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_connect(runtime, "not-an-address", 80, 0, &connection),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_ERROR);
+	assert_int_equal(event.id, connection);
+	assert_int_equal(skyuv_socket_runtime_state(runtime, connection), SKYUV_SOCKET_STATE_INVALID);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_connect_cancelled_by_close(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	int connection;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_connect(runtime, "192.0.2.1", 65000, 0, &connection),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_close(runtime, connection, (uintptr_t)321), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, connection);
+	assert_int_equal(event.opaque, (uintptr_t)321);
+	assert_int_equal(skyuv_socket_runtime_state(runtime, connection), SKYUV_SOCKET_STATE_CLOSING);
+	skyuv_socket_runtime_release(&runtime);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -375,6 +471,10 @@ int main(void) {
 		cmocka_unit_test(test_runtime_listen_invalid_address),
 		cmocka_unit_test(test_runtime_listen_port_in_use),
 		cmocka_unit_test(test_runtime_start_invalid_socket),
+		cmocka_unit_test(test_runtime_connect_success),
+		cmocka_unit_test(test_runtime_connect_refused),
+		cmocka_unit_test(test_runtime_connect_invalid_address),
+		cmocka_unit_test(test_runtime_connect_cancelled_by_close),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
