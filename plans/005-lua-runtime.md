@@ -124,3 +124,6 @@
 - 已接入独立 `bson` 动态模块；Windows 实际编解码测试覆盖嵌套文档、数组、
   UTF-8、布尔值、null 和固定 ObjectID。ObjectID 所需的原子操作与进程 ID
   由既有 skyuv 兼容边界提供，不修改上游源码。
+- 已接入 `sproto.core` 与其 schema 解析依赖 `lpeg`；Windows 实际测试从文本
+  schema 创建协议，覆盖整数、字符串、布尔值、数组、UTF-8、普通编码解码
+  以及 pack/unpack 压缩往返，两模块均使用上游内置源码且不新增外部依赖。
