@@ -47,6 +47,27 @@ static void push_event(struct skyuv_socket_runtime *runtime, enum skyuv_socket_e
 	runtime->event_tail = event;
 }
 
+static void push_data_event(struct skyuv_socket_entry *entry, void *data, size_t size) {
+	struct skyuv_socket_runtime *runtime = entry->runtime;
+	struct skyuv_socket_event *event = calloc(1, sizeof(*event));
+
+	if (event == NULL) {
+		free(data);
+		return;
+	}
+	event->type = SKYUV_SOCKET_EVENT_DATA;
+	event->id = entry->id;
+	event->opaque = entry->opaque;
+	event->data = data;
+	event->size = size;
+	if (runtime->event_tail == NULL) {
+		runtime->event_head = event;
+	} else {
+		runtime->event_tail->next = event;
+	}
+	runtime->event_tail = event;
+}
+
 static struct skyuv_socket_entry *find_entry(struct skyuv_socket_runtime *runtime, int id) {
 	uint16_t slot = skyuv_socket_id_slot(id);
 	struct skyuv_socket_entry *entry = runtime->slots[slot];
@@ -134,6 +155,45 @@ static void reject_entry(struct skyuv_socket_entry *entry, int error) {
 	uv_close((uv_handle_t *)&entry->tcp, close_entry);
 }
 
+static void finish_entry(struct skyuv_socket_entry *entry, enum skyuv_socket_event_type type,
+						 int value) {
+	if (entry_state(entry) == SKYUV_SOCKET_STATE_CLOSING) {
+		return;
+	}
+	push_event(entry->runtime, type, entry->id, entry->opaque, value);
+	set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
+	uv_close((uv_handle_t *)&entry->tcp, close_entry);
+}
+
+static void allocate_read_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buffer) {
+	(void)handle;
+	(void)suggested_size;
+	buffer->base = malloc(65536);
+	buffer->len = buffer->base == NULL ? 0 : 65536;
+}
+
+static void read_completed(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buffer) {
+	struct skyuv_socket_entry *entry = stream->data;
+
+	if (nread > 0) {
+		push_data_event(entry, buffer->base, (size_t)nread);
+		return;
+	}
+	free(buffer->base);
+	if (nread == 0) {
+		return;
+	}
+	if (nread == UV_EOF) {
+		finish_entry(entry, SKYUV_SOCKET_EVENT_CLOSE, 0);
+	} else {
+		finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, (int)nread);
+	}
+}
+
+static int start_reading(struct skyuv_socket_entry *entry) {
+	return uv_read_start((uv_stream_t *)&entry->tcp, allocate_read_buffer, read_completed);
+}
+
 static void connect_completed(uv_connect_t *request, int status) {
 	struct skyuv_socket_entry *entry = request->data;
 	enum skyuv_socket_state state = entry_state(entry);
@@ -141,6 +201,11 @@ static void connect_completed(uv_connect_t *request, int status) {
 	if (state == SKYUV_SOCKET_STATE_CLOSING) {
 		return;
 	}
+	if (status != 0) {
+		reject_entry(entry, status);
+		return;
+	}
+	status = start_reading(entry);
 	if (status != 0) {
 		reject_entry(entry, status);
 		return;
@@ -232,13 +297,19 @@ static void process_listen(struct skyuv_socket_runtime *runtime,
 static void process_start(struct skyuv_socket_runtime *runtime,
 						  struct skyuv_socket_command *command) {
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+	int result;
 
 	if (entry == NULL || entry_state(entry) != SKYUV_SOCKET_STATE_ACCEPTED_PAUSED) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_EINVAL);
 		return;
 	}
-	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED);
 	entry->opaque = command->opaque;
+	result = start_reading(entry);
+	if (result != 0) {
+		reject_entry(entry, result);
+		return;
+	}
+	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED);
 	push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
 }
 

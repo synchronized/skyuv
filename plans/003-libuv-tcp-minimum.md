@@ -178,3 +178,5 @@
 - 使用独立 libuv 客户端验证真实回环连接、动态端口、监听与 accepted 状态，以及非法地址、端口占用和无效 start 的异步错误。
 - 实现 IPv4/IPv6 字面量 connect、内嵌请求生命周期和连接中 close；取消后的迟到 connect 回调不再产生重复事件。
 - 增加同一 loop 回环连接、连接拒绝、非法地址和 connect 命令后立即 close 测试。
+- 实现 connect 成功后自动读取、accepted start 后开始读取，以及 DATA 缓冲区向事件调用方转移所有权。
+- 覆盖 start 前客户端已发送并关闭、start 后 DATA/EOF 顺序，以及主动连接观察对端关闭。

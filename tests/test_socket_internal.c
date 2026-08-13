@@ -21,6 +21,9 @@ struct producer_context {
 struct client_context {
 	int port;
 	int result;
+	const char *data;
+	size_t size;
+	uv_write_t write;
 };
 
 static int released_buffers;
@@ -59,12 +62,29 @@ static void client_closed(uv_handle_t *handle) {
 	(void)handle;
 }
 
+static void client_written(uv_write_t *request, int status) {
+	struct client_context *context = request->data;
+
+	context->result = status;
+	uv_close((uv_handle_t *)request->handle, client_closed);
+}
+
 static void client_connected(uv_connect_t *request, int status) {
 	struct client_context *context = request->data;
 	uv_tcp_t *client = (uv_tcp_t *)request->handle;
+	uv_buf_t buffer;
 
 	context->result = status;
-	uv_close((uv_handle_t *)client, client_closed);
+	if (status != 0 || context->data == NULL) {
+		uv_close((uv_handle_t *)client, client_closed);
+		return;
+	}
+	buffer = uv_buf_init((char *)context->data, (unsigned int)context->size);
+	context->write.data = context;
+	context->result = uv_write(&context->write, (uv_stream_t *)client, &buffer, 1, client_written);
+	if (context->result != 0) {
+		uv_close((uv_handle_t *)client, client_closed);
+	}
 }
 
 static void connect_client(void *argument) {
@@ -267,14 +287,16 @@ static void test_runtime_repeated_lifecycle(void **state) {
 }
 
 static void test_runtime_listen_accept_start(void **state) {
+	static const char payload[] = "paused-data";
 	struct skyuv_socket_runtime *runtime = NULL;
 	struct skyuv_socket_event event;
-	struct client_context client = {0, UV_EINVAL};
+	struct client_context client = {0};
 	skyuv_thread thread = SKYUV_THREAD_INITIALIZER;
 	int listener;
 	int accepted;
 
 	(void)state;
+	client.result = UV_EINVAL;
 	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
 	assert_int_equal(
 		skyuv_socket_runtime_listen(runtime, "127.0.0.1", 0, 16, (uintptr_t)42, &listener),
@@ -287,6 +309,8 @@ static void test_runtime_listen_accept_start(void **state) {
 	assert_int_equal(skyuv_socket_runtime_state(runtime, listener), SKYUV_SOCKET_STATE_LISTENING);
 
 	client.port = event.value;
+	client.data = payload;
+	client.size = sizeof(payload) - 1;
 	assert_int_equal(skyuv_thread_create(&thread, connect_client, &client), SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_ACCEPT);
@@ -303,7 +327,15 @@ static void test_runtime_listen_accept_start(void **state) {
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
 	assert_int_equal(event.id, accepted);
 	assert_int_equal(event.opaque, (uintptr_t)84);
-	assert_int_equal(skyuv_socket_runtime_state(runtime, accepted), SKYUV_SOCKET_STATE_CONNECTED);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+	assert_int_equal(event.id, accepted);
+	assert_int_equal(event.size, sizeof(payload) - 1);
+	assert_memory_equal(event.data, payload, sizeof(payload) - 1);
+	free(event.data);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, accepted);
 	assert_int_equal(skyuv_socket_runtime_exit(runtime), SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_EXIT);
@@ -368,6 +400,7 @@ static void test_runtime_connect_success(void **state) {
 	int port;
 	bool saw_open = false;
 	bool saw_accept = false;
+	int accepted = -1;
 	int index;
 
 	(void)state;
@@ -387,6 +420,7 @@ static void test_runtime_connect_success(void **state) {
 			assert_int_equal(event.opaque, (uintptr_t)123);
 		} else if (event.type == SKYUV_SOCKET_EVENT_ACCEPT && event.id == listener) {
 			saw_accept = true;
+			accepted = event.value;
 		} else {
 			assert_int_equal(event.type, -1);
 		}
@@ -394,6 +428,14 @@ static void test_runtime_connect_success(void **state) {
 	assert_true(saw_open);
 	assert_true(saw_accept);
 	assert_int_equal(skyuv_socket_runtime_state(runtime, connection), SKYUV_SOCKET_STATE_CONNECTED);
+	assert_true(accepted > 0);
+	assert_int_equal(skyuv_socket_runtime_close(runtime, accepted, 0), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, accepted);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, connection);
 	skyuv_socket_runtime_release(&runtime);
 }
 
