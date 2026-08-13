@@ -1,0 +1,55 @@
+diff --git a/skynet-src/skynet_start.c b/skynet-src/skynet_start.c
+index 4ac0d65..f622bce 100644
+--- a/skynet-src/skynet_start.c
++++ b/skynet-src/skynet_start.c
+@@ -175,7 +175,11 @@ thread_worker(void *p) {
+ 
+ static void
+ start(int thread) {
+-	pthread_t pid[thread+3];
++	pthread_t *pid = skynet_malloc((thread + 3) * sizeof(*pid));
++	if (pid == NULL) {
++		fprintf(stderr, "Create thread array failed");
++		exit(1);
++	}
+ 
+ 	struct monitor *m = skynet_malloc(sizeof(*m));
+ 	memset(m, 0, sizeof(*m));
+@@ -211,3 +215,7 @@ start(int thread) {
+ 		3, 3, 3, 3, 3, 3, 3, 3, };
+-	struct worker_parm wp[thread];
++	struct worker_parm *wp = skynet_malloc(thread * sizeof(*wp));
++	if (wp == NULL) {
++		fprintf(stderr, "Create worker array failed");
++		exit(1);
++	}
+ 	for (i=0;i<thread;i++) {
+@@ -230,4 +238,6 @@ start(int thread) {
+ 	}
+ 
++	skynet_free(wp);
++	skynet_free(pid);
+ 	free_monitor(m);
+ }
+@@ -237,6 +247,12 @@ start(int thread) {
+ static void
+ bootstrap(uint32_t logger_handle, const char * cmdline) {
+ 	int sz = strlen(cmdline);
+-	char name[sz+1];
+-	char args[sz+1];
++	char *name = skynet_malloc((size_t)sz + 1);
++	char *args = skynet_malloc((size_t)sz + 1);
++	if (name == NULL || args == NULL) {
++		skynet_free(name);
++		skynet_free(args);
++		fprintf(stderr, "Bootstrap buffer allocation failed\n");
++		exit(1);
++	}
+ 	int arg_pos;
+@@ -251,4 +269,6 @@ bootstrap(uint32_t logger_handle, const char * cmdline) {
+ 		args[0] = '\0';
+ 	}
+ 	const uint32_t handle = skynet_context_new(name, args);
++	skynet_free(name);
++	skynet_free(args);
+ 	if (handle == 0) {

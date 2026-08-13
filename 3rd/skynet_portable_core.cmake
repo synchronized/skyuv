@@ -18,6 +18,17 @@ execute_process(
 if(NOT SKYUV_SKYNET_PATCH_RESULT EQUAL 0)
   message(FATAL_ERROR "应用 Skynet 可变缓冲区所有权补丁失败：${SKYUV_SKYNET_PATCH_ERROR}")
 endif()
+execute_process(
+  COMMAND
+    "${GIT_EXECUTABLE}" apply "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
+    "${PROJECT_SOURCE_DIR}/patches/skynet/0002-Replace-start-VLAs-with-heap-buffers.patch"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  RESULT_VARIABLE SKYUV_SKYNET_START_PATCH_RESULT
+  ERROR_VARIABLE SKYUV_SKYNET_START_PATCH_ERROR
+)
+if(NOT SKYUV_SKYNET_START_PATCH_RESULT EQUAL 0)
+  message(FATAL_ERROR "应用 Skynet 启动 VLA 补丁失败：${SKYUV_SKYNET_START_PATCH_ERROR}")
+endif()
 file(READ "${SKYUV_SKYNET_SOURCE_DIR}/skynet_module.c" SKYUV_SKYNET_MODULE_SOURCE)
 if(NOT SKYUV_SKYNET_MODULE_SOURCE MATCHES "skynet_malloc\\(sz\\)")
   message(FATAL_ERROR "Skynet 可变缓冲区所有权补丁未生效")
@@ -35,6 +46,8 @@ set(
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_env.c"
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_monitor.c"
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_socket.c"
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_start.c"
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_main.c"
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_log.c"
 )
 
@@ -48,6 +61,12 @@ target_include_directories(
     "${SKYUV_SKYNET_COMPAT_DIR}"
     "${SKYUV_SKYNET_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/skynet/3rd/lua"
+)
+set_source_files_properties(
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_start.c"
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_main.c"
+  PROPERTIES
+    COMPILE_OPTIONS "-I${SKYUV_SKYNET_COMPAT_DIR}/start"
 )
 target_compile_options(
   skyuv_skynet_portable_core
@@ -71,5 +90,5 @@ set_source_files_properties(
 )
 target_link_libraries(
   skyuv_skynet_portable_core
-  PRIVATE skyuv::lua skyuv::platform skyuv::allocator skyuv::socket_server
+  PRIVATE skyuv::lua skyuv::libuv skyuv::platform skyuv::allocator skyuv::socket_server
 )

@@ -188,3 +188,6 @@
 - 新增 `socket_server.h` 兼容层，将 Skynet TCP listen/connect/start/send/close/poll/exit 映射到 libuv runtime。
 - MEMORY 缓冲区直接转移所有权，RAWPOINTER 入队前复制，OBJECT 首期复制内容后释放原对象；未支持的 UDP、bind 和统计接口明确失败。
 - 跨平台 Actor 核心开始编译 `skynet_socket.c` 并链接 skyuv socket server，不再依赖 Linux epoll 实现。
+- 将 `skynet_start.c` 和 `skynet_main.c` 纳入跨平台 Actor 核心；启动线程数组及引导参数缓冲区改为显式堆分配，避免 MSVC 不支持的 VLA。
+- 增加 Windows 启动阶段所需的休眠、信号和 daemon 兼容边界；daemon 模式在 Windows 上明确返回不支持。
+- 生成并链接 `skyuv_skynet_portable` 可执行文件，Windows 已能运行到 Skynet 配置文件参数解析入口；完整 Lua 引导服务与 TCP echo 仍属于本计划后续工作。

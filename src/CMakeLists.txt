@@ -23,6 +23,33 @@ target_include_directories(
 target_link_libraries(skyuv_socket_server PUBLIC skyuv::socket_core)
 skyuv_target_compile_warnings(skyuv_socket_server)
 
+if(WIN32)
+  set(SKYUV_SKYNET_DAEMON_SOURCE compat/skynet/start/skyuv_daemon.c)
+else()
+  set(SKYUV_SKYNET_DAEMON_SOURCE "${SKYUV_SKYNET_SOURCE_DIR}/skynet_daemon.c")
+endif()
+add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_DAEMON_SOURCE})
+target_include_directories(
+  skyuv_skynet_runtime_compat
+  PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
+)
+skyuv_target_compile_warnings(skyuv_skynet_runtime_compat)
+
+add_executable(
+  skyuv_skynet_portable
+  $<TARGET_OBJECTS:skyuv_skynet_portable_core>
+)
+target_link_libraries(
+  skyuv_skynet_portable
+  PRIVATE
+    skyuv::allocator
+    skyuv::lua
+    skyuv::platform
+    skyuv::socket_server
+    skyuv_skynet_runtime_compat
+)
+skyuv_target_compile_warnings(skyuv_skynet_portable)
+
 target_include_directories(
   skyuv_platform
   PUBLIC
