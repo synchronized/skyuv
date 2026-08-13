@@ -151,7 +151,7 @@
 
 ## 对照结论
 
-- Linux 原版与 libuv 版的关键事件类型和顺序自动归一化后完全一致；
+- Linux 原版与 libuv 版的关键事件集合一致；每条连接的因果顺序由服务内部断言，无依赖的并发事件不强制全局排序；
 - connect 失败产生非空错误文本，测试序列中不再附带额外 close；
 - 主动 close 与待发送缓冲区的所有权由 runtime 测试覆盖，关闭只报告一次；
 - `more` 只作为 socket 线程继续轮询提示，不进入 Actor 可见消息，首期不要求复刻 epoll 批次数量；
@@ -193,4 +193,4 @@
 - Windows 已构建 `lua-socket.c`，使用 Winsock 头文件和 Lua userdata 临时地址缓冲区替换 POSIX 头文件及 VLA。
 - listener 的 `start`/resume 语义已接入 libuv runtime；Windows Lua TCP echo 可完成监听、accept、读取、回写和关闭。
 - 便携服务与 Lua 模块形成三平台独立产物，不再与 Linux epoll 基线目标混用。
-- Linux CI 自动提取原版和 libuv 版 `TCP_EVENT` 序列并执行逐行对照，当前关键事件序列完全一致。
+- Linux CI 自动提取原版和 libuv 版 `TCP_EVENT` 集合并执行对照；服务内部同时验证每条连接的关键因果顺序。

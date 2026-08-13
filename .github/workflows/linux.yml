@@ -174,9 +174,9 @@ jobs:
             2>&1 | tee portable-tcp-events.log
           grep -F "skyuv TCP 原始事件基线验证通过" portable-tcp-events.log
           grep -F "TCP_EVENT " "$RUNNER_TEMP/skynet/upstream-tcp-events.log" \
-            | sed 's/^.*TCP_EVENT /TCP_EVENT /' >upstream-events.txt
+            | sed 's/^.*TCP_EVENT /TCP_EVENT /' | sort >upstream-events.txt
           grep -F "TCP_EVENT " portable-tcp-events.log \
-            | sed 's/^.*TCP_EVENT /TCP_EVENT /' >portable-events.txt
+            | sed 's/^.*TCP_EVENT /TCP_EVENT /' | sort >portable-events.txt
           diff -u upstream-events.txt portable-events.txt
 
       - name: 运行原版 Skynet 启动冒烟测试
