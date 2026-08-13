@@ -19,6 +19,8 @@ struct skyuv_socket_entry {
 	struct skyuv_socket_write *low_head;
 	struct skyuv_socket_write *low_tail;
 	bool writing;
+	size_t queued_bytes;
+	size_t warn_size;
 	bool pump_pending;
 	struct skyuv_socket_entry *pump_next;
 };
@@ -269,8 +271,14 @@ static void write_completed(uv_write_t *request, int status) {
 			finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, status);
 		}
 	}
+	entry->queued_bytes -= write->size;
 	release_write(write);
 	entry->writing = false;
+	if (entry->queued_bytes == 0 && entry->warn_size > 0 &&
+		entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
+		entry->warn_size = 0;
+		push_event(entry->runtime, SKYUV_SOCKET_EVENT_WARNING, entry->id, entry->opaque, 0);
+	}
 	if (entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
 		pump_write(entry);
 	}
@@ -308,6 +316,7 @@ static void pump_write(struct skyuv_socket_entry *entry) {
 		entry->writing = true;
 		return;
 	}
+	entry->queued_bytes -= write->size;
 	release_write(write);
 	if (entry_state(entry) == SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
 		set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
@@ -558,6 +567,16 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 		(*tail)->next = write;
 	}
 	*tail = write;
+	entry->queued_bytes += write->size;
+	if (entry->queued_bytes >= SKYUV_SOCKET_WARNING_SIZE &&
+		entry->queued_bytes >= entry->warn_size) {
+		size_t warning_kb = (entry->queued_bytes + 1023U) / 1024U;
+
+		entry->warn_size = entry->warn_size == 0 ? SKYUV_SOCKET_WARNING_SIZE * 2U
+												 : entry->warn_size * 2U;
+		push_event(runtime, SKYUV_SOCKET_EVENT_WARNING, entry->id, entry->opaque,
+				   warning_kb > INT_MAX ? INT_MAX : (int)warning_kb);
+	}
 	if (!entry->writing && !entry->pump_pending) {
 		entry->pump_pending = true;
 		if (runtime->pump_tail == NULL) {

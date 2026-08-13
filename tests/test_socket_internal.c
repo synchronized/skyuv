@@ -689,7 +689,9 @@ static void test_runtime_close_during_write(void **state) {
 											   SKYUV_SOCKET_BUFFER_OWNED, count_release),
 					 SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_close(runtime, connection, 0), SKYUV_OK);
-	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	do {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	} while (event.type == SKYUV_SOCKET_EVENT_WARNING);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
 	assert_int_equal(event.id, connection);
 	skyuv_socket_runtime_release(&runtime);
@@ -719,6 +721,8 @@ static void test_runtime_exit_closes_live_handles(void **state) {
 		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 		if (event.type == SKYUV_SOCKET_EVENT_DATA) {
 			free(event.data);
+		} else if (event.type == SKYUV_SOCKET_EVENT_WARNING) {
+			continue;
 		} else {
 			assert_int_equal(event.type, SKYUV_SOCKET_EVENT_EXIT);
 			saw_exit = true;
@@ -883,6 +887,46 @@ static void test_runtime_write_priority(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void test_runtime_write_warning_and_recovery(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	char *data;
+	size_t received = 0;
+	int connection;
+	int accepted;
+	bool saw_warning = false;
+	bool saw_recovery = false;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	data = malloc(SKYUV_SOCKET_WARNING_SIZE);
+	assert_non_null(data);
+	memset(data, 'q', SKYUV_SOCKET_WARNING_SIZE);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, data,
+										 SKYUV_SOCKET_WARNING_SIZE,
+										 SKYUV_SOCKET_BUFFER_OWNED, NULL),
+					 SKYUV_OK);
+	while (!saw_warning || !saw_recovery || received < SKYUV_SOCKET_WARNING_SIZE) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		if (event.type == SKYUV_SOCKET_EVENT_WARNING) {
+			if (event.value == 0) {
+				saw_recovery = true;
+			} else {
+				assert_int_equal(event.id, connection);
+				assert_int_equal(event.value, 1024);
+				saw_warning = true;
+			}
+		} else {
+			assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+			assert_int_equal(event.id, accepted);
+			received += event.size;
+			free(event.data);
+		}
+	}
+	skyuv_socket_runtime_release(&runtime);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -911,6 +955,7 @@ int main(void) {
 		cmocka_unit_test(test_runtime_nodelay_and_shutdown),
 		cmocka_unit_test(test_runtime_remote_eof_keeps_halfclose_until_local_close),
 		cmocka_unit_test(test_runtime_write_priority),
+		cmocka_unit_test(test_runtime_write_warning_and_recovery),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

@@ -183,6 +183,7 @@
 - nodelay 已通过 FIFO 控制命令在 loop 线程映射为 `uv_tcp_nodelay`，无效或非连接 ID 与原版一样静默忽略；shutdown 使用独立命令保持上游立即强制关闭语义，重复 shutdown 只产生一次本端 CLOSE；
 - 对端 EOF 已建模为 `HALFCLOSE_READ`：只报告一次 CLOSE 并保留 handle，允许继续提交写；本端随后 close/shutdown 时释放连接但不重复报告 CLOSE；
 - 每个 TCP 连接已维护高、低两个 FIFO 写队列；整批控制命令消费后优先提交高队列，每次仅保留一个 libuv write 在途，同优先级保持 FIFO，已提交写不抢占；
+- 写队列已统计包含在途请求的积压字节数：达到 1 MiB 后产生 WARNING，增长时按倍增阈值再次报告，全部排空后报告值 0 并重置阈值；
 - 确认 nodelay 可在已连接 socket 上提交且不产生额外事件；
 - 确认上游 shutdown 是强制关闭而非 `uv_shutdown` 写半关闭，本端和对端最终各观察一次 CLOSE；
 - 修正阶段 2 事件对照：无因果关系的 `connect_error` 与 `listener_accept` 允许交换，CI 比较事件集合，连接内因果顺序继续由 Lua 服务断言。
