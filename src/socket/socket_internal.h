@@ -102,6 +102,27 @@ struct skyuv_socket_command_queue {
 
 struct skyuv_socket_runtime;
 
+enum skyuv_socket_info_type {
+	SKYUV_SOCKET_INFO_LISTEN = 1,
+	SKYUV_SOCKET_INFO_TCP,
+	SKYUV_SOCKET_INFO_CLOSING,
+};
+
+struct skyuv_socket_info {
+	struct skyuv_socket_info *next;
+	int id;
+	enum skyuv_socket_info_type type;
+	uintptr_t opaque;
+	uint64_t read;
+	uint64_t write;
+	uint64_t rtime;
+	uint64_t wtime;
+	size_t wbuffer;
+	bool reading;
+	bool writing;
+	char name[128];
+};
+
 int skyuv_socket_command_queue_init(struct skyuv_socket_command_queue *queue);
 void skyuv_socket_command_queue_destroy(struct skyuv_socket_command_queue *queue);
 int skyuv_socket_command_queue_push(struct skyuv_socket_command_queue *queue,
@@ -130,6 +151,9 @@ int skyuv_socket_runtime_send_low(struct skyuv_socket_runtime *runtime, int id, 
 								  void (*release)(void *data));
 int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_shutdown(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
+void skyuv_socket_runtime_updatetime(struct skyuv_socket_runtime *runtime, uint64_t time);
+struct skyuv_socket_info *skyuv_socket_runtime_info(struct skyuv_socket_runtime *runtime);
+void skyuv_socket_runtime_info_release(struct skyuv_socket_info *info);
 enum skyuv_socket_state skyuv_socket_runtime_state(struct skyuv_socket_runtime *runtime, int id);
 int skyuv_socket_runtime_exit(struct skyuv_socket_runtime *runtime);
 int skyuv_socket_runtime_poll(struct skyuv_socket_runtime *runtime,

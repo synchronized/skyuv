@@ -1,6 +1,7 @@
 #include "socket_internal.h"
 
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -23,6 +24,13 @@ struct skyuv_socket_entry {
 	size_t warn_size;
 	bool pump_pending;
 	struct skyuv_socket_entry *pump_next;
+	uint64_t read_bytes;
+	uint64_t write_bytes;
+	uint64_t read_time;
+	uint64_t write_time;
+	uint64_t accept_count;
+	bool reading;
+	char name[128];
 };
 
 struct skyuv_socket_write {
@@ -52,7 +60,45 @@ struct skyuv_socket_runtime {
 	uint32_t entry_count;
 	bool exiting;
 	bool exit_ready;
+	uint64_t current_time;
 };
+
+static void cache_tcp_name(struct skyuv_socket_entry *entry, bool peer) {
+	struct sockaddr_storage address;
+	char ip[INET6_ADDRSTRLEN];
+	char name[128];
+	int length = sizeof(address);
+	int result;
+	int port;
+
+	result = peer ? uv_tcp_getpeername(&entry->tcp, (struct sockaddr *)&address, &length)
+				  : uv_tcp_getsockname(&entry->tcp, (struct sockaddr *)&address, &length);
+	if (result != 0) {
+		return;
+	}
+	if (address.ss_family == AF_INET) {
+		struct sockaddr_in *ipv4 = (struct sockaddr_in *)&address;
+
+		if (uv_ip4_name(ipv4, ip, sizeof(ip)) != 0) {
+			return;
+		}
+		port = ntohs(ipv4->sin_port);
+		(void)snprintf(name, sizeof(name), "%s:%d", ip, port);
+	} else if (address.ss_family == AF_INET6) {
+		struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)&address;
+
+		if (uv_ip6_name(ipv6, ip, sizeof(ip)) != 0) {
+			return;
+		}
+		port = ntohs(ipv6->sin6_port);
+		(void)snprintf(name, sizeof(name), "[%s]:%d", ip, port);
+	} else {
+		return;
+	}
+	skyuv_mutex_lock(&entry->runtime->slots_mutex);
+	(void)memcpy(entry->name, name, strlen(name) + 1);
+	skyuv_mutex_unlock(&entry->runtime->slots_mutex);
+}
 
 static void update_exit_ready(struct skyuv_socket_runtime *runtime) {
 	bool ready;
@@ -97,6 +143,10 @@ static void push_data_event(struct skyuv_socket_entry *entry, void *data, size_t
 	event->opaque = entry->opaque;
 	event->data = data;
 	event->size = size;
+	skyuv_mutex_lock(&runtime->slots_mutex);
+	entry->read_bytes += size;
+	entry->read_time = runtime->current_time;
+	skyuv_mutex_unlock(&runtime->slots_mutex);
 	if (runtime->event_tail == NULL) {
 		runtime->event_head = event;
 	} else {
@@ -237,6 +287,9 @@ static void read_completed(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
 	}
 	if (nread == UV_EOF) {
 		if (entry_state(entry) != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
+			skyuv_mutex_lock(&entry->runtime->slots_mutex);
+			entry->reading = false;
+			skyuv_mutex_unlock(&entry->runtime->slots_mutex);
 			push_event(entry->runtime, SKYUV_SOCKET_EVENT_CLOSE, entry->id, entry->opaque, 0);
 			set_entry_state(entry, SKYUV_SOCKET_STATE_HALFCLOSE_READ);
 		}
@@ -246,7 +299,14 @@ static void read_completed(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
 }
 
 static int start_reading(struct skyuv_socket_entry *entry) {
-	return uv_read_start((uv_stream_t *)&entry->tcp, allocate_read_buffer, read_completed);
+	int result = uv_read_start((uv_stream_t *)&entry->tcp, allocate_read_buffer, read_completed);
+
+	if (result == 0) {
+		skyuv_mutex_lock(&entry->runtime->slots_mutex);
+		entry->reading = true;
+		skyuv_mutex_unlock(&entry->runtime->slots_mutex);
+	}
+	return result;
 }
 
 static void release_write(struct skyuv_socket_write *write) {
@@ -271,12 +331,18 @@ static void write_completed(uv_write_t *request, int status) {
 			finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, status);
 		}
 	}
+	skyuv_mutex_lock(&entry->runtime->slots_mutex);
 	entry->queued_bytes -= write->size;
-	release_write(write);
+	entry->write_bytes += write->size;
+	entry->write_time = entry->runtime->current_time;
 	entry->writing = false;
+	skyuv_mutex_unlock(&entry->runtime->slots_mutex);
+	release_write(write);
 	if (entry->queued_bytes == 0 && entry->warn_size > 0 &&
 		entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
+		skyuv_mutex_lock(&entry->runtime->slots_mutex);
 		entry->warn_size = 0;
+		skyuv_mutex_unlock(&entry->runtime->slots_mutex);
 		push_event(entry->runtime, SKYUV_SOCKET_EVENT_WARNING, entry->id, entry->opaque, 0);
 	}
 	if (entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
@@ -313,10 +379,14 @@ static void pump_write(struct skyuv_socket_entry *entry) {
 	buffer = uv_buf_init(write->data, (unsigned int)write->size);
 	result = uv_write(&write->request, (uv_stream_t *)&entry->tcp, &buffer, 1, write_completed);
 	if (result == 0) {
+		skyuv_mutex_lock(&entry->runtime->slots_mutex);
 		entry->writing = true;
+		skyuv_mutex_unlock(&entry->runtime->slots_mutex);
 		return;
 	}
+	skyuv_mutex_lock(&entry->runtime->slots_mutex);
 	entry->queued_bytes -= write->size;
+	skyuv_mutex_unlock(&entry->runtime->slots_mutex);
 	release_write(write);
 	if (entry_state(entry) == SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
 		set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
@@ -343,6 +413,7 @@ static void connect_completed(uv_connect_t *request, int status) {
 		return;
 	}
 	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED);
+	cache_tcp_name(entry, true);
 	push_event(entry->runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
 }
 
@@ -373,6 +444,11 @@ static void accept_connection(uv_stream_t *server, int status) {
 		return;
 	}
 	set_entry_state(accepted, SKYUV_SOCKET_STATE_ACCEPTED_PAUSED);
+	cache_tcp_name(accepted, true);
+	skyuv_mutex_lock(&runtime->slots_mutex);
+	++listener->accept_count;
+	listener->read_time = runtime->current_time;
+	skyuv_mutex_unlock(&runtime->slots_mutex);
 	push_event(runtime, SKYUV_SOCKET_EVENT_ACCEPT, listener->id, listener->opaque, accepted->id);
 }
 
@@ -416,6 +492,7 @@ static void process_listen(struct skyuv_socket_runtime *runtime,
 		return;
 	}
 	set_entry_state(entry, SKYUV_SOCKET_STATE_LISTENING);
+	cache_tcp_name(entry, false);
 	result = uv_tcp_getsockname(&entry->tcp, (struct sockaddr *)&address, &length);
 	if (result == 0 && address.ss_family == AF_INET) {
 		command->payload.listen.port = ntohs(((struct sockaddr_in *)&address)->sin_port);
@@ -438,7 +515,9 @@ static void process_start(struct skyuv_socket_runtime *runtime,
 	}
 	state = entry_state(entry);
 	if (state == SKYUV_SOCKET_STATE_LISTENING) {
+		skyuv_mutex_lock(&runtime->slots_mutex);
 		entry->opaque = command->opaque;
+		skyuv_mutex_unlock(&runtime->slots_mutex);
 		push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
 		return;
 	}
@@ -447,7 +526,9 @@ static void process_start(struct skyuv_socket_runtime *runtime,
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_EINVAL);
 		return;
 	}
+	skyuv_mutex_lock(&runtime->slots_mutex);
 	entry->opaque = command->opaque;
+	skyuv_mutex_unlock(&runtime->slots_mutex);
 	result = start_reading(entry);
 	if (result != 0) {
 		reject_entry(entry, result);
@@ -471,6 +552,9 @@ static void process_pause(struct skyuv_socket_runtime *runtime,
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
 		return;
 	}
+	skyuv_mutex_lock(&runtime->slots_mutex);
+	entry->reading = false;
+	skyuv_mutex_unlock(&runtime->slots_mutex);
 	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED_PAUSED);
 }
 
@@ -567,6 +651,7 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 		(*tail)->next = write;
 	}
 	*tail = write;
+	skyuv_mutex_lock(&runtime->slots_mutex);
 	entry->queued_bytes += write->size;
 	if (entry->queued_bytes >= SKYUV_SOCKET_WARNING_SIZE &&
 		entry->queued_bytes >= entry->warn_size) {
@@ -577,6 +662,7 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 		push_event(runtime, SKYUV_SOCKET_EVENT_WARNING, entry->id, entry->opaque,
 				   warning_kb > INT_MAX ? INT_MAX : (int)warning_kb);
 	}
+	skyuv_mutex_unlock(&runtime->slots_mutex);
 	if (!entry->writing && !entry->pump_pending) {
 		entry->pump_pending = true;
 		if (runtime->pump_tail == NULL) {
@@ -599,7 +685,9 @@ static void process_close(struct skyuv_socket_runtime *runtime,
 		return;
 	}
 	state = entry_state(entry);
+	skyuv_mutex_lock(&runtime->slots_mutex);
 	entry->opaque = command->opaque;
+	skyuv_mutex_unlock(&runtime->slots_mutex);
 	if (state != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_CLOSE, entry->id, entry->opaque, 0);
 	}
@@ -1118,6 +1206,77 @@ enum skyuv_socket_state skyuv_socket_runtime_state(struct skyuv_socket_runtime *
 	}
 	skyuv_mutex_unlock(&runtime->slots_mutex);
 	return state;
+}
+
+void skyuv_socket_runtime_updatetime(struct skyuv_socket_runtime *runtime, uint64_t time) {
+	if (runtime == NULL) {
+		return;
+	}
+	skyuv_mutex_lock(&runtime->slots_mutex);
+	runtime->current_time = time;
+	skyuv_mutex_unlock(&runtime->slots_mutex);
+}
+
+struct skyuv_socket_info *skyuv_socket_runtime_info(struct skyuv_socket_runtime *runtime) {
+	struct skyuv_socket_info *head = NULL;
+	struct skyuv_socket_info *tail = NULL;
+	uint32_t slot;
+
+	if (runtime == NULL) {
+		return NULL;
+	}
+	skyuv_mutex_lock(&runtime->slots_mutex);
+	for (slot = 0; slot < SKYUV_SOCKET_SLOT_COUNT; ++slot) {
+		struct skyuv_socket_entry *entry = runtime->slots[slot];
+		struct skyuv_socket_info *info;
+
+		if (entry == NULL ||
+			(entry->state != SKYUV_SOCKET_STATE_LISTENING &&
+			 entry->state != SKYUV_SOCKET_STATE_CONNECTED &&
+			 entry->state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
+			 entry->state != SKYUV_SOCKET_STATE_HALFCLOSE_READ &&
+			 entry->state != SKYUV_SOCKET_STATE_CLOSING)) {
+			continue;
+		}
+		info = calloc(1, sizeof(*info));
+		if (info == NULL) {
+			break;
+		}
+		info->id = entry->id;
+		info->type = entry->state == SKYUV_SOCKET_STATE_LISTENING
+						 ? SKYUV_SOCKET_INFO_LISTEN
+						 : (entry->state == SKYUV_SOCKET_STATE_HALFCLOSE_READ ||
+							entry->state == SKYUV_SOCKET_STATE_CLOSING
+								? SKYUV_SOCKET_INFO_CLOSING
+								: SKYUV_SOCKET_INFO_TCP);
+		info->opaque = entry->opaque;
+		info->read = entry->state == SKYUV_SOCKET_STATE_LISTENING ? entry->accept_count
+																 : entry->read_bytes;
+		info->write = entry->write_bytes;
+		info->rtime = entry->read_time;
+		info->wtime = entry->write_time;
+		info->wbuffer = entry->queued_bytes;
+		info->reading = entry->reading;
+		info->writing = entry->writing || entry->queued_bytes > 0;
+		(void)memcpy(info->name, entry->name, sizeof(info->name));
+		if (tail == NULL) {
+			head = info;
+		} else {
+			tail->next = info;
+		}
+		tail = info;
+	}
+	skyuv_mutex_unlock(&runtime->slots_mutex);
+	return head;
+}
+
+void skyuv_socket_runtime_info_release(struct skyuv_socket_info *info) {
+	while (info != NULL) {
+		struct skyuv_socket_info *next = info->next;
+
+		free(info);
+		info = next;
+	}
 }
 
 int skyuv_socket_runtime_submit(struct skyuv_socket_runtime *runtime,

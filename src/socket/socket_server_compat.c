@@ -35,8 +35,9 @@ void socket_server_release(struct socket_server *server) {
 }
 
 void socket_server_updatetime(struct socket_server *server, uint64_t time) {
-	(void)server;
-	(void)time;
+	if (server != NULL) {
+		skyuv_socket_runtime_updatetime(server->runtime, time);
+	}
 }
 
 int socket_server_poll(struct socket_server *server, struct socket_message *result, int *more) {
@@ -242,6 +243,40 @@ const struct socket_udp_address *socket_server_udp_address(struct socket_server 
 }
 
 struct socket_info *socket_server_info(struct socket_server *server) {
-	(void)server;
-	return NULL;
+	struct skyuv_socket_info *snapshot;
+	struct skyuv_socket_info *current;
+	struct socket_info *head = NULL;
+	struct socket_info *tail = NULL;
+
+	if (server == NULL) {
+		return NULL;
+	}
+	snapshot = skyuv_socket_runtime_info(server->runtime);
+	for (current = snapshot; current != NULL; current = current->next) {
+		struct socket_info *info = socket_info_create(tail);
+
+		if (info == NULL) {
+			break;
+		}
+		if (head == NULL) {
+			head = info;
+		}
+		tail = info;
+		info->id = current->id;
+		info->type = current->type == SKYUV_SOCKET_INFO_LISTEN
+						 ? SOCKET_INFO_LISTEN
+						 : (current->type == SKYUV_SOCKET_INFO_CLOSING ? SOCKET_INFO_CLOSING
+																	 : SOCKET_INFO_TCP);
+		info->opaque = (uint64_t)current->opaque;
+		info->read = current->read;
+		info->write = current->write;
+		info->rtime = current->rtime;
+		info->wtime = current->wtime;
+		info->wbuffer = current->wbuffer > INT64_MAX ? INT64_MAX : (int64_t)current->wbuffer;
+		info->reading = current->reading ? 1U : 0U;
+		info->writing = current->writing ? 1U : 0U;
+		(void)memcpy(info->name, current->name, sizeof(info->name));
+	}
+	skyuv_socket_runtime_info_release(snapshot);
+	return head;
 }

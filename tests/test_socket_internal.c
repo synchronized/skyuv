@@ -42,6 +42,11 @@ struct resume_context {
 	int result;
 };
 
+struct info_context {
+	struct skyuv_socket_runtime *runtime;
+	bool succeeded;
+};
+
 static int released_buffers;
 
 static void count_release(void *data) {
@@ -102,6 +107,22 @@ static void resume_after_pause(void *argument) {
 	uv_sleep(50);
 	context->paused_state = skyuv_socket_runtime_state(context->runtime, context->id);
 	context->result = skyuv_socket_runtime_start(context->runtime, context->id, (uintptr_t)91);
+}
+
+static void query_info_repeatedly(void *argument) {
+	struct info_context *context = argument;
+	int index;
+
+	context->succeeded = true;
+	for (index = 0; index < 1000; ++index) {
+		struct skyuv_socket_info *info = skyuv_socket_runtime_info(context->runtime);
+
+		if (info == NULL) {
+			context->succeeded = false;
+			return;
+		}
+		skyuv_socket_runtime_info_release(info);
+	}
 }
 
 static void client_closed(uv_handle_t *handle) {
@@ -927,6 +948,80 @@ static void test_runtime_write_warning_and_recovery(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void test_runtime_info_snapshot(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_info *info;
+	struct skyuv_socket_info *current;
+	struct skyuv_socket_event event;
+	int connection;
+	int accepted;
+	bool saw_connection = false;
+	bool saw_accepted = false;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	skyuv_socket_runtime_updatetime(runtime, 1234);
+	create_connected_pair(runtime, &connection, &accepted);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, "info", 4,
+										 SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+	free(event.data);
+	info = skyuv_socket_runtime_info(runtime);
+	assert_non_null(info);
+	for (current = info; current != NULL; current = current->next) {
+		if (current->id == connection) {
+			saw_connection = true;
+			assert_int_equal(current->type, SKYUV_SOCKET_INFO_TCP);
+			assert_int_equal(current->write, 4);
+			assert_int_equal(current->wtime, 1234);
+			assert_true(current->name[0] != '\0');
+		} else if (current->id == accepted) {
+			saw_accepted = true;
+			assert_int_equal(current->read, 4);
+			assert_int_equal(current->rtime, 1234);
+			assert_true(current->reading);
+		}
+	}
+	assert_true(saw_connection);
+	assert_true(saw_accepted);
+	skyuv_socket_runtime_info_release(info);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_info_concurrent_query(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct info_context context = {0};
+	struct skyuv_socket_event event;
+	skyuv_thread thread = SKYUV_THREAD_INITIALIZER;
+	int connection;
+	int accepted;
+	int index;
+	size_t received = 0;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	context.runtime = runtime;
+	assert_int_equal(skyuv_thread_create(&thread, query_info_repeatedly, &context), SKYUV_OK);
+	for (index = 0; index < 100; ++index) {
+		assert_int_equal(skyuv_socket_runtime_send(runtime, connection, "i", 1,
+											 SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+						 SKYUV_OK);
+	}
+	while (received < 100) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+		received += event.size;
+		free(event.data);
+	}
+	assert_int_equal(received, 100);
+	assert_int_equal(skyuv_thread_join(&thread), SKYUV_OK);
+	assert_true(context.succeeded);
+	skyuv_socket_runtime_release(&runtime);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -956,6 +1051,8 @@ int main(void) {
 		cmocka_unit_test(test_runtime_remote_eof_keeps_halfclose_until_local_close),
 		cmocka_unit_test(test_runtime_write_priority),
 		cmocka_unit_test(test_runtime_write_warning_and_recovery),
+		cmocka_unit_test(test_runtime_info_snapshot),
+		cmocka_unit_test(test_runtime_info_concurrent_query),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
