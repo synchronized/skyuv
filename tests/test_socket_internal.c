@@ -388,7 +388,7 @@ static void test_runtime_connect_success(void **state) {
 		} else if (event.type == SKYUV_SOCKET_EVENT_ACCEPT && event.id == listener) {
 			saw_accept = true;
 		} else {
-			fail_msg("%s", "收到非预期的 connect 事件");
+			assert_int_equal(event.type, -1);
 		}
 	}
 	assert_true(saw_open);
