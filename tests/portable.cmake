@@ -141,6 +141,18 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-debugchannel.conf"
   @ONLY
 )
+set(SKYUV_PORTABLE_START_SERVICE skyuv_mongo_driver)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-mongo-driver.conf"
+  @ONLY
+)
+set(SKYUV_PORTABLE_START_SERVICE skyuv_mongo_integration)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-mongo-integration.conf"
+  @ONLY
+)
 set(SKYUV_PORTABLE_START_SERVICE skyuv_cluster_provider)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
@@ -429,6 +441,19 @@ if(WIN32 AND BUILD_TESTING)
   )
   set_tests_properties(
     skynet.portable.debugchannel
+    PROPERTIES
+      TIMEOUT 10
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.mongo_driver
+    COMMAND
+      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
+      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -Config "3rd/skyuv-portable-mongo-driver.conf"
+  )
+  set_tests_properties(
+    skynet.portable.mongo_driver
     PROPERTIES
       TIMEOUT 10
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"

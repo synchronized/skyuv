@@ -175,3 +175,8 @@
   自旋锁兼容头避免 MSVC 误用 GCC `__sync_*` 内建函数。Windows 实际测试覆盖
   channel 创建与连接、双向 FIFO 读写、包含零字节和 UTF-8 的命令、空队列、
   双端垃圾回收，以及安装、触发和移除 Lua count hook。
+- `skynet` 聚合模块已补入 `skynet.mongo.driver`。Windows 无服务器测试覆盖
+  MongoDB OP_MSG 长度、请求 ID、操作码、标志、BSON 载荷封装、短响应拒绝和
+  `skynet.db.mongo` 高层模块加载；独立 Linux 手动/每周工作流使用固定 MongoDB
+  8.0 服务容器验证连接、插入、查询、更新、唯一索引、删除和资源关闭。由于
+  GitHub Actions 服务容器仅支持 Linux，macOS 当前只承担构建回归。
