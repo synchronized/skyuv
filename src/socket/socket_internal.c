@@ -210,7 +210,10 @@ static void read_completed(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
 		return;
 	}
 	if (nread == UV_EOF) {
-		finish_entry(entry, SKYUV_SOCKET_EVENT_CLOSE, 0);
+		if (entry_state(entry) != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
+			push_event(entry->runtime, SKYUV_SOCKET_EVENT_CLOSE, entry->id, entry->opaque, 0);
+			set_entry_state(entry, SKYUV_SOCKET_STATE_HALFCLOSE_READ);
+		}
 	} else {
 		finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, (int)nread);
 	}
@@ -232,9 +235,15 @@ static void release_write(struct skyuv_socket_write *write) {
 static void write_completed(uv_write_t *request, int status) {
 	struct skyuv_socket_write *write = request->data;
 	struct skyuv_socket_entry *entry = write->entry;
+	enum skyuv_socket_state state = entry_state(entry);
 
-	if (status != 0 && entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
-		finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, status);
+	if (status != 0 && state != SKYUV_SOCKET_STATE_CLOSING) {
+		if (state == SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
+			set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
+			uv_close((uv_handle_t *)&entry->tcp, close_entry);
+		} else {
+			finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, status);
+		}
 	}
 	release_write(write);
 }
@@ -397,7 +406,8 @@ static void process_nodelay(struct skyuv_socket_runtime *runtime,
 	}
 	state = entry_state(entry);
 	if (state != SKYUV_SOCKET_STATE_CONNECTED &&
-		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED) {
+		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
+		state != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
 		return;
 	}
 	/* 与原版一致，设置失败不产生额外 socket 事件。 */
@@ -452,7 +462,8 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 
 	state = entry == NULL ? SKYUV_SOCKET_STATE_INVALID : entry_state(entry);
 	if (state != SKYUV_SOCKET_STATE_CONNECTED &&
-		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED) {
+		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
+		state != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_ENOTCONN);
 		return;
 	}
@@ -469,7 +480,12 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 	result = uv_write(&write->request, (uv_stream_t *)&entry->tcp, &buffer, 1, write_completed);
 	if (result != 0) {
 		free(write);
-		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
+		if (state == SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
+			set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
+			uv_close((uv_handle_t *)&entry->tcp, close_entry);
+		} else {
+			push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
+		}
 		return;
 	}
 	/* uv_write 成功后，请求成为缓冲区的唯一所有者。 */
@@ -479,12 +495,16 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 static void process_close(struct skyuv_socket_runtime *runtime,
 						  struct skyuv_socket_command *command) {
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+	enum skyuv_socket_state state;
 
 	if (entry == NULL || entry_state(entry) == SKYUV_SOCKET_STATE_CLOSING) {
 		return;
 	}
+	state = entry_state(entry);
 	entry->opaque = command->opaque;
-	push_event(runtime, SKYUV_SOCKET_EVENT_CLOSE, entry->id, entry->opaque, 0);
+	if (state != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_CLOSE, entry->id, entry->opaque, 0);
+	}
 	if (!entry->initialized) {
 		discard_uninitialized_entry(entry);
 		return;

@@ -816,6 +816,40 @@ static void test_runtime_nodelay_and_shutdown(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void test_runtime_remote_eof_keeps_halfclose_until_local_close(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	char *data;
+	int connection;
+	int accepted;
+
+	(void)state;
+	released_buffers = 0;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	assert_int_equal(skyuv_socket_runtime_shutdown(runtime, connection, 0), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, connection);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, accepted);
+	assert_int_equal(skyuv_socket_runtime_state(runtime, accepted),
+					 SKYUV_SOCKET_STATE_HALFCLOSE_READ);
+	data = malloc(1);
+	assert_non_null(data);
+	*data = 'h';
+	assert_int_equal(skyuv_socket_runtime_send(runtime, accepted, data, 1,
+										 SKYUV_SOCKET_BUFFER_OWNED, count_release),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_close(runtime, accepted, (uintptr_t)94), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_exit(runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_EXIT);
+	skyuv_socket_runtime_release(&runtime);
+	assert_int_equal(released_buffers, 1);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -842,6 +876,7 @@ int main(void) {
 		cmocka_unit_test(test_runtime_repeated_close_has_single_event),
 		cmocka_unit_test(test_runtime_pause_and_resume),
 		cmocka_unit_test(test_runtime_nodelay_and_shutdown),
+		cmocka_unit_test(test_runtime_remote_eof_keeps_halfclose_until_local_close),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
