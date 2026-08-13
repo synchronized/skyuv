@@ -44,15 +44,15 @@ def main() -> int:
 				timeout=15,
 				check=False,
 			)
-	except subprocess.TimeoutExpired as error:
+		except subprocess.TimeoutExpired as error:
 			output = (error.stdout or "") + (error.stderr or "")
 			if isinstance(output, bytes):
 				output = output.decode(errors="replace")
-	else:
-		output = result.stdout + result.stderr
-		if result.returncode != 0:
-			sys.stderr.write(output)
-			return result.returncode
+		else:
+			output = result.stdout + result.stderr
+			if result.returncode != 0:
+				sys.stderr.write(output)
+				return result.returncode
 		thread.join(timeout=2)
 
 	if errors:
