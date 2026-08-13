@@ -118,3 +118,6 @@
 - `client.socket` 的 Windows 句柄已改为模块内部保留原生 `SOCKET` 宽度，
   Lua 边界通过 `lua_Integer` 往返；Windows 回环测试已覆盖 connect、send、
   非阻塞 recv、写 shutdown 和 close，既有 echo 与模块加载测试保持通过。
+- stdin 队列不再从后台线程调用 `exit(1)`：EOF、读取错误和队列溢出通过
+  `readstdin` 的可选第二返回值报告；空行和 CRLF 得到正确处理，分配失败可诊断，
+  EOF/错误后回收线程句柄。Windows 管道测试已覆盖普通行、空行、UTF-8 和 EOF。

@@ -75,6 +75,17 @@ execute_process(
 if(NOT SKYUV_SKYNET_CLIENT_HANDLE_PATCH_RESULT EQUAL 0)
   message(FATAL_ERROR "应用 Skynet client socket 句柄宽度补丁失败：${SKYUV_SKYNET_CLIENT_HANDLE_PATCH_ERROR}")
 endif()
+execute_process(
+  COMMAND
+    "${GIT_EXECUTABLE}" apply --recount --unidiff-zero "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
+    "${PROJECT_SOURCE_DIR}/patches/skynet/0007-Make-client-stdin-queue-diagnostic-and-reclaimable.patch"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  RESULT_VARIABLE SKYUV_SKYNET_CLIENT_STDIN_PATCH_RESULT
+  ERROR_VARIABLE SKYUV_SKYNET_CLIENT_STDIN_PATCH_ERROR
+)
+if(NOT SKYUV_SKYNET_CLIENT_STDIN_PATCH_RESULT EQUAL 0)
+  message(FATAL_ERROR "应用 Skynet client stdin 生命周期补丁失败：${SKYUV_SKYNET_CLIENT_STDIN_PATCH_ERROR}")
+endif()
 file(READ "${SKYUV_SKYNET_SOURCE_DIR}/skynet_module.c" SKYUV_SKYNET_MODULE_SOURCE)
 if(NOT SKYUV_SKYNET_MODULE_SOURCE MATCHES "skynet_malloc\\(sz\\)")
   message(FATAL_ERROR "Skynet 可变缓冲区所有权补丁未生效")

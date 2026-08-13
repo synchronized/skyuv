@@ -1,0 +1,120 @@
+diff --git a/lualib-src/lua-clientsocket.c b/lualib-src/lua-clientsocket.c
+--- a/lualib-src/lua-clientsocket.c
++++ b/lualib-src/lua-clientsocket.c
+@@ -170,60 +170,103 @@
+ struct queue {
+ 	pthread_mutex_t lock;
+ 	int started;
++	pthread_t thread;
++	int joined;
++	int eof;
++	int failed;
++	int overflow;
+ 	int head;
+ 	int tail;
+ 	char * queue[QUEUE_SIZE];
+ };
+ 
+ static void *
+ readline_stdin(void * arg) {
+ 	struct queue * q = arg;
+ 	char tmp[1024];
+-	while (!feof(stdin)) {
++	for (;;) {
+ 		if (fgets(tmp,sizeof(tmp),stdin) == NULL) {
+-			// read stdin failed
+-			exit(1);
++			pthread_mutex_lock(&q->lock);
++			q->eof = feof(stdin) ? 1 : 0;
++			q->failed = ferror(stdin) ? 1 : 0;
++			pthread_mutex_unlock(&q->lock);
++			return NULL;
+ 		}
+-		int n = strlen(tmp) -1;
++		int n = (int)strlen(tmp);
++		while (n > 0 && (tmp[n-1] == '\n' || tmp[n-1] == '\r'))
++			--n;
+ 
+ 		char * str = malloc(n+1);
++		if (str == NULL) {
++			pthread_mutex_lock(&q->lock);
++			q->failed = 1;
++			pthread_mutex_unlock(&q->lock);
++			return NULL;
++		}
+ 		memcpy(str, tmp, n);
+ 		str[n] = 0;
+ 
+ 		pthread_mutex_lock(&q->lock);
+-		q->queue[q->tail] = str;
+-
+-		if (++q->tail >= QUEUE_SIZE) {
+-			q->tail = 0;
+-		}
+-		if (q->head == q->tail) {
+-			// queue overflow
+-			exit(1);
++		int next = q->tail + 1;
++		if (next >= QUEUE_SIZE)
++			next = 0;
++		if (q->head == next) {
++			q->overflow = 1;
++			free(str);
++		} else {
++			q->queue[q->tail] = str;
++			q->tail = next;
+ 		}
+ 		pthread_mutex_unlock(&q->lock);
+ 	}
+-	return NULL;
+ }
+ 
+ static int
+ lreadstdin(lua_State *L) {
+ 	struct queue *q = lua_touserdata(L, lua_upvalueindex(1));
+ 	if (!q->started) {
+-		pthread_t pid;
+ 		q->started = 1;
+-		pthread_create(&pid, NULL, readline_stdin, q);
++		if (pthread_create(&q->thread, NULL, readline_stdin, q) != 0) {
++			q->failed = 1;
++			q->joined = 1;
++		}
+ 	}
+ 	pthread_mutex_lock(&q->lock);
+ 	if (q->head == q->tail) {
++		int eof = q->eof;
++		int failed = q->failed;
++		int overflow = q->overflow;
++		int join = q->started && !q->joined && (eof || failed);
++		if (join)
++			q->joined = 1;
+ 		pthread_mutex_unlock(&q->lock);
++		if (join)
++			pthread_join(q->thread, NULL);
++		if (overflow) {
++			lua_pushnil(L);
++			lua_pushliteral(L, "overflow");
++			return 2;
++		}
++		if (failed) {
++			lua_pushnil(L);
++			lua_pushliteral(L, "error");
++			return 2;
++		}
++		if (eof) {
++			lua_pushnil(L);
++			lua_pushliteral(L, "eof");
++			return 2;
++		}
+ 		return 0;
+ 	}
+ 	char * str = q->queue[q->head];
+ 	if (++q->head >= QUEUE_SIZE) {
+ 		q->head = 0;
+ 	}
+ 	pthread_mutex_unlock(&q->lock);
+ 	lua_pushstring(L, str);
+ 	free(str);
+ 	return 1;
+ }

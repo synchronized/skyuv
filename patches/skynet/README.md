@@ -71,3 +71,6 @@ git -C 3rd/skynet status --short
 - `0006-Preserve-client-socket-native-handle-width.patch`：让 `client.socket`
   在 Windows 内部始终使用 Winsock `SOCKET`，仅在 Lua 边界与 64 位
   `lua_Integer` 转换，避免经由 32 位 `int` 截断原生句柄；Unix 继续使用 fd。
+- `0007-Make-client-stdin-queue-diagnostic-and-reclaimable.patch`：让客户端
+  stdin 队列在 EOF、读取错误和队列满时返回诊断状态，不再由后台线程直接
+  终止进程；保留空行并在 EOF/错误后 join 已结束线程。

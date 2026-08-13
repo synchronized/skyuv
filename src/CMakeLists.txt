@@ -267,6 +267,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-client-socket.conf"
     @ONLY
   )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_client_stdin)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-client-stdin.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
@@ -310,6 +316,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     )
     set_tests_properties(
       skynet.portable.client_socket
+      PROPERTIES
+        TIMEOUT 15
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+    add_test(
+      NAME skynet.portable.client_stdin
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-client-stdin.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Config "3rd/skyuv-portable-client-stdin.conf"
+    )
+    set_tests_properties(
+      skynet.portable.client_stdin
       PROPERTIES
         TIMEOUT 15
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
