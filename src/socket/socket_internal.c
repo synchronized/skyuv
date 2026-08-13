@@ -387,6 +387,23 @@ static void process_pause(struct skyuv_socket_runtime *runtime,
 	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED_PAUSED);
 }
 
+static void process_nodelay(struct skyuv_socket_runtime *runtime,
+							struct skyuv_socket_command *command) {
+	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+	enum skyuv_socket_state state;
+
+	if (entry == NULL) {
+		return;
+	}
+	state = entry_state(entry);
+	if (state != SKYUV_SOCKET_STATE_CONNECTED &&
+		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED) {
+		return;
+	}
+	/* 与原版一致，设置失败不产生额外 socket 事件。 */
+	(void)uv_tcp_nodelay(&entry->tcp, 1);
+}
+
 static void process_connect(struct skyuv_socket_runtime *runtime,
 							struct skyuv_socket_command *command) {
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
@@ -510,9 +527,12 @@ static void consume_commands(uv_async_t *async) {
 			process_start(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_PAUSE) {
 			process_pause(runtime, command);
+		} else if (command->type == SKYUV_SOCKET_COMMAND_NODELAY) {
+			process_nodelay(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_SEND) {
 			process_send(runtime, command);
-		} else if (command->type == SKYUV_SOCKET_COMMAND_CLOSE) {
+		} else if (command->type == SKYUV_SOCKET_COMMAND_CLOSE ||
+				   command->type == SKYUV_SOCKET_COMMAND_SHUTDOWN) {
 			process_close(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_EXIT) {
 			process_exit(runtime);
@@ -798,6 +818,26 @@ int skyuv_socket_runtime_pause(struct skyuv_socket_runtime *runtime, int id, uin
 	return result;
 }
 
+int skyuv_socket_runtime_nodelay(struct skyuv_socket_runtime *runtime, int id) {
+	struct skyuv_socket_command *command;
+	int result;
+
+	if (runtime == NULL || id <= 0) {
+		return SKYUV_ERROR_INVALID_ARGUMENT;
+	}
+	command = calloc(1, sizeof(*command));
+	if (command == NULL) {
+		return SKYUV_ERROR_OUT_OF_MEMORY;
+	}
+	command->type = SKYUV_SOCKET_COMMAND_NODELAY;
+	command->id = id;
+	result = skyuv_socket_runtime_submit(runtime, command);
+	if (result != SKYUV_OK) {
+		free(command);
+	}
+	return result;
+}
+
 int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
 							  enum skyuv_socket_buffer_ownership ownership,
 							  void (*release)(void *data)) {
@@ -889,6 +929,27 @@ int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uin
 		return SKYUV_ERROR_OUT_OF_MEMORY;
 	}
 	command->type = SKYUV_SOCKET_COMMAND_CLOSE;
+	command->id = id;
+	command->opaque = opaque;
+	result = skyuv_socket_runtime_submit(runtime, command);
+	if (result != SKYUV_OK) {
+		free(command);
+	}
+	return result;
+}
+
+int skyuv_socket_runtime_shutdown(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque) {
+	struct skyuv_socket_command *command;
+	int result;
+
+	if (runtime == NULL || id <= 0) {
+		return SKYUV_ERROR_INVALID_ARGUMENT;
+	}
+	command = calloc(1, sizeof(*command));
+	if (command == NULL) {
+		return SKYUV_ERROR_OUT_OF_MEMORY;
+	}
+	command->type = SKYUV_SOCKET_COMMAND_SHUTDOWN;
 	command->id = id;
 	command->opaque = opaque;
 	result = skyuv_socket_runtime_submit(runtime, command);

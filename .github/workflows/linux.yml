@@ -186,6 +186,7 @@ jobs:
             "build/${{ matrix.preset }}/3rd/skyuv-portable-socket-controls.conf" \
             2>&1 | tee portable-socket-controls.log
           grep -F "TCP_CONTROL pause_resume" portable-socket-controls.log
+          grep -F "TCP_CONTROL shutdown_close" portable-socket-controls.log
           grep -F "skyuv TCP 控制语义基线验证通过" portable-socket-controls.log
 
       - name: 运行原版 Skynet 启动冒烟测试

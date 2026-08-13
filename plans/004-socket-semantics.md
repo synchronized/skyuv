@@ -180,6 +180,7 @@
 
 - 固化原版 accepted TCP 连接的 pause/start 行为：pause 请求先于客户端发送进入控制队列，恢复前不产生 DATA，start 后收到完整负载；
 - libuv 适配层已增加独立 PAUSE 命令和 `CONNECTED_PAUSED` 状态；pause 在 loop 线程执行 `uv_read_stop`，start 执行 `uv_read_start`、更新 opaque 并产生与原版 transfer 一致的 OPEN 事件；
+- nodelay 已通过 FIFO 控制命令在 loop 线程映射为 `uv_tcp_nodelay`，无效或非连接 ID 与原版一样静默忽略；shutdown 使用独立命令保持上游立即强制关闭语义，重复 shutdown 只产生一次本端 CLOSE；
 - 确认 nodelay 可在已连接 socket 上提交且不产生额外事件；
 - 确认上游 shutdown 是强制关闭而非 `uv_shutdown` 写半关闭，本端和对端最终各观察一次 CLOSE；
 - 修正阶段 2 事件对照：无因果关系的 `connect_error` 与 `listener_accept` 允许交换，CI 比较事件集合，连接内因果顺序继续由 Lua 服务断言。

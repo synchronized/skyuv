@@ -70,8 +70,9 @@ void socket_server_close(struct socket_server *server, uintptr_t opaque, int id)
 }
 
 void socket_server_shutdown(struct socket_server *server, uintptr_t opaque, int id) {
-	/* 首期没有 half-close，以完整关闭明确降级。 */
-	socket_server_close(server, opaque, id);
+	if (server != NULL) {
+		(void)skyuv_socket_runtime_shutdown(server->runtime, id, opaque);
+	}
 }
 
 void socket_server_start(struct socket_server *server, uintptr_t opaque, int id) {
@@ -169,8 +170,9 @@ int socket_server_bind(struct socket_server *server, uintptr_t opaque, int fd) {
 }
 
 void socket_server_nodelay(struct socket_server *server, int id) {
-	(void)server;
-	(void)id;
+	if (server != NULL) {
+		(void)skyuv_socket_runtime_nodelay(server->runtime, id);
+	}
 }
 
 void socket_server_userobject(struct socket_server *server,
