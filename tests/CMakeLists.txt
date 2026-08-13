@@ -2,6 +2,8 @@ if(NOT SKYUV_BUILD_TESTS OR NOT BUILD_TESTING)
   return()
 endif()
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/portable.cmake")
+
 add_executable(skyuv_test_allocator test_allocator.c)
 target_link_libraries(skyuv_test_allocator PRIVATE skyuv::allocator cmocka::cmocka)
 skyuv_target_compile_warnings(skyuv_test_allocator)
