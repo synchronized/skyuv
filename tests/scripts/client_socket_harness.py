@@ -35,24 +35,26 @@ def main() -> int:
 		listener.listen(1)
 		thread = threading.Thread(target=serve, args=(listener, errors), daemon=True)
 		thread.start()
+		process = subprocess.Popen(
+			[arguments.executable, arguments.config],
+			cwd=arguments.cwd,
+			stdin=subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE,
+			text=True,
+		)
 		try:
-			result = subprocess.run(
-				[arguments.executable, arguments.config],
-				cwd=arguments.cwd,
-				capture_output=True,
-				text=True,
-				timeout=15,
-				check=False,
-			)
-		except subprocess.TimeoutExpired as error:
-			output = (error.stdout or "") + (error.stderr or "")
-			if isinstance(output, bytes):
-				output = output.decode(errors="replace")
-		else:
-			output = result.stdout + result.stderr
-			if result.returncode != 0:
-				sys.stderr.write(output)
-				return result.returncode
+			result = process.wait(timeout=15)
+		except subprocess.TimeoutExpired:
+			process.kill()
+			process.wait()
+			result = process.returncode
+		assert process.stdout is not None
+		assert process.stderr is not None
+		output = process.stdout.read() + process.stderr.read()
+		if result != 0:
+			sys.stderr.write(output)
+			return result
 		thread.join(timeout=2)
 
 	if errors:
