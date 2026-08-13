@@ -129,6 +129,36 @@ skyuv 的 libuv 实现
 
 完成兼容性和压力测试后，再评估批量发送、减少复制和直接写优化。
 
+### 4.6 外部 socket 接管
+
+Skynet 的 `socket.bind(fd)` 使用 `int` 传递外部 socket。在 Unix 上，原生文件描述符可以由 `int` 无损表示；在 64 位 Windows 上，`SOCKET` 通常具有指针宽度，直接经过 `int` 传递可能发生截断。因此，`SKYUV_SOCKET_EXTERNAL_FD` 仅作为迁移阶段的保护开关，不作为长期公共能力或最终平台抽象。
+
+最终方案分为内部接口和 Skynet 兼容边界两层：
+
+- skyuv 内部定义 `skyuv_os_socket`，底层对应 `uv_os_sock_t`；
+- `skyuv_socket_runtime_bind()`、bind 命令和 socket 条目均使用 `skyuv_os_socket`，不再假设原生句柄是非负整数；
+- Unix 和 Windows 的网络线程统一通过 `uv_tcp_open()` 接管有效的原生 socket；
+- Skynet 原有 `int fd` 接口仅保留在兼容层，不允许该类型进入 skyuv socket 核心；
+- Unix 兼容层可将 `int fd` 无损转换为 `skyuv_os_socket`；
+- Windows 兼容层不得把旧接口中的 `int` 解释为 `SOCKET`，该入口应明确返回失败；
+- skyuv 提供显式的平台扩展接口，例如 `skyuv_socket_server_bind_native()`，供 Windows 调用者传递完整宽度的原生 socket。
+
+所有权规则：
+
+- 接管成功后，原生 socket 的所有权转移给 skyuv/libuv，调用者不得再次关闭或继续操作；
+- 接管失败时，所有权仍属于调用者；
+- 重复接管同一原生 socket 必须失败；
+- 关闭由所属网络线程发起，并以 libuv close callback 完成为生命周期终点。
+
+实施顺序：
+
+1. 引入 `skyuv_os_socket` 以及无效值、相等比较等辅助定义。
+2. 修改内部 bind 接口、命令载荷、条目字段和测试，覆盖两个平台的成功、失败、重复接管及关闭所有权。
+3. 在 Skynet 兼容层保留旧 ABI，并增加完整宽度的 native 扩展入口。
+4. 删除 `SKYUV_SOCKET_EXTERNAL_FD` 及对应条件编译，让平台实现自然决定能力。
+
+不对 Skynet 第三方源码中的所有 `int fd` 做全局替换，避免句柄类型扩散到 Lua API、消息结构和无关模块。
+
 ## 5. 平台基础层
 
 ### 5.1 线程与同步
