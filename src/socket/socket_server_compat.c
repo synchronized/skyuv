@@ -180,10 +180,13 @@ int socket_server_connect(struct socket_server *server, uintptr_t opaque, const 
 }
 
 int socket_server_bind(struct socket_server *server, uintptr_t opaque, int fd) {
-	(void)server;
-	(void)opaque;
-	(void)fd;
-	return -1;
+	int id;
+
+	if (server == NULL ||
+		skyuv_socket_runtime_bind(server->runtime, fd, opaque, &id) != SKYUV_OK) {
+		return -1;
+	}
+	return id;
 }
 
 void socket_server_nodelay(struct socket_server *server, int id) {

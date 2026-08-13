@@ -45,7 +45,12 @@ target_link_libraries(
   skyuv_test_socket_internal PRIVATE skyuv::socket_core skyuv::libuv cmocka::cmocka
 )
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  target_compile_definitions(skyuv_test_socket_internal PRIVATE _POSIX_C_SOURCE=200112L)
+	target_compile_definitions(skyuv_test_socket_internal PRIVATE _POSIX_C_SOURCE=200112L)
+endif()
+if(UNIX)
+  target_compile_definitions(skyuv_test_socket_internal PRIVATE SKYUV_SOCKET_EXTERNAL_FD=1)
+else()
+  target_compile_definitions(skyuv_test_socket_internal PRIVATE SKYUV_SOCKET_EXTERNAL_FD=0)
 endif()
 skyuv_target_compile_warnings(skyuv_test_socket_internal)
 add_test(NAME socket.internal COMMAND skyuv_test_socket_internal)

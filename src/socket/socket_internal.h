@@ -40,6 +40,7 @@ enum skyuv_socket_command_type {
 	SKYUV_SOCKET_COMMAND_UDP,
 	SKYUV_SOCKET_COMMAND_UDP_CONNECT,
 	SKYUV_SOCKET_COMMAND_UDP_SEND,
+	SKYUV_SOCKET_COMMAND_BIND,
 	SKYUV_SOCKET_COMMAND_EXIT,
 };
 
@@ -90,6 +91,10 @@ struct skyuv_socket_command {
 			uint8_t address[19];
 			size_t address_size;
 		} send;
+		struct {
+			/* 支持的平台在命令成功入队后接管 fd 所有权。 */
+			int fd;
+		} bind;
 	} payload;
 };
 
@@ -152,6 +157,8 @@ int skyuv_socket_runtime_listen(struct skyuv_socket_runtime *runtime, const char
 								int backlog, uintptr_t opaque, int *id);
 int skyuv_socket_runtime_connect(struct skyuv_socket_runtime *runtime, const char *host, int port,
 								 uintptr_t opaque, int *id);
+int skyuv_socket_runtime_bind(struct skyuv_socket_runtime *runtime, int fd, uintptr_t opaque,
+							 int *id);
 int skyuv_socket_runtime_start(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_pause(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_nodelay(struct skyuv_socket_runtime *runtime, int id);

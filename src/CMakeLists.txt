@@ -11,6 +11,12 @@ add_library(skyuv::socket_core ALIAS skyuv_socket_core)
 target_include_directories(skyuv_socket_core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/socket")
 skyuv_target_compile_warnings(skyuv_socket_core)
 
+if(UNIX)
+  target_compile_definitions(skyuv_socket_core PRIVATE SKYUV_SOCKET_EXTERNAL_FD=1)
+else()
+  target_compile_definitions(skyuv_socket_core PRIVATE SKYUV_SOCKET_EXTERNAL_FD=0)
+endif()
+
 add_library(skyuv_socket_server STATIC socket/socket_server_compat.c)
 add_library(skyuv::socket_server ALIAS skyuv_socket_server)
 target_include_directories(

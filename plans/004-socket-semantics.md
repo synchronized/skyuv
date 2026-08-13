@@ -116,12 +116,13 @@
 
 ### 5. 外部 fd 接管
 
-先完成平台能力审计，再确定接口行为：
+平台能力审计结论与接口行为：
 
-- Unix 可评估 `uv_tcp_open` 接管 socket fd；
+- Unix 使用 `uv_tcp_open` 接管已连接 TCP socket fd，成功入队后其所有权转移给 socket runtime，关闭 socket 或 runtime 时关闭 fd；
 - Windows 必须区分 CRT fd 与 Winsock `SOCKET`，现有 `int fd` 接口不能安全表达 64 位原生句柄；
-- 若无法在不改变上层 ABI 的前提下可靠接管，Windows 的 `socket_server_bind` 保持明确失败，并在平台扩展中另行设计原生句柄入口；
-- 接管时必须明确句柄所有权、重复接管、close 和进程标准输入等非 socket fd 行为。
+- Windows 的 `socket_server_bind` 保持同步返回 `-1`，未来如确有需求，以不改变 Skynet ABI 的独立平台扩展接收原生句柄；
+- libuv 的 TCP handle 只支持有效流式 socket，因此普通文件、管道、标准输入等非 socket fd 明确不属于兼容范围；
+- 同一 runtime 重复接管相同 fd 会同步失败；异步发现无效 fd 时产生错误事件并回收 socket id。
 
 验证：
 

@@ -5,6 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if SKYUV_SOCKET_EXTERNAL_FD
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
 #include <cmocka.h>
 #include <uv.h>
 
@@ -1139,6 +1146,60 @@ static void test_runtime_udp_default_and_explicit_send(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void test_runtime_external_fd(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	int id;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+#if SKYUV_SOCKET_EXTERNAL_FD
+	{
+		struct skyuv_socket_event event;
+		struct sockaddr_in address;
+		socklen_t address_size = sizeof(address);
+		int listener = socket(AF_INET, SOCK_STREAM, 0);
+		int peer;
+		int accepted;
+		const char payload[] = "external-fd";
+
+		assert_true(listener >= 0);
+		memset(&address, 0, sizeof(address));
+		address.sin_family = AF_INET;
+		address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+		assert_int_equal(bind(listener, (const struct sockaddr *)&address, sizeof(address)), 0);
+		assert_int_equal(listen(listener, 1), 0);
+		assert_int_equal(getsockname(listener, (struct sockaddr *)&address, &address_size), 0);
+		peer = socket(AF_INET, SOCK_STREAM, 0);
+		assert_true(peer >= 0);
+		assert_int_equal(connect(peer, (const struct sockaddr *)&address, sizeof(address)), 0);
+		accepted = accept(listener, NULL, NULL);
+		assert_true(accepted >= 0);
+		assert_int_equal(close(listener), 0);
+		assert_int_equal(skyuv_socket_runtime_bind(runtime, accepted, (uintptr_t)96, &id), SKYUV_OK);
+		assert_int_equal(skyuv_socket_runtime_bind(runtime, accepted, 0, &id),
+						 SKYUV_ERROR_INVALID_STATE);
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
+		assert_int_equal(send(peer, payload, sizeof(payload) - 1, 0), sizeof(payload) - 1);
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+		assert_memory_equal(event.data, payload, sizeof(payload) - 1);
+		free(event.data);
+		assert_int_equal(skyuv_socket_runtime_close(runtime, id, 0), SKYUV_OK);
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+		skyuv_socket_runtime_release(&runtime);
+		errno = 0;
+		assert_int_equal(fcntl(accepted, F_GETFD), -1);
+		assert_int_equal(errno, EBADF);
+		assert_int_equal(close(peer), 0);
+	}
+#else
+	assert_int_equal(skyuv_socket_runtime_bind(runtime, 1, 0, &id), SKYUV_ERROR_NOT_SUPPORTED);
+	skyuv_socket_runtime_release(&runtime);
+#endif
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -1172,6 +1233,7 @@ int main(void) {
 		cmocka_unit_test(test_runtime_info_concurrent_query),
 		cmocka_unit_test(test_runtime_udp_lifecycle),
 		cmocka_unit_test(test_runtime_udp_default_and_explicit_send),
+		cmocka_unit_test(test_runtime_external_fd),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
