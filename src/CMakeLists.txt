@@ -90,6 +90,14 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
         PREFIX ""
         WINDOWS_EXPORT_ALL_SYMBOLS TRUE
     )
+    foreach(config IN ITEMS DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+      set_target_properties(
+        "skyuv_portable_service_${service_name}"
+        PROPERTIES
+          "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/cservice"
+          "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/cservice"
+      )
+    endforeach()
     target_include_directories(
       "skyuv_portable_service_${service_name}"
       PRIVATE
@@ -145,6 +153,14 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       PREFIX ""
       WINDOWS_EXPORT_ALL_SYMBOLS TRUE
   )
+  foreach(config IN ITEMS DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+    set_target_properties(
+      skyuv_portable_lua_module_skynet
+      PROPERTIES
+        "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+        "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+    )
+  endforeach()
   target_include_directories(
     skyuv_portable_lua_module_skynet
     PRIVATE

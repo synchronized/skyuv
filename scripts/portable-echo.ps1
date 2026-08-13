@@ -60,7 +60,19 @@ try {
 		$received
 	)
 	if ($offset -ne $payload.Length -or -not $equal) {
-		throw "Windows Skynet echo 内容不一致。"
+		$expectedHex = [Convert]::ToHexString($payload)
+		$receivedHex = [Convert]::ToHexString($received, 0, $offset)
+		$output = if (Test-Path -LiteralPath $outputPath) {
+			Get-Content -LiteralPath $outputPath -Raw
+		} else {
+			""
+		}
+		$errorOutput = if (Test-Path -LiteralPath $errorPath) {
+			Get-Content -LiteralPath $errorPath -Raw
+		} else {
+			""
+		}
+		throw "Windows Skynet echo 内容不一致：收到 $offset/$($payload.Length) 字节，期望 $expectedHex，实际 $receivedHex。`n$output`n$errorOutput"
 	}
 } finally {
 	if ($null -ne $client) {
