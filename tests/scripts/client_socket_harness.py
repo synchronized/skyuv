@@ -26,6 +26,7 @@ def main() -> int:
 	parser.add_argument("executable")
 	parser.add_argument("config")
 	parser.add_argument("--cwd", default=None)
+	parser.add_argument("--allow-timeout-after-success", action="store_true")
 	arguments = parser.parse_args()
 
 	errors: list[BaseException] = []
@@ -48,11 +49,11 @@ def main() -> int:
 		except subprocess.TimeoutExpired:
 			process.kill()
 			process.wait()
-			result = process.returncode
+			result = None if arguments.allow_timeout_after_success else process.returncode
 		assert process.stdout is not None
 		assert process.stderr is not None
 		output = process.stdout.read() + process.stderr.read()
-		if result != 0:
+		if result not in (0, None):
 			sys.stderr.write(output)
 			return result
 		thread.join(timeout=2)

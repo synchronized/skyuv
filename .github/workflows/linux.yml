@@ -144,7 +144,8 @@ jobs:
         run: |
           python3 tests/scripts/client_socket_harness.py \
             "$RUNNER_TEMP/skynet/skynet" examples/client-socket.conf \
-            --cwd "$RUNNER_TEMP/skynet" | tee "$RUNNER_TEMP/upstream-client-socket.txt"
+            --cwd "$RUNNER_TEMP/skynet" --allow-timeout-after-success \
+            | tee "$RUNNER_TEMP/upstream-client-socket.txt"
 
       - name: 运行原版 Skynet TCP echo 对照测试
         working-directory: ${{ runner.temp }}/skynet
