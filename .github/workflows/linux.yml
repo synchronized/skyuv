@@ -128,10 +128,10 @@ jobs:
 
       - name: 准备原版 Skynet echo 环境
         run: |
-          cmake -E copy examples/skyuv_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_echo.lua"
-          cmake -E copy examples/skyuv_tcp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_tcp_events.lua"
-          cmake -E copy examples/skyuv_socket_controls.lua "$RUNNER_TEMP/skynet/service/skyuv_socket_controls.lua"
-          cmake -E copy examples/skyuv_udp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_udp_events.lua"
+          cmake -E copy tests/fixtures/skyuv_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_echo.lua"
+          cmake -E copy tests/fixtures/skyuv_tcp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_tcp_events.lua"
+          cmake -E copy tests/fixtures/skyuv_socket_controls.lua "$RUNNER_TEMP/skynet/service/skyuv_socket_controls.lua"
+          cmake -E copy tests/fixtures/skyuv_udp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_udp_events.lua"
           cmake -E copy examples/upstream-echo.conf "$RUNNER_TEMP/skynet/examples/skyuv-echo.conf"
           cmake -E copy examples/upstream-tcp-events.conf "$RUNNER_TEMP/skynet/examples/tcp-events.conf"
           cmake -E copy examples/upstream-socket-controls.conf "$RUNNER_TEMP/skynet/examples/socket-controls.conf"

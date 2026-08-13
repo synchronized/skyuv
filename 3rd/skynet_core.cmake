@@ -179,7 +179,7 @@ target_include_directories(
 target_link_libraries(skyuv_lua_module_client PRIVATE skyuv::platform)
 
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/skynet" SKYUV_SKYNET_RUNTIME_SOURCE_DIR)
-file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/examples" SKYUV_EXAMPLE_SOURCE_DIR)
+file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/tests/fixtures" SKYUV_EXAMPLE_SOURCE_DIR)
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_BINARY_DIR}" SKYUV_SKYNET_RUNTIME_BINARY_DIR)
 set(SKYUV_SKYNET_START_SERVICE skyuv_smoke)
 configure_file(
