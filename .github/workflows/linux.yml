@@ -130,8 +130,10 @@ jobs:
         run: |
           cmake -E copy examples/skyuv_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_echo.lua"
           cmake -E copy examples/skyuv_tcp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_tcp_events.lua"
+          cmake -E copy examples/skyuv_socket_controls.lua "$RUNNER_TEMP/skynet/service/skyuv_socket_controls.lua"
           cmake -E copy examples/upstream-echo.conf "$RUNNER_TEMP/skynet/examples/skyuv-echo.conf"
           cmake -E copy examples/upstream-tcp-events.conf "$RUNNER_TEMP/skynet/examples/tcp-events.conf"
+          cmake -E copy examples/upstream-socket-controls.conf "$RUNNER_TEMP/skynet/examples/socket-controls.conf"
 
       - name: 运行原版 Skynet TCP echo 对照测试
         working-directory: ${{ runner.temp }}/skynet
@@ -154,6 +156,15 @@ jobs:
         run: |
           timeout 15s ./skynet examples/tcp-events.conf 2>&1 | tee upstream-tcp-events.log
           grep -F "skyuv TCP 原始事件基线验证通过" upstream-tcp-events.log
+
+      - name: 运行原版 Skynet TCP 控制语义基线
+        working-directory: ${{ runner.temp }}/skynet
+        shell: bash
+        run: |
+          timeout 15s ./skynet examples/socket-controls.conf 2>&1 | tee upstream-socket-controls.log
+          grep -F "TCP_CONTROL pause_resume" upstream-socket-controls.log
+          grep -F "TCP_CONTROL shutdown_close" upstream-socket-controls.log
+          grep -F "skyuv TCP 控制语义基线验证通过" upstream-socket-controls.log
 
       - name: 对照 libuv 版 TCP 原始事件序列
         shell: bash

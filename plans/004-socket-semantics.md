@@ -52,13 +52,14 @@
 - `pause`：在 loop 线程调用 `uv_read_stop`，保留连接和已接收事件；
 - `start`：暂停连接恢复读取，listener 的 start/resume 保持阶段 2 已验证行为；
 - `nodelay`：映射 `uv_tcp_nodelay`，无效 ID 不影响其他连接；
-- `shutdown`：映射 `uv_shutdown` 完成写方向 half-close，读取方向继续工作，完成后按原版语义报告关闭或错误；
+- `shutdown`：保持上游立即强制关闭语义，不等待待写队列；
+- half-close：对端 EOF 后保留上游读半关闭状态，待本端写队列完成或主动 close 后释放；
 - 重复 pause/start/shutdown 的幂等边界。
 
 验证：
 
 - pause 后对端发送数据不产生 DATA，start 后按顺序收到；
-- shutdown 前已入队数据发送完成，对端收到 EOF，本端仍可处理对端数据；
+- shutdown 丢弃尚未完成的写并报告关闭；对端 EOF 与本端后续写/close 的顺序单独验证；
 - nodelay 对连接、listener 和无效 ID 的行为与原版对照；
 - 重复控制命令、控制命令与 close/exit 竞态不泄漏或挂起。
 
@@ -157,7 +158,7 @@
 
 ## 风险与决策
 
-- `uv_shutdown` 只适用于流 handle，half-close 与原版 close 事件时机需用对照测试确定；
+- 上游 shutdown 是强制关闭，不能直接映射为 `uv_shutdown`；对端 EOF 的读半关闭状态需独立建模；
 - libuv write 一旦提交不能被后来的高优先级数据抢占，兼容目标限定为未提交队列的优先级；
 - UDP 地址编码属于 Lua 可见 ABI，必须先从原版测试固化字节布局再实现；
 - socket info 是跨线程快照，不返回 runtime 内部链表；
@@ -172,4 +173,3 @@
 - 高低优先级在连续小包下的可观察合并边界；
 - UDP 来源地址编码及 IPv4/IPv6 长度；
 - `socket_info` 中 closing、reading、writing 和地址文本的精确表示。
-
