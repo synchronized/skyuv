@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#ifndef _WIN32
+#include <signal.h>
+#endif
+
 #include <skyuv/thread.h>
 
 #define pthread_t skyuv_thread
