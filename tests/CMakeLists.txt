@@ -41,7 +41,9 @@ target_include_directories(
   skyuv_test_socket_internal
   PRIVATE "${PROJECT_SOURCE_DIR}/src/socket" "${PROJECT_SOURCE_DIR}/include"
 )
-target_link_libraries(skyuv_test_socket_internal PRIVATE skyuv::socket_core cmocka::cmocka)
+target_link_libraries(
+  skyuv_test_socket_internal PRIVATE skyuv::socket_core skyuv::libuv cmocka::cmocka
+)
 skyuv_target_compile_warnings(skyuv_test_socket_internal)
 add_test(NAME socket.internal COMMAND skyuv_test_socket_internal)
 
