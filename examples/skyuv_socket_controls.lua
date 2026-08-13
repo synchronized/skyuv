@@ -44,11 +44,14 @@ skynet.register_protocol {
 				driver.nodelay(accepted)
 				driver.pause(accepted)
 				paused = true
-				driver.send(client, "paused-payload")
-				skynet.timeout(10, function()
-					assert(not resumed)
-					resumed = true
-					driver.start(accepted)
+				-- pause 是异步控制命令，延后一拍再发送，避免把命令生效前已就绪的数据误判为失败。
+				skynet.timeout(1, function()
+					driver.send(client, "paused-payload")
+					skynet.timeout(10, function()
+						assert(not resumed)
+						resumed = true
+						driver.start(accepted)
+					end)
 				end)
 			else
 				-- connect 的 OPEN 可能先于 driver.connect 返回并写入 client。
