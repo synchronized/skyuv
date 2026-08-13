@@ -160,3 +160,7 @@
   因此相同 harbor ID 重启会被明确拒绝，不提供透明热重连；使用新 ID 的替代
   节点可以正常加入并继续访问既有全局服务。该流程在 Windows 连续运行 10 次，
   未出现端口占用、残留进程或 socket 生命周期污染。
+- `skynet` 聚合模块已补入 `skynet.memory`。便携运行时保留 `total`、`block`、
+  `current`、`info`、`jestat`、`mallctl`、dump 和 profiling 等完整 Lua API；当前
+  后端不伪造上游 malloc hook 的服务级统计，基础查询返回零、服务表为空且
+  profiling 保持关闭，诊断调用给出明确的系统分配器提示。

@@ -40,11 +40,17 @@ target_link_libraries(
 )
 skyuv_target_compile_warnings(skyuv_socket_server)
 
-set(SKYUV_SKYNET_DAEMON_SOURCE compat/skynet/start/skyuv_daemon.c)
-add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_DAEMON_SOURCE})
+set(
+  SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES
+  compat/skynet/start/skyuv_daemon.c
+  compat/skynet/skyuv_memory.c
+)
+add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES})
 target_include_directories(
   skyuv_skynet_runtime_compat
-  PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
+  PRIVATE
+    "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
+    "${PROJECT_SOURCE_DIR}/3rd/skynet/3rd/lua"
 )
 skyuv_target_compile_warnings(skyuv_skynet_runtime_compat)
 
@@ -331,6 +337,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-sharedata.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-datasheet.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-netpack.c"
+    "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-memory.c"
   )
   add_library(skyuv_portable_lua_module_skynet MODULE ${SKYUV_PORTABLE_LUA_MODULE_SOURCES})
   set_target_properties(
@@ -381,6 +388,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       skyuv::lua
       skyuv::libuv
       skyuv::platform
+      skyuv_skynet_runtime_compat
   )
 
   file(TO_CMAKE_PATH "${SKYUV_PORTABLE_SKYNET_ROOT}" SKYUV_PORTABLE_SOURCE_DIR)
@@ -499,6 +507,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   configure_file(
     "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-cgate.conf"
+    @ONLY
+  )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_memory)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-memory.conf"
     @ONLY
   )
   set(SKYUV_HARBOR_ID 1)
@@ -727,6 +741,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       skynet.portable.cgate
       PROPERTIES
         TIMEOUT 15
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+    add_test(
+      NAME skynet.portable.memory
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-smoke.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Config "3rd/skyuv-portable-memory.conf"
+    )
+    set_tests_properties(
+      skynet.portable.memory
+      PROPERTIES
+        TIMEOUT 10
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
     add_test(
