@@ -33,8 +33,21 @@ struct skyuv_socket_runtime {
 	uint32_t next_slot;
 	struct skyuv_socket_event *event_head;
 	struct skyuv_socket_event *event_tail;
+	uint32_t entry_count;
+	bool exiting;
 	bool exit_ready;
 };
+
+static void update_exit_ready(struct skyuv_socket_runtime *runtime) {
+	bool ready;
+
+	skyuv_mutex_lock(&runtime->slots_mutex);
+	ready = runtime->exiting && runtime->entry_count == 0;
+	skyuv_mutex_unlock(&runtime->slots_mutex);
+	if (ready) {
+		runtime->exit_ready = true;
+	}
+}
 
 static void push_event(struct skyuv_socket_runtime *runtime, enum skyuv_socket_event_type type,
 					   int id, uintptr_t opaque, int value) {
@@ -124,6 +137,7 @@ static int reserve_entry(struct skyuv_socket_runtime *runtime, uintptr_t opaque,
 		entry->id = skyuv_socket_id_make(slot, runtime->generations[slot]);
 		entry->opaque = opaque;
 		runtime->slots[slot] = entry;
+		++runtime->entry_count;
 		*result = entry;
 		skyuv_mutex_unlock(&runtime->slots_mutex);
 		return SKYUV_OK;
@@ -140,9 +154,11 @@ static void close_entry(uv_handle_t *handle) {
 	skyuv_mutex_lock(&runtime->slots_mutex);
 	if (runtime->slots[slot] == entry) {
 		runtime->slots[slot] = NULL;
+		--runtime->entry_count;
 	}
 	skyuv_mutex_unlock(&runtime->slots_mutex);
 	free(entry);
+	update_exit_ready(runtime);
 }
 
 static void discard_uninitialized_entry(struct skyuv_socket_entry *entry) {
@@ -152,9 +168,11 @@ static void discard_uninitialized_entry(struct skyuv_socket_entry *entry) {
 	skyuv_mutex_lock(&runtime->slots_mutex);
 	if (runtime->slots[slot] == entry) {
 		runtime->slots[slot] = NULL;
+		--runtime->entry_count;
 	}
 	skyuv_mutex_unlock(&runtime->slots_mutex);
 	free(entry);
+	update_exit_ready(runtime);
 }
 
 static void reject_entry(struct skyuv_socket_entry *entry, int error) {
@@ -426,6 +444,27 @@ static void process_close(struct skyuv_socket_runtime *runtime,
 	uv_close((uv_handle_t *)&entry->tcp, close_entry);
 }
 
+static void process_exit(struct skyuv_socket_runtime *runtime) {
+	uint32_t slot;
+
+	runtime->exiting = true;
+	for (slot = 0; slot < SKYUV_SOCKET_SLOT_COUNT; ++slot) {
+		struct skyuv_socket_entry *entry = runtime->slots[slot];
+
+		if (entry == NULL) {
+			continue;
+		}
+		if (!entry->initialized) {
+			discard_uninitialized_entry(entry);
+		} else if (!uv_is_closing((uv_handle_t *)&entry->tcp)) {
+			set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
+			uv_close((uv_handle_t *)&entry->tcp, close_entry);
+		}
+	}
+	uv_close((uv_handle_t *)&runtime->async, NULL);
+	update_exit_ready(runtime);
+}
+
 static void consume_commands(uv_async_t *async) {
 	struct skyuv_socket_runtime *runtime = async->data;
 	struct skyuv_socket_command *command;
@@ -442,8 +481,7 @@ static void consume_commands(uv_async_t *async) {
 		} else if (command->type == SKYUV_SOCKET_COMMAND_CLOSE) {
 			process_close(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_EXIT) {
-			runtime->exit_ready = true;
-			uv_close((uv_handle_t *)&runtime->async, NULL);
+			process_exit(runtime);
 		}
 		skyuv_socket_command_destroy(command);
 	}

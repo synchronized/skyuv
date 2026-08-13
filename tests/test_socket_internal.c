@@ -675,6 +675,61 @@ static void test_runtime_close_during_write(void **state) {
 	assert_int_equal(released_buffers, 1);
 }
 
+static void test_runtime_exit_closes_live_handles(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	char *data;
+	int connection;
+	int accepted;
+	bool saw_exit = false;
+
+	(void)state;
+	released_buffers = 0;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	data = malloc(4U * 1024U * 1024U);
+	assert_non_null(data);
+	memset(data, 'e', 4U * 1024U * 1024U);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, data, 4U * 1024U * 1024U,
+											   SKYUV_SOCKET_BUFFER_OWNED, count_release),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_exit(runtime), SKYUV_OK);
+	while (!saw_exit) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		if (event.type == SKYUV_SOCKET_EVENT_DATA) {
+			free(event.data);
+		} else {
+			assert_int_equal(event.type, SKYUV_SOCKET_EVENT_EXIT);
+			saw_exit = true;
+		}
+	}
+	assert_int_equal(skyuv_socket_runtime_state(runtime, connection), SKYUV_SOCKET_STATE_INVALID);
+	assert_int_equal(skyuv_socket_runtime_state(runtime, accepted), SKYUV_SOCKET_STATE_INVALID);
+	assert_int_equal(released_buffers, 1);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_repeated_close_has_single_event(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	int connection;
+	int accepted;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	assert_int_equal(skyuv_socket_runtime_close(runtime, connection, (uintptr_t)17), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_close(runtime, connection, (uintptr_t)18), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_exit(runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, connection);
+	assert_int_equal(event.opaque, (uintptr_t)17);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_EXIT);
+	skyuv_socket_runtime_release(&runtime);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -697,6 +752,8 @@ int main(void) {
 		cmocka_unit_test(test_runtime_send_lifecycle),
 		cmocka_unit_test(test_runtime_concurrent_send),
 		cmocka_unit_test(test_runtime_close_during_write),
+		cmocka_unit_test(test_runtime_exit_closes_live_handles),
+		cmocka_unit_test(test_runtime_repeated_close_has_single_event),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
