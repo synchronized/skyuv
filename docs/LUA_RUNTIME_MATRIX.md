@@ -8,7 +8,7 @@
 |---|---|---|---|
 | `snlua` | 已构建、可加载 | Windows 最小启动与 Lua 服务执行；Linux 对照启动；macOS 构建测试 | 扩大三平台示例覆盖 |
 | `logger` | 已构建、可加载 | 三平台启动路径使用；Windows 多配置目录已验证 | 补充文件输出路径测试 |
-| `harbor` | 已构建、可加载 | 三平台构建，单节点启动会加载 | 审计多节点行为和退出路径 |
+| `harbor` | 已构建、可加载 | Windows 双节点已验证握手、socket 所有权转移、全局名传播、跨节点 RPC 和掉线通知；三平台构建通过 | 补充 Linux、macOS 双节点运行和重连测试 |
 | `gate` | 已构建、可直接加载 | Windows 已验证 C 服务监听、连接、二字节分帧、watchdog 转发、客户端回写和关闭；`snax.gateserver` 也已完成真实 TCP 分帧回显 | 补充 Linux、macOS 运行测试和异常连接测试 |
 
 ## Lua C 模块

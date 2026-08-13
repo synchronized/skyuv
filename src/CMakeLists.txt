@@ -501,6 +501,24 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-cgate.conf"
     @ONLY
   )
+  set(SKYUV_HARBOR_ID 1)
+  set(SKYUV_HARBOR_PORT 25287)
+  set(SKYUV_STANDALONE_LINE "standalone = \"127.0.0.1:25286\"")
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_harbor_provider)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-harbor.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-harbor-node1.conf"
+    @ONLY
+  )
+  set(SKYUV_HARBOR_ID 2)
+  set(SKYUV_HARBOR_PORT 25288)
+  set(SKYUV_STANDALONE_LINE "")
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_harbor_consumer)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-harbor.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-harbor-node2.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
@@ -702,6 +720,20 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       skynet.portable.cgate
       PROPERTIES
         TIMEOUT 15
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+    add_test(
+      NAME skynet.portable.harbor
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-harbor.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Node1Config "3rd/skyuv-portable-harbor-node1.conf"
+        -Node2Config "3rd/skyuv-portable-harbor-node2.conf"
+    )
+    set_tests_properties(
+      skynet.portable.harbor
+      PROPERTIES
+        TIMEOUT 25
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
     set_tests_properties(

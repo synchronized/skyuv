@@ -330,7 +330,7 @@ static void read_completed(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
 }
 
 static void udp_received(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buffer,
-					 const struct sockaddr *address, unsigned flags) {
+						 const struct sockaddr *address, unsigned flags) {
 	struct skyuv_socket_entry *entry = handle->data;
 	struct skyuv_socket_event *event;
 	size_t address_size;
@@ -660,6 +660,14 @@ static void process_start(struct skyuv_socket_runtime *runtime,
 		push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
 		return;
 	}
+	if (state == SKYUV_SOCKET_STATE_CONNECTED) {
+		/* start 也承担 Skynet socket 在服务间转移所有权的职责。 */
+		skyuv_mutex_lock(&runtime->slots_mutex);
+		entry->opaque = command->opaque;
+		skyuv_mutex_unlock(&runtime->slots_mutex);
+		push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
+		return;
+	}
 	if (state != SKYUV_SOCKET_STATE_ACCEPTED_PAUSED &&
 		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_EINVAL);
@@ -706,8 +714,7 @@ static void process_nodelay(struct skyuv_socket_runtime *runtime,
 		return;
 	}
 	state = entry_state(entry);
-	if (state != SKYUV_SOCKET_STATE_CONNECTED &&
-		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
+	if (state != SKYUV_SOCKET_STATE_CONNECTED && state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
 		state != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
 		return;
 	}
@@ -800,8 +807,7 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 		process_udp_send(runtime, command);
 		return;
 	}
-	if (state != SKYUV_SOCKET_STATE_CONNECTED &&
-		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
+	if (state != SKYUV_SOCKET_STATE_CONNECTED && state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
 		state != SKYUV_SOCKET_STATE_HALFCLOSE_READ) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_ENOTCONN);
 		return;
@@ -838,8 +844,8 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 		entry->queued_bytes >= entry->warn_size) {
 		size_t warning_kb = (entry->queued_bytes + 1023U) / 1024U;
 
-		entry->warn_size = entry->warn_size == 0 ? SKYUV_SOCKET_WARNING_SIZE * 2U
-												 : entry->warn_size * 2U;
+		entry->warn_size =
+			entry->warn_size == 0 ? SKYUV_SOCKET_WARNING_SIZE * 2U : entry->warn_size * 2U;
 		push_event(runtime, SKYUV_SOCKET_EVENT_WARNING, entry->id, entry->opaque,
 				   warning_kb > INT_MAX ? INT_MAX : (int)warning_kb);
 	}
@@ -984,8 +990,7 @@ static void process_close(struct skyuv_socket_runtime *runtime,
 		discard_uninitialized_entry(entry);
 		return;
 	}
-	if (command->type == SKYUV_SOCKET_COMMAND_CLOSE && !entry->is_udp &&
-		entry->queued_bytes > 0) {
+	if (command->type == SKYUV_SOCKET_COMMAND_CLOSE && !entry->is_udp && entry->queued_bytes > 0) {
 		(void)uv_read_stop((uv_stream_t *)&entry->tcp);
 		skyuv_mutex_lock(&runtime->slots_mutex);
 		entry->reading = false;
@@ -1371,8 +1376,8 @@ int skyuv_socket_runtime_nodelay(struct skyuv_socket_runtime *runtime, int id) {
 }
 
 static int runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
-						enum skyuv_socket_buffer_ownership ownership,
-						void (*release)(void *data), bool low_priority) {
+						enum skyuv_socket_buffer_ownership ownership, void (*release)(void *data),
+						bool low_priority) {
 	struct skyuv_socket_command *command;
 	void *queued_data = data;
 	int result;
@@ -1397,8 +1402,7 @@ static int runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data
 		}
 		return SKYUV_ERROR_OUT_OF_MEMORY;
 	}
-	command->type =
-		low_priority ? SKYUV_SOCKET_COMMAND_SEND_LOW : SKYUV_SOCKET_COMMAND_SEND;
+	command->type = low_priority ? SKYUV_SOCKET_COMMAND_SEND_LOW : SKYUV_SOCKET_COMMAND_SEND;
 	command->id = id;
 	command->payload.send.data = queued_data;
 	command->payload.send.size = size;
@@ -1463,7 +1467,7 @@ int skyuv_socket_runtime_connect(struct skyuv_socket_runtime *runtime, const cha
 }
 
 int skyuv_socket_runtime_bind(struct skyuv_socket_runtime *runtime, int fd, uintptr_t opaque,
-							 int *id) {
+							  int *id) {
 #if SKYUV_SOCKET_EXTERNAL_FD
 	struct skyuv_socket_command *command;
 	struct skyuv_socket_entry *entry;
@@ -1516,7 +1520,7 @@ int skyuv_socket_runtime_bind(struct skyuv_socket_runtime *runtime, int fd, uint
 }
 
 int skyuv_socket_runtime_udp(struct skyuv_socket_runtime *runtime, const char *host, int port,
-							uintptr_t opaque, int *id) {
+							 uintptr_t opaque, int *id) {
 	struct skyuv_socket_command *command;
 	struct skyuv_socket_entry *entry;
 	const char *bind_host = host == NULL ? "0.0.0.0" : host;
@@ -1710,13 +1714,12 @@ struct skyuv_socket_info *skyuv_socket_runtime_info(struct skyuv_socket_runtime 
 		struct skyuv_socket_entry *entry = runtime->slots[slot];
 		struct skyuv_socket_info *info;
 
-		if (entry == NULL ||
-			(entry->state != SKYUV_SOCKET_STATE_LISTENING &&
-			 entry->state != SKYUV_SOCKET_STATE_CONNECTED &&
-			 entry->state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
-			 entry->state != SKYUV_SOCKET_STATE_HALFCLOSE_READ &&
-			 entry->state != SKYUV_SOCKET_STATE_UDP &&
-			 entry->state != SKYUV_SOCKET_STATE_CLOSING)) {
+		if (entry == NULL || (entry->state != SKYUV_SOCKET_STATE_LISTENING &&
+							  entry->state != SKYUV_SOCKET_STATE_CONNECTED &&
+							  entry->state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED &&
+							  entry->state != SKYUV_SOCKET_STATE_HALFCLOSE_READ &&
+							  entry->state != SKYUV_SOCKET_STATE_UDP &&
+							  entry->state != SKYUV_SOCKET_STATE_CLOSING)) {
 			continue;
 		}
 		info = calloc(1, sizeof(*info));
@@ -1728,14 +1731,14 @@ struct skyuv_socket_info *skyuv_socket_runtime_info(struct skyuv_socket_runtime 
 						 ? SKYUV_SOCKET_INFO_LISTEN
 						 : (entry->state == SKYUV_SOCKET_STATE_UDP
 								? SKYUV_SOCKET_INFO_UDP
-						 : (entry->close_requested ||
-							entry->state == SKYUV_SOCKET_STATE_HALFCLOSE_READ ||
-							entry->state == SKYUV_SOCKET_STATE_CLOSING
-								? SKYUV_SOCKET_INFO_CLOSING
-								: SKYUV_SOCKET_INFO_TCP));
+								: (entry->close_requested ||
+										   entry->state == SKYUV_SOCKET_STATE_HALFCLOSE_READ ||
+										   entry->state == SKYUV_SOCKET_STATE_CLOSING
+									   ? SKYUV_SOCKET_INFO_CLOSING
+									   : SKYUV_SOCKET_INFO_TCP));
 		info->opaque = entry->opaque;
-		info->read = entry->state == SKYUV_SOCKET_STATE_LISTENING ? entry->accept_count
-																 : entry->read_bytes;
+		info->read =
+			entry->state == SKYUV_SOCKET_STATE_LISTENING ? entry->accept_count : entry->read_bytes;
 		info->write = entry->write_bytes;
 		info->rtime = entry->read_time;
 		info->wtime = entry->write_time;

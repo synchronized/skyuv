@@ -152,3 +152,7 @@
 - 上游 C `gate` 服务已纳入便携构建并在 Windows 直接加载；实际回环测试覆盖
   监听、accept、拆分长度头、watchdog 文本事件、`PTYPE_CLIENT` 回写、连接关闭
   通知和监听句柄关闭，确认旧 C 服务路径不依赖 POSIX 网络接口。
+- Windows 双节点 harbor 已完成最小联调：节点 1 同时运行 cmaster、cslave 和
+  全局服务，节点 2 完成握手后查询全局名并执行跨节点 Lua RPC，随后验证节点
+  掉线通知。联调同时修复 `socket.start` 对已连接 socket 的服务所有权转移语义，
+  防止握手后数据继续投递给已调用 `socket.abandon` 的原 Lua 服务。

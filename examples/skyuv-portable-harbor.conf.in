@@ -1,0 +1,14 @@
+thread = 2
+logger = nil
+harbor = @SKYUV_HARBOR_ID@
+master = "127.0.0.1:25286"
+address = "127.0.0.1:@SKYUV_HARBOR_PORT@"
+@SKYUV_STANDALONE_LINE@
+bootstrap = "snlua bootstrap"
+start = "@SKYUV_PORTABLE_START_SERVICE@"
+
+cpath = "@SKYUV_PORTABLE_BINARY_DIR@/cservice/?@SKYUV_PORTABLE_MODULE_SUFFIX@"
+lua_path = "@SKYUV_PORTABLE_SOURCE_DIR@/lualib/?.lua;@SKYUV_PORTABLE_SOURCE_DIR@/lualib/?/init.lua"
+lua_cpath = "@SKYUV_PORTABLE_BINARY_DIR@/luaclib/?@SKYUV_PORTABLE_MODULE_SUFFIX@"
+luaservice = "@SKYUV_PORTABLE_SOURCE_DIR@/service/?.lua;@SKYUV_EXAMPLE_SOURCE_DIR@/?.lua"
+lualoader = "@SKYUV_PORTABLE_SOURCE_DIR@/lualib/loader.lua"

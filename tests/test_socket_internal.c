@@ -165,8 +165,8 @@ static void send_udp_datagram(void *argument) {
 	}
 	if (context->result == 0) {
 		request.data = context;
-		context->result = uv_udp_send(&request, &udp, &buffer, 1,
-									  (const struct sockaddr *)&address, udp_sent);
+		context->result =
+			uv_udp_send(&request, &udp, &buffer, 1, (const struct sockaddr *)&address, udp_sent);
 	}
 	if (context->result == 0) {
 		(void)uv_run(&loop, UV_RUN_DEFAULT);
@@ -769,8 +769,7 @@ static void test_runtime_close_during_write(void **state) {
 	} while (event.type == SKYUV_SOCKET_EVENT_WARNING);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
 	assert_int_equal(event.id, connection);
-	assert_int_equal(skyuv_socket_runtime_state(runtime, connection),
-					 SKYUV_SOCKET_STATE_CLOSING);
+	assert_int_equal(skyuv_socket_runtime_state(runtime, connection), SKYUV_SOCKET_STATE_CLOSING);
 	while (received < 4U * 1024U * 1024U) {
 		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 		if (event.type == SKYUV_SOCKET_EVENT_WARNING) {
@@ -857,7 +856,8 @@ static void test_runtime_pause_and_resume(void **state) {
 	create_connected_pair(runtime, &connection, &accepted);
 	assert_int_equal(skyuv_socket_runtime_pause(runtime, accepted, (uintptr_t)90), SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, (void *)payload,
-										 sizeof(payload) - 1, SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+											   sizeof(payload) - 1, SKYUV_SOCKET_BUFFER_BORROWED,
+											   NULL),
 					 SKYUV_OK);
 	resume.runtime = runtime;
 	resume.id = accepted;
@@ -873,6 +873,38 @@ static void test_runtime_pause_and_resume(void **state) {
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
 	assert_int_equal(event.id, accepted);
+	assert_int_equal(event.size, sizeof(payload) - 1);
+	assert_memory_equal(event.data, payload, sizeof(payload) - 1);
+	free(event.data);
+	assert_int_equal(skyuv_socket_runtime_exit(runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_EXIT);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_start_transfers_connected_socket(void **state) {
+	static const char payload[] = "transfer-data";
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	int connection;
+	int accepted;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	assert_int_equal(skyuv_socket_runtime_start(runtime, accepted, (uintptr_t)94), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
+	assert_int_equal(event.id, accepted);
+	assert_int_equal(event.opaque, (uintptr_t)94);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, (void *)payload,
+											   sizeof(payload) - 1, SKYUV_SOCKET_BUFFER_BORROWED,
+											   NULL),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+	assert_int_equal(event.id, accepted);
+	assert_int_equal(event.opaque, (uintptr_t)94);
 	assert_int_equal(event.size, sizeof(payload) - 1);
 	assert_memory_equal(event.data, payload, sizeof(payload) - 1);
 	free(event.data);
@@ -932,7 +964,7 @@ static void test_runtime_remote_eof_keeps_halfclose_until_local_close(void **sta
 	assert_non_null(data);
 	*data = 'h';
 	assert_int_equal(skyuv_socket_runtime_send(runtime, accepted, data, 1,
-										 SKYUV_SOCKET_BUFFER_OWNED, count_release),
+											   SKYUV_SOCKET_BUFFER_OWNED, count_release),
 					 SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_close(runtime, accepted, (uintptr_t)94), SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_exit(runtime), SKYUV_OK);
@@ -954,13 +986,13 @@ static void test_runtime_write_priority(void **state) {
 	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
 	create_connected_pair(runtime, &connection, &accepted);
 	assert_int_equal(skyuv_socket_runtime_send_low(runtime, connection, "l", 1,
-											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+												   SKYUV_SOCKET_BUFFER_BORROWED, NULL),
 					 SKYUV_OK);
-	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, "h", 1,
-										 SKYUV_SOCKET_BUFFER_BORROWED, NULL),
-					 SKYUV_OK);
+	assert_int_equal(
+		skyuv_socket_runtime_send(runtime, connection, "h", 1, SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+		SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_send_low(runtime, connection, "x", 1,
-											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+												   SKYUV_SOCKET_BUFFER_BORROWED, NULL),
 					 SKYUV_OK);
 	while (received_size < sizeof(received)) {
 		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
@@ -991,9 +1023,8 @@ static void test_runtime_write_warning_and_recovery(void **state) {
 	data = malloc(SKYUV_SOCKET_WARNING_SIZE);
 	assert_non_null(data);
 	memset(data, 'q', SKYUV_SOCKET_WARNING_SIZE);
-	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, data,
-										 SKYUV_SOCKET_WARNING_SIZE,
-										 SKYUV_SOCKET_BUFFER_OWNED, NULL),
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, data, SKYUV_SOCKET_WARNING_SIZE,
+											   SKYUV_SOCKET_BUFFER_OWNED, NULL),
 					 SKYUV_OK);
 	while (!saw_warning || !saw_recovery || received < SKYUV_SOCKET_WARNING_SIZE) {
 		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
@@ -1030,7 +1061,7 @@ static void test_runtime_info_snapshot(void **state) {
 	skyuv_socket_runtime_updatetime(runtime, 1234);
 	create_connected_pair(runtime, &connection, &accepted);
 	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, "info", 4,
-										 SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+											   SKYUV_SOCKET_BUFFER_BORROWED, NULL),
 					 SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
@@ -1074,7 +1105,7 @@ static void test_runtime_info_concurrent_query(void **state) {
 	assert_int_equal(skyuv_thread_create(&thread, query_info_repeatedly, &context), SKYUV_OK);
 	for (index = 0; index < 100; ++index) {
 		assert_int_equal(skyuv_socket_runtime_send(runtime, connection, "i", 1,
-											 SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+												   SKYUV_SOCKET_BUFFER_BORROWED, NULL),
 						 SKYUV_OK);
 	}
 	while (received < 100) {
@@ -1100,9 +1131,8 @@ static void test_runtime_udp_lifecycle(void **state) {
 
 	(void)state;
 	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
-	assert_int_equal(skyuv_socket_runtime_udp(runtime, "127.0.0.1", client.port,
-										(uintptr_t)95, &udp),
-					 SKYUV_OK);
+	assert_int_equal(
+		skyuv_socket_runtime_udp(runtime, "127.0.0.1", client.port, (uintptr_t)95, &udp), SKYUV_OK);
 	assert_int_equal(skyuv_thread_create(&thread, send_udp_datagram, &client), SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_UDP);
@@ -1132,13 +1162,12 @@ static void test_runtime_udp_default_and_explicit_send(void **state) {
 
 	(void)state;
 	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
-	assert_int_equal(skyuv_socket_runtime_udp(runtime, "127.0.0.1", 25485, 0, &server),
-					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_udp(runtime, "127.0.0.1", 25485, 0, &server), SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_udp(runtime, NULL, 0, 0, &client), SKYUV_OK);
-	assert_int_equal(
-		skyuv_socket_runtime_udp_connect(runtime, client, "127.0.0.1", 25485), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_udp_connect(runtime, client, "127.0.0.1", 25485),
+					 SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_udp_send(runtime, client, NULL, 0, "request", 7,
-											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+												   SKYUV_SOCKET_BUFFER_BORROWED, NULL),
 					 SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_UDP);
@@ -1149,8 +1178,8 @@ static void test_runtime_udp_default_and_explicit_send(void **state) {
 	(void)memcpy(address, (const uint8_t *)event.data + event.size, address_size);
 	free(event.data);
 	assert_int_equal(skyuv_socket_runtime_udp_send(runtime, server, address, address_size,
-											  "response", 8,
-											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+												   "response", 8, SKYUV_SOCKET_BUFFER_BORROWED,
+												   NULL),
 					 SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_UDP);
@@ -1189,7 +1218,8 @@ static void test_runtime_external_fd(void **state) {
 		accepted = accept(listener, NULL, NULL);
 		assert_true(accepted >= 0);
 		assert_int_equal(close(listener), 0);
-		assert_int_equal(skyuv_socket_runtime_bind(runtime, accepted, (uintptr_t)96, &id), SKYUV_OK);
+		assert_int_equal(skyuv_socket_runtime_bind(runtime, accepted, (uintptr_t)96, &id),
+						 SKYUV_OK);
 		assert_int_equal(skyuv_socket_runtime_bind(runtime, accepted, 0, &id),
 						 SKYUV_ERROR_INVALID_STATE);
 		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
@@ -1239,6 +1269,7 @@ int main(void) {
 		cmocka_unit_test(test_runtime_exit_closes_live_handles),
 		cmocka_unit_test(test_runtime_repeated_close_has_single_event),
 		cmocka_unit_test(test_runtime_pause_and_resume),
+		cmocka_unit_test(test_runtime_start_transfers_connected_socket),
 		cmocka_unit_test(test_runtime_nodelay_and_shutdown),
 		cmocka_unit_test(test_runtime_remote_eof_keeps_halfclose_until_local_close),
 		cmocka_unit_test(test_runtime_write_priority),
