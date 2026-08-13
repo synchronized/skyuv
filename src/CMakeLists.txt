@@ -194,6 +194,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-socket-controls.conf"
     @ONLY
   )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_udp_events)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-udp-events.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke

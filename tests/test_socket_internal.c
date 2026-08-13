@@ -1101,6 +1101,44 @@ static void test_runtime_udp_lifecycle(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void test_runtime_udp_default_and_explicit_send(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	uint8_t address[19];
+	size_t address_size;
+	int server;
+	int client;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_udp(runtime, "127.0.0.1", 25485, 0, &server),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_udp(runtime, NULL, 0, 0, &client), SKYUV_OK);
+	assert_int_equal(
+		skyuv_socket_runtime_udp_connect(runtime, client, "127.0.0.1", 25485), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_udp_send(runtime, client, NULL, 0, "request", 7,
+											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_UDP);
+	assert_int_equal(event.id, server);
+	assert_memory_equal(event.data, "request", 7);
+	address_size = (size_t)event.value;
+	assert_true(address_size == 7U);
+	(void)memcpy(address, (const uint8_t *)event.data + event.size, address_size);
+	free(event.data);
+	assert_int_equal(skyuv_socket_runtime_udp_send(runtime, server, address, address_size,
+											  "response", 8,
+											  SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_UDP);
+	assert_int_equal(event.id, client);
+	assert_memory_equal(event.data, "response", 8);
+	free(event.data);
+	skyuv_socket_runtime_release(&runtime);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -1133,6 +1171,7 @@ int main(void) {
 		cmocka_unit_test(test_runtime_info_snapshot),
 		cmocka_unit_test(test_runtime_info_concurrent_query),
 		cmocka_unit_test(test_runtime_udp_lifecycle),
+		cmocka_unit_test(test_runtime_udp_default_and_explicit_send),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

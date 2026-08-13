@@ -211,16 +211,21 @@ int socket_server_udp(struct socket_server *server, uintptr_t opaque, const char
 }
 
 int socket_server_udp_connect(struct socket_server *server, int id, const char *address, int port) {
-	(void)server;
-	(void)id;
-	(void)address;
-	(void)port;
-	return -1;
+	return server != NULL &&
+			   skyuv_socket_runtime_udp_connect(server->runtime, id, address, port) == SKYUV_OK
+			   ? 0
+			   : -1;
 }
 
 int socket_server_udp_dial(struct socket_server *server, uintptr_t opaque, const char *address,
 						   int port) {
-	return socket_server_udp(server, opaque, address, port);
+	int id = socket_server_udp(server, opaque,
+							   address != NULL && strchr(address, ':') != NULL ? "::" : NULL, 0);
+
+	if (id < 0 || socket_server_udp_connect(server, id, address, port) != 0) {
+		return -1;
+	}
+	return id;
 }
 
 int socket_server_udp_listen(struct socket_server *server, uintptr_t opaque, const char *address,
@@ -230,9 +235,51 @@ int socket_server_udp_listen(struct socket_server *server, uintptr_t opaque, con
 
 int socket_server_udp_send(struct socket_server *server, const struct socket_udp_address *address,
 						   struct socket_sendbuffer *buffer) {
-	(void)address;
-	release_sendbuffer(server, buffer);
-	return -1;
+	const uint8_t *encoded = (const uint8_t *)address;
+	const void *data;
+	void *copy;
+	size_t size;
+	size_t address_size;
+	enum skyuv_socket_buffer_ownership ownership;
+	int result;
+
+	if (server == NULL || buffer == NULL || buffer->buffer == NULL || encoded == NULL) {
+		return -1;
+	}
+	address_size = encoded[0] == 1U ? 7U : (encoded[0] == 2U ? 19U : 0U);
+	if (address_size == 0) {
+		release_sendbuffer(server, buffer);
+		return -1;
+	}
+	if (buffer->type == SOCKET_BUFFER_OBJECT) {
+		if (server->object_interface.buffer == NULL || server->object_interface.size == NULL ||
+			server->object_interface.free == NULL) {
+			return -1;
+		}
+		data = server->object_interface.buffer(buffer->buffer);
+		size = server->object_interface.size(buffer->buffer);
+		copy = malloc(size);
+		if (copy == NULL) {
+			release_sendbuffer(server, buffer);
+			return -1;
+		}
+		(void)memcpy(copy, data, size);
+		release_sendbuffer(server, buffer);
+		result = skyuv_socket_runtime_udp_send(server->runtime, buffer->id, encoded, address_size,
+											 copy, size, SKYUV_SOCKET_BUFFER_OWNED, NULL);
+		if (result != SKYUV_OK) {
+			free(copy);
+		}
+		return result == SKYUV_OK ? 0 : -1;
+	}
+	ownership = buffer->type == SOCKET_BUFFER_MEMORY ? SKYUV_SOCKET_BUFFER_OWNED
+													 : SKYUV_SOCKET_BUFFER_BORROWED;
+	result = skyuv_socket_runtime_udp_send(server->runtime, buffer->id, encoded, address_size,
+										(void *)buffer->buffer, buffer->sz, ownership, NULL);
+	if (result != SKYUV_OK && buffer->type == SOCKET_BUFFER_MEMORY) {
+		release_sendbuffer(server, buffer);
+	}
+	return result == SKYUV_OK ? 0 : -1;
 }
 
 const struct socket_udp_address *socket_server_udp_address(struct socket_server *server,

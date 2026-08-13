@@ -38,6 +38,8 @@ enum skyuv_socket_command_type {
 	SKYUV_SOCKET_COMMAND_CLOSE,
 	SKYUV_SOCKET_COMMAND_SHUTDOWN,
 	SKYUV_SOCKET_COMMAND_UDP,
+	SKYUV_SOCKET_COMMAND_UDP_CONNECT,
+	SKYUV_SOCKET_COMMAND_UDP_SEND,
 	SKYUV_SOCKET_COMMAND_EXIT,
 };
 
@@ -85,6 +87,8 @@ struct skyuv_socket_command {
 			size_t size;
 			enum skyuv_socket_buffer_ownership ownership;
 			void (*release)(void *data);
+			uint8_t address[19];
+			size_t address_size;
 		} send;
 	} payload;
 };
@@ -159,6 +163,12 @@ int skyuv_socket_runtime_send_low(struct skyuv_socket_runtime *runtime, int id, 
 								  void (*release)(void *data));
 int skyuv_socket_runtime_udp(struct skyuv_socket_runtime *runtime, const char *host, int port,
 							uintptr_t opaque, int *id);
+int skyuv_socket_runtime_udp_connect(struct skyuv_socket_runtime *runtime, int id, const char *host,
+									 int port);
+int skyuv_socket_runtime_udp_send(struct skyuv_socket_runtime *runtime, int id,
+								  const uint8_t *address, size_t address_size, void *data,
+								  size_t size, enum skyuv_socket_buffer_ownership ownership,
+								  void (*release)(void *data));
 int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_shutdown(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 void skyuv_socket_runtime_updatetime(struct skyuv_socket_runtime *runtime, uint64_t time);
