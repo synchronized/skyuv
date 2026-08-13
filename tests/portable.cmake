@@ -129,6 +129,24 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-multicast.conf"
   @ONLY
 )
+set(SKYUV_PORTABLE_START_SERVICE skyuv_cluster_core)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-cluster-core.conf"
+  @ONLY
+)
+set(SKYUV_PORTABLE_START_SERVICE skyuv_cluster_provider)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-cluster-provider.conf"
+  @ONLY
+)
+set(SKYUV_PORTABLE_START_SERVICE skyuv_cluster_consumer)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-cluster-consumer.conf"
+  @ONLY
+)
 set(SKYUV_HARBOR_ID 1)
 set(SKYUV_HARBOR_PORT 25287)
 set(SKYUV_STANDALONE_LINE "standalone = \"127.0.0.1:25286\"")
@@ -381,6 +399,33 @@ if(WIN32 AND BUILD_TESTING)
     skynet.portable.multicast
     PROPERTIES
       TIMEOUT 10
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.cluster_core
+    COMMAND
+      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
+      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -Config "3rd/skyuv-portable-cluster-core.conf"
+  )
+  set_tests_properties(
+    skynet.portable.cluster_core
+    PROPERTIES
+      TIMEOUT 10
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.cluster
+    COMMAND
+      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-cluster.ps1"
+      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -ProviderConfig "3rd/skyuv-portable-cluster-provider.conf"
+      -ConsumerConfig "3rd/skyuv-portable-cluster-consumer.conf"
+  )
+  set_tests_properties(
+    skynet.portable.cluster
+    PROPERTIES
+      TIMEOUT 20
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   add_test(

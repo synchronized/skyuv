@@ -167,3 +167,7 @@
 - `skynet` 聚合模块已补入 `skynet.multicast.core`；Windows 单节点集成测试使用
   两个 Actor 订阅同一频道，验证共享消息向两个订阅者发布并各自释放引用，
   随后覆盖取消订阅、仅剩订阅者接收以及频道删除流程。
+- `skynet` 聚合模块已补入 `skynet.cluster.core`；Windows 测试先固定名称判断、
+  节点名、trace 帧和成功/失败响应的协议编解码，再启动两个独立节点，覆盖
+  cluster 监听、服务注册、连接建立、按名称寻址以及携带 UTF-8 数据的跨节点
+  RPC。cluster sender 持有长连接，测试在确认结果后由驱动统一终止节点。
