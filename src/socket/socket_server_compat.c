@@ -49,7 +49,9 @@ int socket_server_poll(struct socket_server *server, struct socket_message *resu
 	}
 	result->id = event.id;
 	result->opaque = event.opaque;
-	result->ud = event.type == SKYUV_SOCKET_EVENT_DATA ? (int)event.size : event.value;
+	result->ud = event.type == SKYUV_SOCKET_EVENT_DATA || event.type == SKYUV_SOCKET_EVENT_UDP
+					 ? (int)event.size
+					 : event.value;
 	result->data = event.type == SKYUV_SOCKET_EVENT_ERROR ? (char *)uv_strerror(event.value)
 												  : event.data;
 	if (more != NULL) {
@@ -199,11 +201,13 @@ void socket_server_userobject(struct socket_server *server,
 
 int socket_server_udp(struct socket_server *server, uintptr_t opaque, const char *address,
 					  int port) {
-	(void)server;
-	(void)opaque;
-	(void)address;
-	(void)port;
-	return -1;
+	int id;
+
+	if (server == NULL ||
+		skyuv_socket_runtime_udp(server->runtime, address, port, opaque, &id) != SKYUV_OK) {
+		return -1;
+	}
+	return id;
 }
 
 int socket_server_udp_connect(struct socket_server *server, int id, const char *address, int port) {
@@ -234,12 +238,22 @@ int socket_server_udp_send(struct socket_server *server, const struct socket_udp
 const struct socket_udp_address *socket_server_udp_address(struct socket_server *server,
 														   struct socket_message *message,
 														   int *address_size) {
+	const uint8_t *address;
+	int size;
+
 	(void)server;
-	(void)message;
-	if (address_size != NULL) {
-		*address_size = 0;
+	if (message == NULL || message->data == NULL || message->ud < 0) {
+		if (address_size != NULL) {
+			*address_size = 0;
+		}
+		return NULL;
 	}
-	return NULL;
+	address = (const uint8_t *)message->data + message->ud;
+	size = address[0] == 1U ? 7 : (address[0] == 2U ? 19 : 0);
+	if (address_size != NULL) {
+		*address_size = size;
+	}
+	return size == 0 ? NULL : (const struct socket_udp_address *)address;
 }
 
 struct socket_info *socket_server_info(struct socket_server *server) {
@@ -265,8 +279,10 @@ struct socket_info *socket_server_info(struct socket_server *server) {
 		info->id = current->id;
 		info->type = current->type == SKYUV_SOCKET_INFO_LISTEN
 						 ? SOCKET_INFO_LISTEN
-						 : (current->type == SKYUV_SOCKET_INFO_CLOSING ? SOCKET_INFO_CLOSING
-																	 : SOCKET_INFO_TCP);
+						 : (current->type == SKYUV_SOCKET_INFO_UDP ? SOCKET_INFO_UDP
+																	 : (current->type == SKYUV_SOCKET_INFO_CLOSING
+																			? SOCKET_INFO_CLOSING
+																			: SOCKET_INFO_TCP));
 		info->opaque = (uint64_t)current->opaque;
 		info->read = current->read;
 		info->write = current->write;

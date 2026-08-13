@@ -47,7 +47,14 @@ struct info_context {
 	bool succeeded;
 };
 
+struct udp_client_context {
+	int port;
+	int result;
+};
+
 static int released_buffers;
+
+static void client_closed(uv_handle_t *handle);
 
 static void count_release(void *data) {
 	++released_buffers;
@@ -123,6 +130,45 @@ static void query_info_repeatedly(void *argument) {
 		}
 		skyuv_socket_runtime_info_release(info);
 	}
+}
+
+static void udp_sent(uv_udp_send_t *request, int status) {
+	struct udp_client_context *context = request->data;
+
+	context->result = status;
+	uv_close((uv_handle_t *)request->handle, client_closed);
+}
+
+static void send_udp_datagram(void *argument) {
+	static const char payload[] = "udp-lifecycle";
+	struct udp_client_context *context = argument;
+	struct sockaddr_in address;
+	uv_loop_t loop;
+	uv_udp_t udp;
+	uv_udp_send_t request;
+	uv_buf_t buffer = uv_buf_init((char *)payload, sizeof(payload) - 1);
+
+	uv_sleep(50);
+	context->result = uv_loop_init(&loop);
+	if (context->result == 0) {
+		context->result = uv_udp_init(&loop, &udp);
+	}
+	if (context->result == 0) {
+		context->result = uv_ip4_addr("127.0.0.1", context->port, &address);
+	}
+	if (context->result == 0) {
+		request.data = context;
+		context->result = uv_udp_send(&request, &udp, &buffer, 1,
+									  (const struct sockaddr *)&address, udp_sent);
+	}
+	if (context->result == 0) {
+		(void)uv_run(&loop, UV_RUN_DEFAULT);
+	}
+	if (context->result != 0) {
+		uv_close((uv_handle_t *)&udp, client_closed);
+		(void)uv_run(&loop, UV_RUN_DEFAULT);
+	}
+	(void)uv_loop_close(&loop);
 }
 
 static void client_closed(uv_handle_t *handle) {
@@ -1022,6 +1068,39 @@ static void test_runtime_info_concurrent_query(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void test_runtime_udp_lifecycle(void **state) {
+	static const char payload[] = "udp-lifecycle";
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct udp_client_context client = {25484, UV_EINVAL};
+	struct skyuv_socket_event event;
+	skyuv_thread thread = SKYUV_THREAD_INITIALIZER;
+	const uint8_t *address;
+	int udp;
+
+	(void)state;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_udp(runtime, "127.0.0.1", client.port,
+										(uintptr_t)95, &udp),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_thread_create(&thread, send_udp_datagram, &client), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_UDP);
+	assert_int_equal(event.id, udp);
+	assert_int_equal(event.opaque, (uintptr_t)95);
+	assert_int_equal(event.size, sizeof(payload) - 1);
+	assert_int_equal(event.value, 7);
+	assert_memory_equal(event.data, payload, sizeof(payload) - 1);
+	address = (const uint8_t *)event.data + event.size;
+	assert_int_equal(address[0], 1);
+	free(event.data);
+	assert_int_equal(skyuv_thread_join(&thread), SKYUV_OK);
+	assert_int_equal(client.result, 0);
+	assert_int_equal(skyuv_socket_runtime_close(runtime, udp, 0), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	skyuv_socket_runtime_release(&runtime);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -1053,6 +1132,7 @@ int main(void) {
 		cmocka_unit_test(test_runtime_write_warning_and_recovery),
 		cmocka_unit_test(test_runtime_info_snapshot),
 		cmocka_unit_test(test_runtime_info_concurrent_query),
+		cmocka_unit_test(test_runtime_udp_lifecycle),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

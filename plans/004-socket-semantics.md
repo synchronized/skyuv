@@ -186,6 +186,7 @@
 - 写队列已统计包含在途请求的积压字节数：达到 1 MiB 后产生 WARNING，增长时按倍增阈值再次报告，全部排空后报告值 0 并重置阈值；
 - socket.info 已通过 slots 锁复制独立快照，覆盖类型、opaque、地址、读写/accept 计数、时间、积压和读写状态；地址由 loop 线程查询后缓存，调用方不接触 libuv handle；
 - UDP 原版 Lua 基线已覆盖 IPv4/IPv6 默认目标发送、显式来源地址回复与地址解码；确认 IPv4 地址编码为 7 字节、IPv6 为 19 字节，均为协议字节、网络序端口和原始 IP 字节；
+- libuv UDP 生命周期已支持 IPv4/IPv6 bind、创建后自动接收、兼容来源地址编码、socket.info 类型与统一 close/exit 释放；直接测试已覆盖 IPv4 数据报接收和 7 字节地址布局；
 - 确认 nodelay 可在已连接 socket 上提交且不产生额外事件；
 - 确认上游 shutdown 是强制关闭而非 `uv_shutdown` 写半关闭，本端和对端最终各观察一次 CLOSE；
 - 修正阶段 2 事件对照：无因果关系的 `connect_error` 与 `listener_accept` 允许交换，CI 比较事件集合，连接内因果顺序继续由 Lua 服务断言。

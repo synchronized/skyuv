@@ -23,6 +23,7 @@ enum skyuv_socket_state {
 	SKYUV_SOCKET_STATE_CONNECTED,
 	SKYUV_SOCKET_STATE_CONNECTED_PAUSED,
 	SKYUV_SOCKET_STATE_HALFCLOSE_READ,
+	SKYUV_SOCKET_STATE_UDP,
 	SKYUV_SOCKET_STATE_CLOSING,
 };
 
@@ -36,6 +37,7 @@ enum skyuv_socket_command_type {
 	SKYUV_SOCKET_COMMAND_SEND_LOW,
 	SKYUV_SOCKET_COMMAND_CLOSE,
 	SKYUV_SOCKET_COMMAND_SHUTDOWN,
+	SKYUV_SOCKET_COMMAND_UDP,
 	SKYUV_SOCKET_COMMAND_EXIT,
 };
 
@@ -73,6 +75,11 @@ struct skyuv_socket_command {
 			int port;
 		} connect;
 		struct {
+			/* 命令拥有 host，消费或丢弃命令时释放。 */
+			char *host;
+			int port;
+		} udp;
+		struct {
 			/* OWNED 由命令转移给 write 请求；BORROWED 必须在入队前复制。 */
 			void *data;
 			size_t size;
@@ -106,6 +113,7 @@ enum skyuv_socket_info_type {
 	SKYUV_SOCKET_INFO_LISTEN = 1,
 	SKYUV_SOCKET_INFO_TCP,
 	SKYUV_SOCKET_INFO_CLOSING,
+	SKYUV_SOCKET_INFO_UDP,
 };
 
 struct skyuv_socket_info {
@@ -149,6 +157,8 @@ int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void
 int skyuv_socket_runtime_send_low(struct skyuv_socket_runtime *runtime, int id, void *data,
 								  size_t size, enum skyuv_socket_buffer_ownership ownership,
 								  void (*release)(void *data));
+int skyuv_socket_runtime_udp(struct skyuv_socket_runtime *runtime, const char *host, int port,
+							uintptr_t opaque, int *id);
 int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_shutdown(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 void skyuv_socket_runtime_updatetime(struct skyuv_socket_runtime *runtime, uint64_t time);
