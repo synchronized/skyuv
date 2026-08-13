@@ -1,5 +1,6 @@
 #include "socket_internal.h"
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -13,6 +14,13 @@ struct skyuv_socket_entry {
 	int id;
 	uintptr_t opaque;
 	bool initialized;
+};
+
+struct skyuv_socket_write {
+	uv_write_t request;
+	struct skyuv_socket_entry *entry;
+	void *data;
+	void (*release)(void *data);
 };
 
 struct skyuv_socket_runtime {
@@ -194,6 +202,25 @@ static int start_reading(struct skyuv_socket_entry *entry) {
 	return uv_read_start((uv_stream_t *)&entry->tcp, allocate_read_buffer, read_completed);
 }
 
+static void release_write(struct skyuv_socket_write *write) {
+	if (write->release != NULL) {
+		write->release(write->data);
+	} else {
+		free(write->data);
+	}
+	free(write);
+}
+
+static void write_completed(uv_write_t *request, int status) {
+	struct skyuv_socket_write *write = request->data;
+	struct skyuv_socket_entry *entry = write->entry;
+
+	if (status != 0 && entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
+		finish_entry(entry, SKYUV_SOCKET_EVENT_ERROR, status);
+	}
+	release_write(write);
+}
+
 static void connect_completed(uv_connect_t *request, int status) {
 	struct skyuv_socket_entry *entry = request->data;
 	enum skyuv_socket_state state = entry_state(entry);
@@ -351,6 +378,37 @@ static void process_connect(struct skyuv_socket_runtime *runtime,
 	}
 }
 
+static void process_send(struct skyuv_socket_runtime *runtime,
+						 struct skyuv_socket_command *command) {
+	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+	struct skyuv_socket_write *write;
+	uv_buf_t buffer;
+	int result;
+
+	if (entry == NULL || entry_state(entry) != SKYUV_SOCKET_STATE_CONNECTED) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_ENOTCONN);
+		return;
+	}
+	write = calloc(1, sizeof(*write));
+	if (write == NULL) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, UV_ENOMEM);
+		return;
+	}
+	write->entry = entry;
+	write->data = command->payload.send.data;
+	write->release = command->payload.send.release;
+	write->request.data = write;
+	buffer = uv_buf_init(write->data, (unsigned int)command->payload.send.size);
+	result = uv_write(&write->request, (uv_stream_t *)&entry->tcp, &buffer, 1, write_completed);
+	if (result != 0) {
+		free(write);
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
+		return;
+	}
+	/* uv_write 成功后，请求成为缓冲区的唯一所有者。 */
+	command->payload.send.ownership = SKYUV_SOCKET_BUFFER_BORROWED;
+}
+
 static void process_close(struct skyuv_socket_runtime *runtime,
 						  struct skyuv_socket_command *command) {
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
@@ -379,6 +437,8 @@ static void consume_commands(uv_async_t *async) {
 			process_connect(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_START) {
 			process_start(runtime, command);
+		} else if (command->type == SKYUV_SOCKET_COMMAND_SEND) {
+			process_send(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_CLOSE) {
 			process_close(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_EXIT) {
@@ -643,6 +703,49 @@ int skyuv_socket_runtime_start(struct skyuv_socket_runtime *runtime, int id, uin
 		return SKYUV_ERROR_INVALID_STATE;
 	}
 	return SKYUV_OK;
+}
+
+int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
+							  enum skyuv_socket_buffer_ownership ownership,
+							  void (*release)(void *data)) {
+	struct skyuv_socket_command *command;
+	void *queued_data = data;
+	int result;
+
+	if (runtime == NULL || id <= 0 || data == NULL || size == 0 ||
+		(ownership != SKYUV_SOCKET_BUFFER_BORROWED && ownership != SKYUV_SOCKET_BUFFER_OWNED) ||
+		size > UINT_MAX) {
+		return SKYUV_ERROR_INVALID_ARGUMENT;
+	}
+	if (ownership == SKYUV_SOCKET_BUFFER_BORROWED) {
+		queued_data = malloc(size);
+		if (queued_data == NULL) {
+			return SKYUV_ERROR_OUT_OF_MEMORY;
+		}
+		memcpy(queued_data, data, size);
+		release = NULL;
+	}
+	command = calloc(1, sizeof(*command));
+	if (command == NULL) {
+		if (ownership == SKYUV_SOCKET_BUFFER_BORROWED) {
+			free(queued_data);
+		}
+		return SKYUV_ERROR_OUT_OF_MEMORY;
+	}
+	command->type = SKYUV_SOCKET_COMMAND_SEND;
+	command->id = id;
+	command->payload.send.data = queued_data;
+	command->payload.send.size = size;
+	command->payload.send.ownership = SKYUV_SOCKET_BUFFER_OWNED;
+	command->payload.send.release = release;
+	result = skyuv_socket_runtime_submit(runtime, command);
+	if (result != SKYUV_OK) {
+		if (ownership == SKYUV_SOCKET_BUFFER_OWNED) {
+			command->payload.send.ownership = SKYUV_SOCKET_BUFFER_BORROWED;
+		}
+		skyuv_socket_command_destroy(command);
+	}
+	return result;
 }
 
 int skyuv_socket_runtime_connect(struct skyuv_socket_runtime *runtime, const char *host, int port,

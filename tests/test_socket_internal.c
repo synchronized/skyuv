@@ -11,6 +11,7 @@
 
 #define PRODUCER_COUNT 4
 #define COMMANDS_PER_PRODUCER 1000
+#define SENDS_PER_PRODUCER 25
 
 struct producer_context {
 	struct skyuv_socket_command_queue *queue;
@@ -24,6 +25,13 @@ struct client_context {
 	const char *data;
 	size_t size;
 	uv_write_t write;
+};
+
+struct send_context {
+	struct skyuv_socket_runtime *runtime;
+	int id;
+	char value;
+	bool succeeded;
 };
 
 static int released_buffers;
@@ -52,6 +60,28 @@ static void produce_commands(void *argument) {
 			SKYUV_SOCKET_COMMAND_CLOSE, context->producer * COMMANDS_PER_PRODUCER + index);
 		if (skyuv_socket_command_queue_push(context->queue, command) != SKYUV_OK) {
 			skyuv_socket_command_destroy(command);
+			context->succeeded = false;
+			return;
+		}
+	}
+}
+
+static void produce_sends(void *argument) {
+	struct send_context *context = argument;
+	int index;
+
+	context->succeeded = true;
+	for (index = 0; index < SENDS_PER_PRODUCER; ++index) {
+		char *data = malloc(1);
+
+		if (data == NULL) {
+			context->succeeded = false;
+			return;
+		}
+		*data = context->value;
+		if (skyuv_socket_runtime_send(context->runtime, context->id, data, 1,
+									  SKYUV_SOCKET_BUFFER_OWNED, count_release) != SKYUV_OK) {
+			free(data);
 			context->succeeded = false;
 			return;
 		}
@@ -501,6 +531,149 @@ static void test_runtime_connect_cancelled_by_close(void **state) {
 	skyuv_socket_runtime_release(&runtime);
 }
 
+static void create_connected_pair(struct skyuv_socket_runtime *runtime, int *connection,
+								  int *accepted) {
+	struct skyuv_socket_event event;
+	int listener;
+	int port;
+	int index;
+
+	assert_int_equal(skyuv_socket_runtime_listen(runtime, "127.0.0.1", 0, 16, 0, &listener),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
+	port = event.value;
+	assert_int_equal(skyuv_socket_runtime_connect(runtime, "127.0.0.1", port, 0, connection),
+					 SKYUV_OK);
+	*accepted = -1;
+	for (index = 0; index < 2; ++index) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		if (event.type == SKYUV_SOCKET_EVENT_ACCEPT) {
+			*accepted = event.value;
+		} else {
+			assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
+			assert_int_equal(event.id, *connection);
+		}
+	}
+	assert_true(*accepted > 0);
+	assert_int_equal(skyuv_socket_runtime_start(runtime, *accepted, 0), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
+	assert_int_equal(event.id, *accepted);
+}
+
+static void test_runtime_send_lifecycle(void **state) {
+	static const char first[] = "first";
+	static const char second[] = "second";
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	char borrowed[] = "borrowed";
+	char received[sizeof(first) + sizeof(second) + sizeof(borrowed) - 3];
+	size_t received_size = 0;
+	char *owned;
+	int connection;
+	int accepted;
+
+	(void)state;
+	released_buffers = 0;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	owned = malloc(sizeof(first) - 1);
+	assert_non_null(owned);
+	memcpy(owned, first, sizeof(first) - 1);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, owned, sizeof(first) - 1,
+											   SKYUV_SOCKET_BUFFER_OWNED, count_release),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, (void *)second,
+											   sizeof(second) - 1, SKYUV_SOCKET_BUFFER_BORROWED,
+											   NULL),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, borrowed, sizeof(borrowed) - 1,
+											   SKYUV_SOCKET_BUFFER_BORROWED, NULL),
+					 SKYUV_OK);
+	memset(borrowed, 'x', sizeof(borrowed) - 1);
+	while (received_size < sizeof(received)) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+		assert_int_equal(event.id, accepted);
+		assert_true(event.size <= sizeof(received) - received_size);
+		memcpy(received + received_size, event.data, event.size);
+		received_size += event.size;
+		free(event.data);
+	}
+	assert_memory_equal(received, "firstsecondborrowed", sizeof(received));
+	assert_int_equal(released_buffers, 1);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_concurrent_send(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	skyuv_thread threads[PRODUCER_COUNT] = {
+		SKYUV_THREAD_INITIALIZER,
+		SKYUV_THREAD_INITIALIZER,
+		SKYUV_THREAD_INITIALIZER,
+		SKYUV_THREAD_INITIALIZER,
+	};
+	struct send_context contexts[PRODUCER_COUNT];
+	size_t received = 0;
+	int connection;
+	int accepted;
+	int index;
+
+	(void)state;
+	released_buffers = 0;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	for (index = 0; index < PRODUCER_COUNT; ++index) {
+		contexts[index].runtime = runtime;
+		contexts[index].id = connection;
+		contexts[index].value = (char)('a' + index);
+		contexts[index].succeeded = false;
+		assert_int_equal(skyuv_thread_create(&threads[index], produce_sends, &contexts[index]),
+						 SKYUV_OK);
+	}
+	for (index = 0; index < PRODUCER_COUNT; ++index) {
+		assert_int_equal(skyuv_thread_join(&threads[index]), SKYUV_OK);
+		assert_true(contexts[index].succeeded);
+	}
+	while (received < PRODUCER_COUNT * SENDS_PER_PRODUCER) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+		assert_int_equal(event.id, accepted);
+		received += event.size;
+		free(event.data);
+	}
+	assert_int_equal(received, PRODUCER_COUNT * SENDS_PER_PRODUCER);
+	assert_int_equal(released_buffers, PRODUCER_COUNT * SENDS_PER_PRODUCER);
+	skyuv_socket_runtime_release(&runtime);
+}
+
+static void test_runtime_close_during_write(void **state) {
+	struct skyuv_socket_runtime *runtime = NULL;
+	struct skyuv_socket_event event;
+	char *data;
+	int connection;
+	int accepted;
+
+	(void)state;
+	released_buffers = 0;
+	assert_int_equal(skyuv_socket_runtime_create(&runtime), SKYUV_OK);
+	create_connected_pair(runtime, &connection, &accepted);
+	data = malloc(4U * 1024U * 1024U);
+	assert_non_null(data);
+	memset(data, 'w', 4U * 1024U * 1024U);
+	assert_int_equal(skyuv_socket_runtime_send(runtime, connection, data, 4U * 1024U * 1024U,
+											   SKYUV_SOCKET_BUFFER_OWNED, count_release),
+					 SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_close(runtime, connection, 0), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
+	assert_int_equal(event.id, connection);
+	skyuv_socket_runtime_release(&runtime);
+	assert_int_equal(released_buffers, 1);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_id_roundtrip),
@@ -520,6 +693,9 @@ int main(void) {
 		cmocka_unit_test(test_runtime_connect_refused),
 		cmocka_unit_test(test_runtime_connect_invalid_address),
 		cmocka_unit_test(test_runtime_connect_cancelled_by_close),
+		cmocka_unit_test(test_runtime_send_lifecycle),
+		cmocka_unit_test(test_runtime_concurrent_send),
+		cmocka_unit_test(test_runtime_close_during_write),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
