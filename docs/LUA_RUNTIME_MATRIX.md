@@ -18,7 +18,7 @@
 | `skynet` | 核心、序列化、socket、mongo、netpack、memory、multicast、cluster、crypt、sharedata、stm、debugchannel、datasheet、sharetable | 当前仅纳入核心、序列化和 socket | 多个源文件依赖 Skynet 内部符号；`lua-socket` 已完成 Winsock/VLA 适配 | 分批补齐源码，以 `require` 和无外部依赖 API 验证 |
 | `client` | clientsocket、crypt、sha1 | 未构建 | pthread、POSIX socket、`fcntl`、`usleep`、stdin 后台线程生命周期、Winsock 句柄宽度 | 回环 connect/send/recv/shutdown/close；可控 stdin |
 | `bson` | lua-bson | 已构建、可加载 | ObjectID 初始化需要原子操作、时间和进程 ID，已通过 skyuv 兼容层提供 | 文档、数组、UTF-8、null 与固定 ObjectID 编解码已验证；错误输入待补充 |
-| `md5` | lua-md5 | 未构建 | 独立第三方源码 | 已知摘要向量 |
+| `md5` | lua-md5 | 已构建、可加载 | 独立第三方源码，无新增外部依赖 | 已知摘要、HMAC、异或、加解密往返及错误输入已验证 |
 | `sproto` | sproto、lsproto | 已构建、可加载 | schema 的 Lua 解析器依赖 lpeg | schema 解析、结构编码/解码及 pack/unpack 往返已验证 |
 | `lpeg` | 上游内置 lpeg | 已构建、可加载 | 独立第三方源码，被 sprotoparser 使用 | 已通过 sproto schema 解析进行集成验证；独立模式边界测试待补充 |
 | `ltls` | OpenSSL TLS 模块 | 上游默认关闭，skyuv 未构建 | OpenSSL、证书与平台分发 | 不属于本阶段默认交付；依赖策略确定后单独计划 |
@@ -38,7 +38,7 @@
 ## 接入顺序
 
 1. `client`：平台依赖最多，先确定 socket 与控制台适配边界；
-2. `bson`、`sproto`、`lpeg`、`md5`：独立模块逐个建立加载和功能测试；其中前三项已完成；
+2. `bson`、`sproto`、`lpeg`、`md5`：独立模块均已建立加载和功能测试；
 3. 补齐 `skynet` 聚合模块中的剩余源文件；
 4. `gate`、`harbor`：在基础模块齐备后运行主要网络服务示例；
 5. 统一验证路径、终端、信号和退出行为。

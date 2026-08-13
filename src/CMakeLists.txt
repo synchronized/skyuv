@@ -218,6 +218,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     skyuv_portable_lua_module_sproto
     PROPERTIES
       C_EXTENSIONS TRUE
+      ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/sproto"
       LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/sproto"
       RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/sproto"
       OUTPUT_NAME core
@@ -230,6 +231,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       PROPERTIES
         "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/sproto"
         "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/sproto"
+        "ARCHIVE_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/sproto"
     )
   endforeach()
   target_include_directories(
@@ -275,6 +277,41 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lpeg"
   )
   target_link_libraries(skyuv_portable_lua_module_lpeg PRIVATE skyuv::lua)
+
+  add_library(
+    skyuv_portable_lua_module_md5
+    MODULE
+      "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua-md5/md5.c"
+      "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua-md5/md5lib.c"
+      "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua-md5/compat-5.2.c"
+  )
+  set_target_properties(
+    skyuv_portable_lua_module_md5
+    PROPERTIES
+      C_EXTENSIONS TRUE
+      ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/md5"
+      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/md5"
+      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/md5"
+      OUTPUT_NAME core
+      PREFIX ""
+      WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+  )
+  foreach(config IN ITEMS DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+    set_target_properties(
+      skyuv_portable_lua_module_md5
+      PROPERTIES
+        "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/md5"
+        "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/md5"
+        "ARCHIVE_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/md5"
+    )
+  endforeach()
+  target_include_directories(
+    skyuv_portable_lua_module_md5
+    PRIVATE
+      "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua"
+      "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua-md5"
+  )
+  target_link_libraries(skyuv_portable_lua_module_md5 PRIVATE skyuv::lua)
 
   set(
     SKYUV_PORTABLE_LUA_MODULE_SOURCES
@@ -392,6 +429,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-sproto.conf"
     @ONLY
   )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_md5)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-md5.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
@@ -474,6 +517,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     )
     set_tests_properties(
       skynet.portable.sproto
+      PROPERTIES
+        TIMEOUT 10
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+    add_test(
+      NAME skynet.portable.md5
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-smoke.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Config "3rd/skyuv-portable-md5.conf"
+    )
+    set_tests_properties(
+      skynet.portable.md5
       PROPERTIES
         TIMEOUT 10
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
