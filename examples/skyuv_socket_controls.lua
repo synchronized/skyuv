@@ -14,11 +14,13 @@ local paused = false
 local resumed = false
 local accepted_closed = false
 local client_closed = false
+local finished = false
 
 local function finish_if_ready()
-	if not (accepted_closed and client_closed) then
+	if finished or not (accepted_closed and client_closed) then
 		return
 	end
+	finished = true
 	driver.close(listener)
 	skynet.error("skyuv TCP 控制语义基线验证通过")
 	skynet.timeout(2, skynet.abort)
@@ -31,10 +33,14 @@ skynet.register_protocol {
 	dispatch = function(_, _, event_type, id, ud, data)
 		if event_type == TYPE_CONNECT then
 			if id == listener then
-				client = assert(driver.connect("127.0.0.1", 25283))
-			elseif id == client then
-				-- 等 accepted start 后再发送，确保 pause 请求先进入控制队列。
-			elseif id == accepted then
+				if not client then
+					client = assert(driver.connect("127.0.0.1", 25283))
+				end
+			elseif accepted and id == accepted then
+				if resumed then
+					-- start 恢复已连接 socket 时，原版会产生 transfer OPEN。
+					return
+				end
 				driver.nodelay(accepted)
 				driver.pause(accepted)
 				paused = true
@@ -45,7 +51,10 @@ skynet.register_protocol {
 					driver.start(accepted)
 				end)
 			else
-				error("未知 CONNECT id")
+				-- connect 的 OPEN 可能先于 driver.connect 返回并写入 client。
+				client = client or id
+				assert(id == client)
+				-- 等 accepted start 后再发送，确保 pause 请求先进入控制队列。
 			end
 		elseif event_type == TYPE_ACCEPT then
 			assert(id == listener)
@@ -67,7 +76,13 @@ skynet.register_protocol {
 			end
 			finish_if_ready()
 		elseif event_type == TYPE_ERROR then
-			error("TCP 控制语义出现错误：" .. tostring(data))
+			if id == client and accepted_closed then
+				-- 强制 shutdown 后，对端可能报告 reset，也可能报告 close。
+				client_closed = true
+				finish_if_ready()
+			else
+				error("TCP 控制语义出现错误：" .. tostring(data))
+			end
 		end
 	end,
 }
