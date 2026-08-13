@@ -338,6 +338,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-datasheet.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-netpack.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-memory.c"
+    "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-multicast.c"
   )
   add_library(skyuv_portable_lua_module_skynet MODULE ${SKYUV_PORTABLE_LUA_MODULE_SOURCES})
   set_target_properties(
@@ -513,6 +514,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   configure_file(
     "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-memory.conf"
+    @ONLY
+  )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_multicast)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-multicast.conf"
     @ONLY
   )
   set(SKYUV_HARBOR_ID 1)
@@ -752,6 +759,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     )
     set_tests_properties(
       skynet.portable.memory
+      PROPERTIES
+        TIMEOUT 10
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+    add_test(
+      NAME skynet.portable.multicast
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-smoke.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Config "3rd/skyuv-portable-multicast.conf"
+    )
+    set_tests_properties(
+      skynet.portable.multicast
       PROPERTIES
         TIMEOUT 10
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"

@@ -164,3 +164,6 @@
   `current`、`info`、`jestat`、`mallctl`、dump 和 profiling 等完整 Lua API；当前
   后端不伪造上游 malloc hook 的服务级统计，基础查询返回零、服务表为空且
   profiling 保持关闭，诊断调用给出明确的系统分配器提示。
+- `skynet` 聚合模块已补入 `skynet.multicast.core`；Windows 单节点集成测试使用
+  两个 Actor 订阅同一频道，验证共享消息向两个订阅者发布并各自释放引用，
+  随后覆盖取消订阅、仅剩订阅者接收以及频道删除流程。
