@@ -129,3 +129,6 @@
   以及 pack/unpack 压缩往返，两模块均使用上游内置源码且不新增外部依赖。
 - 已接入 `md5.core` 并沿用上游 `md5.lua` 封装；Windows 实际测试覆盖标准摘要
   向量、HMAC-MD5、按位异或、固定种子加解密往返及参数错误，不新增外部依赖。
+- `skynet` 聚合模块已补入 `skynet.crypt` 与 SHA-1 实现；Windows 实际测试覆盖
+  SHA-1、HMAC-SHA1、Base64、Hex、循环异或、DES、随机密钥及错误输入。
+  `random/srandom/getpid` 的平台差异集中在既有 POSIX 兼容头中。

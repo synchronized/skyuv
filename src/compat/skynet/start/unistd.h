@@ -8,6 +8,7 @@
 #else
 
 #include <process.h>
+#include <stdlib.h>
 #include <uv.h>
 
 typedef int pid_t;
@@ -26,9 +27,19 @@ static int skyuv_compat_usleep(unsigned int microseconds) {
 	return 0;
 }
 
+static long skyuv_compat_random(void) {
+	return (long)rand();
+}
+
+static void skyuv_compat_srandom(unsigned int seed) {
+	srand(seed);
+}
+
 #define sleep skyuv_compat_sleep
 #define usleep skyuv_compat_usleep
 #define getpid skyuv_compat_getpid
+#define random skyuv_compat_random
+#define srandom skyuv_compat_srandom
 
 #endif
 
