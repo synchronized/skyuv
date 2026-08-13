@@ -1,0 +1,50 @@
+diff --git a/service-src/service_harbor.c b/service-src/service_harbor.c
+index 665bc96..69c47e3 100644
+--- a/service-src/service_harbor.c
++++ b/service-src/service_harbor.c
+@@ -336,7 +336,11 @@ send_remote(struct skynet_context * ctx, int fd, const char * buffer, size_t sz,
+ 		skynet_error(ctx, "remote message from :%08x to :%08x is too large.", cookie->source, cookie->destination);
+ 		return;
+ 	}
+-	uint8_t sendbuf[sz_header+4];
++	uint8_t *sendbuf = skynet_malloc(sz_header + 4);
++	if (sendbuf == NULL) {
++		skynet_error(ctx, "remote message buffer allocation failed");
++		return;
++	}
+ 	to_bigendian(sendbuf, (uint32_t)sz_header);
+ 	memcpy(sendbuf+4, buffer, sz);
+ 	header_to_message(cookie, sendbuf+4+sz);
+@@ -349,6 +353,7 @@ send_remote(struct skynet_context * ctx, int fd, const char * buffer, size_t sz,
+ 
+ 	// ignore send error, because if the connection is broken, the mainloop will recv a message.
+ 	skynet_socket_sendbuffer(ctx, &tmp);
++	skynet_free(sendbuf);
+ }
+ 
+ static void
+@@ -619,13 +624,23 @@ harbor_command(struct harbor * h, const char * msg, size_t sz, int session, uint
+ 	}
+ 	case 'S' :
+ 	case 'A' : {
+-		char buffer[s+1];
++		if (s <= 0) {
++			skynet_error(h->ctx, "Invalid command %c", msg[0]);
++			return;
++		}
++		char *buffer = skynet_malloc((size_t)s + 1);
++		if (buffer == NULL) {
++			skynet_error(h->ctx, "harbor command buffer allocation failed");
++			return;
++		}
+ 		memcpy(buffer, name, s);
+ 		buffer[s] = 0;
+ 		int fd=0, id=0;
+ 		sscanf(buffer, "%d %d",&fd,&id);
+ 		if (fd == 0 || id <= 0 || id>=REMOTE_MAX) {
+ 			skynet_error(h->ctx, "Invalid command %c %s", msg[0], buffer);
++			skynet_free(buffer);
+ 			return;
+ 		}
++		skynet_free(buffer);
+ 		struct slave * slave = &h->s[id];

@@ -191,3 +191,5 @@
 - 将 `skynet_start.c` 和 `skynet_main.c` 纳入跨平台 Actor 核心；启动线程数组及引导参数缓冲区改为显式堆分配，避免 MSVC 不支持的 VLA。
 - 增加 Windows 启动阶段所需的休眠、信号和 daemon 兼容边界；daemon 模式在 Windows 上明确返回不支持。
 - 生成并链接 `skyuv_skynet_portable` 可执行文件，Windows 已能运行到 Skynet 配置文件参数解析入口；完整 Lua 引导服务与 TCP echo 仍属于本计划后续工作。
+- Windows 已构建并动态加载 `logger`、`snlua`、`harbor` 和最小 `skynet` Lua C 模块，能够运行到 `skyuv_smoke` 服务并观察启动成功标志。
+- Windows 启动冒烟作为受控超时测试加入 CTest；Skynet 基线节点保持常驻语义，测试在观察到成功标志后终止进程。
