@@ -321,6 +321,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-crypt.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lsha1.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-stm.c"
+    "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-sharetable.c"
   )
   add_library(skyuv_portable_lua_module_skynet MODULE ${SKYUV_PORTABLE_LUA_MODULE_SOURCES})
   set_target_properties(
@@ -455,6 +456,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-stm.conf"
     @ONLY
   )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_sharetable)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-sharetable.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
@@ -576,6 +583,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     )
     set_tests_properties(
       skynet.portable.stm
+      PROPERTIES
+        TIMEOUT 10
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+    add_test(
+      NAME skynet.portable.sharetable
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-smoke.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Config "3rd/skyuv-portable-sharetable.conf"
+    )
+    set_tests_properties(
+      skynet.portable.sharetable
       PROPERTIES
         TIMEOUT 10
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"

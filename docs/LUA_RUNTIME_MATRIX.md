@@ -15,7 +15,7 @@
 
 | 产物 | 上游组成 | 当前状态 | 依赖与风险 | 计划验证 |
 |---|---|---|---|---|
-| `skynet` | 核心、序列化、socket、mongo、netpack、memory、multicast、cluster、crypt、sharedata、stm、debugchannel、datasheet、sharetable | 已纳入核心、序列化、socket、crypt 和 stm | 多个源文件依赖 Skynet 内部符号；`lua-socket` 已完成 Winsock/VLA 适配；crypt 的 POSIX 随机函数已由兼容层提供 | crypt 已完成算法测试；stm 已验证跨服务共享、无变更读取和更新可见性；其余模块分批验证 |
+| `skynet` | 核心、序列化、socket、mongo、netpack、memory、multicast、cluster、crypt、sharedata、stm、debugchannel、datasheet、sharetable | 已纳入核心、序列化、socket、crypt、stm 和 sharetable | 多个源文件依赖 Skynet 内部符号；`lua-socket` 已完成 Winsock/VLA 适配；crypt 的 POSIX 随机函数已由兼容层提供；sharetable 依赖内置 Lua 共享对象扩展 | crypt 与 stm 已完成功能测试；sharetable 已验证嵌套只读表、批量查询及版本替换；其余模块分批验证 |
 | `client` | clientsocket、crypt、sha1 | 未构建 | pthread、POSIX socket、`fcntl`、`usleep`、stdin 后台线程生命周期、Winsock 句柄宽度 | 回环 connect/send/recv/shutdown/close；可控 stdin |
 | `bson` | lua-bson | 已构建、可加载 | ObjectID 初始化需要原子操作、时间和进程 ID，已通过 skyuv 兼容层提供 | 文档、数组、UTF-8、null 与固定 ObjectID 编解码已验证；错误输入待补充 |
 | `md5` | lua-md5 | 已构建、可加载 | 独立第三方源码，无新增外部依赖 | 已知摘要、HMAC、异或、加解密往返及错误输入已验证 |

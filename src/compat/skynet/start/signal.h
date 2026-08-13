@@ -13,6 +13,7 @@
 #define SA_RESTART 0
 
 typedef int sigset_t;
+typedef int sig_atomic_t;
 
 struct sigaction {
 	void (*sa_handler)(int);
