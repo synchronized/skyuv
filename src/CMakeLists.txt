@@ -34,11 +34,7 @@ target_link_libraries(
 )
 skyuv_target_compile_warnings(skyuv_socket_server)
 
-if(WIN32)
-  set(SKYUV_SKYNET_DAEMON_SOURCE compat/skynet/start/skyuv_daemon.c)
-else()
-  set(SKYUV_SKYNET_DAEMON_SOURCE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src/skynet_daemon.c")
-endif()
+set(SKYUV_SKYNET_DAEMON_SOURCE compat/skynet/start/skyuv_daemon.c)
 add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_DAEMON_SOURCE})
 target_include_directories(
   skyuv_skynet_runtime_compat
@@ -231,5 +227,6 @@ target_link_libraries(skyuv_socket_core PRIVATE skyuv::platform skyuv::libuv)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_compile_definitions(skyuv_platform PRIVATE _POSIX_C_SOURCE=200112L)
   target_compile_definitions(skyuv_socket_core PRIVATE _POSIX_C_SOURCE=200112L)
+  target_compile_definitions(skyuv_socket_server PRIVATE _POSIX_C_SOURCE=200112L)
 endif()
 skyuv_target_compile_warnings(skyuv_platform)
