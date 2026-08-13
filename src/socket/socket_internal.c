@@ -35,6 +35,7 @@ struct skyuv_socket_entry {
 	uint64_t write_time;
 	uint64_t accept_count;
 	bool reading;
+	bool close_requested;
 	char name[128];
 };
 
@@ -63,6 +64,7 @@ static void pump_write(struct skyuv_socket_entry *entry);
 static void release_write(struct skyuv_socket_write *write);
 static void process_udp_send(struct skyuv_socket_runtime *runtime,
 							 struct skyuv_socket_command *command);
+static void close_after_writes(struct skyuv_socket_entry *entry);
 
 struct skyuv_socket_runtime {
 	uv_loop_t loop;
@@ -255,6 +257,15 @@ static void close_entry(uv_handle_t *handle) {
 	skyuv_mutex_unlock(&runtime->slots_mutex);
 	free(entry);
 	update_exit_ready(runtime);
+}
+
+static void close_after_writes(struct skyuv_socket_entry *entry) {
+	if (!entry->close_requested || entry->writing || entry->high_head != NULL ||
+		entry->low_head != NULL) {
+		return;
+	}
+	set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
+	uv_close((uv_handle_t *)&entry->tcp, close_entry);
 }
 
 static void discard_uninitialized_entry(struct skyuv_socket_entry *entry) {
@@ -471,7 +482,9 @@ static void write_completed(uv_write_t *request, int status) {
 		skyuv_mutex_unlock(&entry->runtime->slots_mutex);
 		push_event(entry->runtime, SKYUV_SOCKET_EVENT_WARNING, entry->id, entry->opaque, 0);
 	}
-	if (entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
+	if (entry->close_requested) {
+		close_after_writes(entry);
+	} else if (entry_state(entry) != SKYUV_SOCKET_STATE_CLOSING) {
 		pump_write(entry);
 	}
 }
@@ -793,6 +806,10 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_ENOTCONN);
 		return;
 	}
+	if (entry->close_requested) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_ECANCELED);
+		return;
+	}
 	write = calloc(1, sizeof(*write));
 	if (write == NULL) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, UV_ENOMEM);
@@ -965,6 +982,16 @@ static void process_close(struct skyuv_socket_runtime *runtime,
 	}
 	if (!entry->initialized) {
 		discard_uninitialized_entry(entry);
+		return;
+	}
+	if (command->type == SKYUV_SOCKET_COMMAND_CLOSE && !entry->is_udp &&
+		entry->queued_bytes > 0) {
+		(void)uv_read_stop((uv_stream_t *)&entry->tcp);
+		skyuv_mutex_lock(&runtime->slots_mutex);
+		entry->reading = false;
+		entry->close_requested = true;
+		skyuv_mutex_unlock(&runtime->slots_mutex);
+		close_after_writes(entry);
 		return;
 	}
 	set_entry_state(entry, SKYUV_SOCKET_STATE_CLOSING);
@@ -1655,7 +1682,7 @@ enum skyuv_socket_state skyuv_socket_runtime_state(struct skyuv_socket_runtime *
 	skyuv_mutex_lock(&runtime->slots_mutex);
 	entry = find_entry(runtime, id);
 	if (entry != NULL) {
-		state = entry->state;
+		state = entry->close_requested ? SKYUV_SOCKET_STATE_CLOSING : entry->state;
 	}
 	skyuv_mutex_unlock(&runtime->slots_mutex);
 	return state;
@@ -1701,7 +1728,8 @@ struct skyuv_socket_info *skyuv_socket_runtime_info(struct skyuv_socket_runtime 
 						 ? SKYUV_SOCKET_INFO_LISTEN
 						 : (entry->state == SKYUV_SOCKET_STATE_UDP
 								? SKYUV_SOCKET_INFO_UDP
-						 : (entry->state == SKYUV_SOCKET_STATE_HALFCLOSE_READ ||
+						 : (entry->close_requested ||
+							entry->state == SKYUV_SOCKET_STATE_HALFCLOSE_READ ||
 							entry->state == SKYUV_SOCKET_STATE_CLOSING
 								? SKYUV_SOCKET_INFO_CLOSING
 								: SKYUV_SOCKET_INFO_TCP));

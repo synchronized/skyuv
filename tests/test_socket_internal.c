@@ -749,6 +749,7 @@ static void test_runtime_close_during_write(void **state) {
 	struct skyuv_socket_runtime *runtime = NULL;
 	struct skyuv_socket_event event;
 	char *data;
+	size_t received = 0;
 	int connection;
 	int accepted;
 
@@ -768,6 +769,19 @@ static void test_runtime_close_during_write(void **state) {
 	} while (event.type == SKYUV_SOCKET_EVENT_WARNING);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
 	assert_int_equal(event.id, connection);
+	assert_int_equal(skyuv_socket_runtime_state(runtime, connection),
+					 SKYUV_SOCKET_STATE_CLOSING);
+	while (received < 4U * 1024U * 1024U) {
+		assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+		if (event.type == SKYUV_SOCKET_EVENT_WARNING) {
+			continue;
+		}
+		assert_int_equal(event.type, SKYUV_SOCKET_EVENT_DATA);
+		assert_int_equal(event.id, accepted);
+		received += event.size;
+		free(event.data);
+	}
+	assert_int_equal(received, 4U * 1024U * 1024U);
 	skyuv_socket_runtime_release(&runtime);
 	assert_int_equal(released_buffers, 1);
 }
