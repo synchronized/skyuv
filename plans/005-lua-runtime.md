@@ -132,3 +132,6 @@
 - `skynet` 聚合模块已补入 `skynet.crypt` 与 SHA-1 实现；Windows 实际测试覆盖
   SHA-1、HMAC-SHA1、Base64、Hex、循环异或、DES、随机密钥及错误输入。
   `random/srandom/getpid` 的平台差异集中在既有 POSIX 兼容头中。
+- `skynet` 聚合模块已补入 `skynet.stm`；Windows 实际测试由两个独立服务
+  共享同一对象，覆盖首次读取、无变更读取、写入更新及跨服务更新可见性，
+  同时经过服务退出和对象回收流程。
