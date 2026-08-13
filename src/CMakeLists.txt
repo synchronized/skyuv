@@ -519,6 +519,13 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-harbor-node2.conf"
     @ONLY
   )
+  set(SKYUV_HARBOR_ID 3)
+  set(SKYUV_HARBOR_PORT 25289)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-harbor.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-harbor-node3.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
@@ -729,11 +736,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
         -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
         -Node1Config "3rd/skyuv-portable-harbor-node1.conf"
         -Node2Config "3rd/skyuv-portable-harbor-node2.conf"
+        -Node3Config "3rd/skyuv-portable-harbor-node3.conf"
     )
     set_tests_properties(
       skynet.portable.harbor
       PROPERTIES
-        TIMEOUT 25
+        TIMEOUT 35
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
     set_tests_properties(
