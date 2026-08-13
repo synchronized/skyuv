@@ -131,9 +131,11 @@ jobs:
           cmake -E copy examples/skyuv_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_echo.lua"
           cmake -E copy examples/skyuv_tcp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_tcp_events.lua"
           cmake -E copy examples/skyuv_socket_controls.lua "$RUNNER_TEMP/skynet/service/skyuv_socket_controls.lua"
+          cmake -E copy examples/skyuv_udp_events.lua "$RUNNER_TEMP/skynet/service/skyuv_udp_events.lua"
           cmake -E copy examples/upstream-echo.conf "$RUNNER_TEMP/skynet/examples/skyuv-echo.conf"
           cmake -E copy examples/upstream-tcp-events.conf "$RUNNER_TEMP/skynet/examples/tcp-events.conf"
           cmake -E copy examples/upstream-socket-controls.conf "$RUNNER_TEMP/skynet/examples/socket-controls.conf"
+          cmake -E copy examples/upstream-udp-events.conf "$RUNNER_TEMP/skynet/examples/udp-events.conf"
 
       - name: 运行原版 Skynet TCP echo 对照测试
         working-directory: ${{ runner.temp }}/skynet
@@ -165,6 +167,17 @@ jobs:
           grep -F "TCP_CONTROL pause_resume" upstream-socket-controls.log
           grep -F "TCP_CONTROL shutdown_close" upstream-socket-controls.log
           grep -F "skyuv TCP 控制语义基线验证通过" upstream-socket-controls.log
+
+      - name: 运行原版 Skynet UDP 事件基线
+        working-directory: ${{ runner.temp }}/skynet
+        shell: bash
+        run: |
+          timeout 15s ./skynet examples/udp-events.conf 2>&1 | tee upstream-udp-events.log
+          grep -F "UDP_EVENT ipv4_receive address_size=7" upstream-udp-events.log
+          grep -F "UDP_EVENT ipv4_reply" upstream-udp-events.log
+          grep -F "UDP_EVENT ipv6_receive address_size=19" upstream-udp-events.log
+          grep -F "UDP_EVENT ipv6_reply" upstream-udp-events.log
+          grep -F "skyuv UDP 原版事件基线验证通过" upstream-udp-events.log
 
       - name: 对照 libuv 版 TCP 原始事件序列
         shell: bash
