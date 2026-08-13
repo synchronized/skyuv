@@ -152,6 +152,19 @@ jobs:
           timeout 15s ./skynet examples/tcp-events.conf 2>&1 | tee upstream-tcp-events.log
           grep -F "skyuv TCP 原始事件基线验证通过" upstream-tcp-events.log
 
+      - name: 对照 libuv 版 TCP 原始事件序列
+        shell: bash
+        run: |
+          timeout 15s "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
+            "build/${{ matrix.preset }}/3rd/skyuv-portable-tcp-events.conf" \
+            2>&1 | tee portable-tcp-events.log
+          grep -F "skyuv TCP 原始事件基线验证通过" portable-tcp-events.log
+          grep -F "TCP_EVENT " "$RUNNER_TEMP/skynet/upstream-tcp-events.log" \
+            | sed 's/^.*TCP_EVENT /TCP_EVENT /' >upstream-events.txt
+          grep -F "TCP_EVENT " portable-tcp-events.log \
+            | sed 's/^.*TCP_EVENT /TCP_EVENT /' >portable-events.txt
+          diff -u upstream-events.txt portable-events.txt
+
       - name: 运行原版 Skynet 启动冒烟测试
         working-directory: ${{ runner.temp }}/skynet
         shell: bash

@@ -67,8 +67,7 @@ target_link_libraries(
 )
 skyuv_target_compile_warnings(skyuv_skynet_portable)
 
-if(WIN32)
-  set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
+set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   set(SKYUV_PORTABLE_SKYNET_SOURCE_DIR "${SKYUV_PORTABLE_SKYNET_ROOT}/skynet-src")
   set(SKYUV_PORTABLE_SERVICE_DIR "${PROJECT_BINARY_DIR}/3rd/skynet-patched/service-src")
   set(SKYUV_PORTABLE_LUALIB_SOURCE_DIR "${PROJECT_BINARY_DIR}/3rd/skynet-patched/lualib-src")
@@ -83,8 +82,8 @@ if(WIN32)
       "skyuv_portable_service_${service_name}"
       PROPERTIES
         C_EXTENSIONS TRUE
-        LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/cservice"
-        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/cservice"
+        LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/cservice"
+        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/cservice"
         OUTPUT_NAME "${service_name}"
         PREFIX ""
         WINDOWS_EXPORT_ALL_SYMBOLS TRUE
@@ -97,7 +96,7 @@ if(WIN32)
     )
     target_compile_options(
       "skyuv_portable_service_${service_name}"
-      PRIVATE "/FIstdlib.h"
+      PRIVATE "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FIstdlib.h>"
     )
     target_link_libraries(
       "skyuv_portable_service_${service_name}"
@@ -115,8 +114,10 @@ if(WIN32)
   target_compile_options(
     skyuv_portable_service_snlua
     PRIVATE
-      "/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h"
-      "/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
+      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
+      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>"
+      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>"
   )
   target_link_libraries(skyuv_portable_service_snlua PRIVATE skyuv::platform)
   target_include_directories(
@@ -136,8 +137,8 @@ if(WIN32)
     skyuv_portable_lua_module_skynet
     PROPERTIES
       C_EXTENSIONS TRUE
-      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/luaclib"
-      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/luaclib"
+      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
       OUTPUT_NAME skynet
       PREFIX ""
       WINDOWS_EXPORT_ALL_SYMBOLS TRUE
@@ -150,10 +151,14 @@ if(WIN32)
       "${SKYUV_PORTABLE_SERVICE_DIR}"
       "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}"
   )
-  target_compile_options(skyuv_portable_lua_module_skynet PRIVATE "/FIstdlib.h")
+  target_compile_options(
+    skyuv_portable_lua_module_skynet
+    PRIVATE "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FIstdlib.h>"
+  )
   set_source_files_properties(
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-skynet.c"
-    PROPERTIES COMPILE_OPTIONS "/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+    PROPERTIES COMPILE_OPTIONS
+      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>;$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>"
   )
   target_link_libraries(
     skyuv_portable_lua_module_skynet
@@ -166,7 +171,8 @@ if(WIN32)
   )
 
   file(TO_CMAKE_PATH "${SKYUV_PORTABLE_SKYNET_ROOT}" SKYUV_PORTABLE_SOURCE_DIR)
-  file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/3rd" SKYUV_PORTABLE_BINARY_DIR)
+  file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/3rd/portable" SKYUV_PORTABLE_BINARY_DIR)
+  set(SKYUV_PORTABLE_MODULE_SUFFIX "${CMAKE_SHARED_MODULE_SUFFIX}")
   file(TO_CMAKE_PATH "${PROJECT_SOURCE_DIR}/examples" SKYUV_EXAMPLE_SOURCE_DIR)
   set(SKYUV_PORTABLE_START_SERVICE skyuv_smoke)
   configure_file(
@@ -180,7 +186,13 @@ if(WIN32)
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-echo.conf"
     @ONLY
   )
-  if(BUILD_TESTING)
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_tcp_events)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-tcp-events.conf"
+    @ONLY
+  )
+  if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
       COMMAND
@@ -208,7 +220,6 @@ if(WIN32)
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
   endif()
-endif()
 
 target_include_directories(
   skyuv_platform
