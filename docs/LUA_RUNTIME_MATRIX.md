@@ -1,0 +1,46 @@
+# Lua 模块与运行环境清单
+
+本文记录 Skynet 上游默认构建产物在 skyuv 便携构建中的接入状态。状态描述的是可重复验证的能力，不把“源码已参与编译”等同于“功能已完成”。
+
+## C 服务
+
+| 产物 | 当前状态 | 验证等级 | 后续工作 |
+|---|---|---|---|
+| `snlua` | 已构建、可加载 | Windows 最小启动与 Lua 服务执行；Linux 对照启动；macOS 构建测试 | 扩大三平台示例覆盖 |
+| `logger` | 已构建、可加载 | 三平台启动路径使用；Windows 多配置目录已验证 | 补充文件输出路径测试 |
+| `harbor` | 已构建、可加载 | 三平台构建，单节点启动会加载 | 审计多节点行为和退出路径 |
+| `gate` | 未纳入便携目标 | 无 | 接入构建，使用回环客户端验证 listen/accept/转发/关闭 |
+
+## Lua C 模块
+
+| 产物 | 上游组成 | 当前状态 | 依赖与风险 | 计划验证 |
+|---|---|---|---|---|
+| `skynet` | 核心、序列化、socket、mongo、netpack、memory、multicast、cluster、crypt、sharedata、stm、debugchannel、datasheet、sharetable | 当前仅纳入核心、序列化和 socket | 多个源文件依赖 Skynet 内部符号；`lua-socket` 已完成 Winsock/VLA 适配 | 分批补齐源码，以 `require` 和无外部依赖 API 验证 |
+| `client` | clientsocket、crypt、sha1 | 未构建 | pthread、POSIX socket、`fcntl`、`usleep`、stdin 后台线程生命周期、Winsock 句柄宽度 | 回环 connect/send/recv/shutdown/close；可控 stdin |
+| `bson` | lua-bson | 未构建 | 无显著平台系统调用 | 编解码与错误输入 |
+| `md5` | lua-md5 | 未构建 | 独立第三方源码 | 已知摘要向量 |
+| `sproto` | sproto、lsproto | 未构建 | 内部包含 MSVC 整数兼容头 | schema 加载、编码和解码 |
+| `lpeg` | 上游内置 lpeg | 未构建 | 独立第三方源码 | 模式匹配最小用例 |
+| `ltls` | OpenSSL TLS 模块 | 上游默认关闭，skyuv 未构建 | OpenSSL、证书与平台分发 | 不属于本阶段默认交付；依赖策略确定后单独计划 |
+
+## 运行环境能力
+
+| 能力 | 当前状态 | 平台边界 |
+|---|---|---|
+| 动态库加载 | 已通过 skyuv 动态加载接口接入 | 扩展名、搜索路径和错误文本仍需矩阵测试 |
+| 模块输出目录 | Windows VS 多配置与单配置已统一 | Linux/macOS 继续使用同一无配置子目录布局 |
+| Lua 搜索路径 | 最小配置可加载 `cservice`、`lualib`、`luaclib` | 需覆盖空格和非 ASCII 工作路径 |
+| stdin | 便携构建未接入 `client.socket` | Unix 与 Windows 管道/控制台 EOF、编码不同；不得直接 `exit(1)` |
+| signal | Unix 保留上游行为；Windows 使用最小兼容定义 | Windows 不伪造 POSIX 信号 |
+| daemon | Unix 使用上游能力；Windows 明确不支持 | Windows Service 不在本阶段范围 |
+| 进程退出 | 测试脚本观察成功标志后终止常驻节点 | 需增加模块线程与 socket 正常回收验证 |
+
+## 接入顺序
+
+1. `client`：平台依赖最多，先确定 socket 与控制台适配边界；
+2. `bson`、`sproto`、`lpeg`、`md5`：独立模块逐个建立加载和功能测试；
+3. 补齐 `skynet` 聚合模块中的剩余源文件；
+4. `gate`、`harbor`：在基础模块齐备后运行主要网络服务示例；
+5. 统一验证路径、终端、信号和退出行为。
+
+`ltls` 继续遵循依赖决策文档，不因阶段 4 自动引入 OpenSSL。

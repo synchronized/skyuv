@@ -109,4 +109,5 @@
 
 ## 完成记录
 
-已开始模块与运行环境依赖清单审计。
+- 已完成上游默认 C 服务、Lua C 模块和运行环境能力清单，见 [`docs/LUA_RUNTIME_MATRIX.md`](../docs/LUA_RUNTIME_MATRIX.md)；
+- 清单确认 `snlua`、`logger`、`harbor` 和最小 `skynet` 模块已有可运行基础，首个实现缺口为 `client` 模块。
