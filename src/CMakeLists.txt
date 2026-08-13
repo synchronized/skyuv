@@ -26,7 +26,7 @@ skyuv_target_compile_warnings(skyuv_socket_server)
 if(WIN32)
   set(SKYUV_SKYNET_DAEMON_SOURCE compat/skynet/start/skyuv_daemon.c)
 else()
-  set(SKYUV_SKYNET_DAEMON_SOURCE "${SKYUV_SKYNET_SOURCE_DIR}/skynet_daemon.c")
+  set(SKYUV_SKYNET_DAEMON_SOURCE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src/skynet_daemon.c")
 endif()
 add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_DAEMON_SOURCE})
 target_include_directories(
