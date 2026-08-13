@@ -193,3 +193,5 @@
 - 生成并链接 `skyuv_skynet_portable` 可执行文件，Windows 已能运行到 Skynet 配置文件参数解析入口；完整 Lua 引导服务与 TCP echo 仍属于本计划后续工作。
 - Windows 已构建并动态加载 `logger`、`snlua`、`harbor` 和最小 `skynet` Lua C 模块，能够运行到 `skyuv_smoke` 服务并观察启动成功标志。
 - Windows 启动冒烟作为受控超时测试加入 CTest；Skynet 基线节点保持常驻语义，测试在观察到成功标志后终止进程。
+- Windows 已构建 `lua-socket.c`，使用 Winsock 头文件和 Lua userdata 临时地址缓冲区替换 POSIX 头文件及 VLA。
+- listener 的 `start`/resume 语义已接入 libuv runtime；Windows Lua TCP echo 可完成监听、accept、读取、回写和关闭。

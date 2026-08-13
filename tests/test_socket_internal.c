@@ -340,12 +340,18 @@ static void test_runtime_listen_accept_start(void **state) {
 	assert_int_equal(skyuv_socket_runtime_state(runtime, listener), SKYUV_SOCKET_STATE_LISTENING);
 
 	client.port = event.value;
+	assert_int_equal(skyuv_socket_runtime_start(runtime, listener, (uintptr_t)43), SKYUV_OK);
+	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
+	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_OPEN);
+	assert_int_equal(event.id, listener);
+	assert_int_equal(event.opaque, (uintptr_t)43);
 	client.data = payload;
 	client.size = sizeof(payload) - 1;
 	assert_int_equal(skyuv_thread_create(&thread, connect_client, &client), SKYUV_OK);
 	assert_int_equal(skyuv_socket_runtime_poll(runtime, &event), SKYUV_OK);
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_ACCEPT);
 	assert_int_equal(event.id, listener);
+	assert_int_equal(event.opaque, (uintptr_t)43);
 	accepted = event.value;
 	assert_true(accepted > 0);
 	assert_int_equal(skyuv_socket_runtime_state(runtime, accepted),

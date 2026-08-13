@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <uv.h>
+
 #include "socket_server.h"
 
 struct socket_server {
@@ -47,7 +49,8 @@ int socket_server_poll(struct socket_server *server, struct socket_message *resu
 	result->id = event.id;
 	result->opaque = event.opaque;
 	result->ud = event.type == SKYUV_SOCKET_EVENT_DATA ? (int)event.size : event.value;
-	result->data = event.data;
+	result->data = event.type == SKYUV_SOCKET_EVENT_ERROR ? (char *)uv_strerror(event.value)
+												  : event.data;
 	if (more != NULL) {
 		*more = 0;
 	}

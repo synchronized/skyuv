@@ -344,6 +344,11 @@ static void process_start(struct skyuv_socket_runtime *runtime,
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
 	int result;
 
+	if (entry != NULL && entry_state(entry) == SKYUV_SOCKET_STATE_LISTENING) {
+		entry->opaque = command->opaque;
+		push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
+		return;
+	}
 	if (entry == NULL || entry_state(entry) != SKYUV_SOCKET_STATE_ACCEPTED_PAUSED) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_EINVAL);
 		return;
