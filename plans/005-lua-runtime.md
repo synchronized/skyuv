@@ -171,3 +171,7 @@
   节点名、trace 帧和成功/失败响应的协议编解码，再启动两个独立节点，覆盖
   cluster 监听、服务注册、连接建立、按名称寻址以及携带 UTF-8 数据的跨节点
   RPC。cluster sender 持有长连接，测试在确认结果后由驱动统一终止节点。
+- `skynet` 聚合模块已补入 `skynet.debugchannel`；上游源码通过既有 skyuv
+  自旋锁兼容头避免 MSVC 误用 GCC `__sync_*` 内建函数。Windows 实际测试覆盖
+  channel 创建与连接、双向 FIFO 读写、包含零字节和 UTF-8 的命令、空队列、
+  双端垃圾回收，以及安装、触发和移除 Lua count hook。

@@ -340,6 +340,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-memory.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-multicast.c"
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-cluster.c"
+    "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-debugchannel.c"
   )
   add_library(skyuv_portable_lua_module_skynet MODULE ${SKYUV_PORTABLE_LUA_MODULE_SOURCES})
   set_target_properties(
@@ -380,6 +381,11 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-skynet.c"
     PROPERTIES COMPILE_OPTIONS
       "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>;$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>"
+  )
+  set_source_files_properties(
+    "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-debugchannel.c"
+    PROPERTIES COMPILE_OPTIONS
+      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/spinlock.h>;$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/spinlock.h>"
   )
   target_link_libraries(
     skyuv_portable_lua_module_skynet
