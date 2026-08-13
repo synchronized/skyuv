@@ -115,3 +115,6 @@
   `luaclib/client/socket`；Windows 已完成编译、动态加载和 API 表面验证；
 - stdin 后台线程改为首次调用 `readstdin` 时才启动，仅 `require` 模块不再因
   重定向 stdin 的 EOF 直接终止 Skynet。网络功能和完整线程退出协议仍待后续验证。
+- `client.socket` 的 Windows 句柄已改为模块内部保留原生 `SOCKET` 宽度，
+  Lua 边界通过 `lua_Integer` 往返；Windows 回环测试已覆盖 connect、send、
+  非阻塞 recv、写 shutdown 和 close，既有 echo 与模块加载测试保持通过。

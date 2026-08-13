@@ -68,3 +68,6 @@ git -C 3rd/skynet status --short
   首次调用 `readstdin` 时创建，避免仅加载模块就在无控制台环境中提前退出。
   补丁只应用到构建目录副本；句柄宽度和 stdin 完整退出协议仍由计划 005
   后续步骤处理。
+- `0006-Preserve-client-socket-native-handle-width.patch`：让 `client.socket`
+  在 Windows 内部始终使用 Winsock `SOCKET`，仅在 Lua 边界与 64 位
+  `lua_Integer` 转换，避免经由 32 位 `int` 截断原生句柄；Unix 继续使用 fd。

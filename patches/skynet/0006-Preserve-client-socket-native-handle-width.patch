@@ -1,0 +1,33 @@
+diff --git a/lualib-src/lua-clientsocket.c b/lualib-src/lua-clientsocket.c
+--- a/lualib-src/lua-clientsocket.c
++++ b/lualib-src/lua-clientsocket.c
+@@ -19,0 +20 @@
++typedef SOCKET socket_fd;
+@@ -23,0 +25 @@
++typedef int socket_fd;
+@@ -35 +37 @@
+-	int fd = socket(AF_INET,SOCK_STREAM,0);
++	socket_fd fd = socket(AF_INET,SOCK_STREAM,0);
+@@ -60 +62 @@
+-	lua_pushinteger(L, fd);
++	lua_pushinteger(L, (lua_Integer)(uintptr_t)fd);
+@@ -67 +69 @@
+-	int fd = luaL_checkinteger(L, 1);
++	socket_fd fd = (socket_fd)(uintptr_t)luaL_checkinteger(L, 1);
+@@ -69 +71 @@
+-	closesocket((SOCKET)(uintptr_t)fd);
++	closesocket(fd);
+@@ -79 +81 @@
+-block_send(lua_State *L, int fd, const char * buffer, int sz) {
++block_send(lua_State *L, socket_fd fd, const char * buffer, int sz) {
+@@ -109 +111 @@
+-	int fd = luaL_checkinteger(L,1);
++	socket_fd fd = (socket_fd)(uintptr_t)luaL_checkinteger(L,1);
+@@ -136 +138 @@
+-	int fd = luaL_checkinteger(L,1);
++	socket_fd fd = (socket_fd)(uintptr_t)luaL_checkinteger(L,1);
+@@ -227 +229 @@
+-	int fd = luaL_checkinteger(L,1);
++	socket_fd fd = (socket_fd)(uintptr_t)luaL_checkinteger(L,1);
+@@ -260 +262,0 @@
+-	printf("SHUTDOWN %d %d\n", fd, v);
