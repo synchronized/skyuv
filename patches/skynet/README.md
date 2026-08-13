@@ -74,3 +74,6 @@ git -C 3rd/skynet status --short
 - `0007-Make-client-stdin-queue-diagnostic-and-reclaimable.patch`：让客户端
   stdin 队列在 EOF、读取错误和队列满时返回诊断状态，不再由后台线程直接
   终止进程；保留空行并在 EOF/错误后 join 已结束线程。
+- `0008-Make-netpack-pointer-arithmetic-standard-C.patch`：将 `lua-netpack.c`
+  中两处 GNU C `void *` 指针运算改为显式的字节指针运算，使 MSVC 可编译；
+  不改变缓冲区偏移、所有权或 Unix 行为，适合提交上游。

@@ -144,3 +144,7 @@
 - `skynet` 聚合模块已补入 `skynet.datasheet.core`；Windows 实际测试覆盖
   builder 创建数据、两个独立服务查询同一数据、根与嵌套代理原位更新、数组
   和 UTF-8 访问、表到标量的结构变化、旧嵌套代理失效及服务退出释放。
+- `skynet` 聚合模块已补入 `skynet.netpack`；Windows 实际测试覆盖二字节
+  大端长度头、空包、含零字节与 UTF-8 的载荷、65535 字节上限、超限错误，
+  并通过 `tostring` 验证 C 缓冲区向 Lua 字符串转移后的释放路径。
+  `filter/pop` 依赖真实 socket 消息，留待 gate 服务联调测试覆盖。
