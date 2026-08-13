@@ -81,9 +81,9 @@ void socket_server_start(struct socket_server *server, uintptr_t opaque, int id)
 }
 
 void socket_server_pause(struct socket_server *server, uintptr_t opaque, int id) {
-	(void)server;
-	(void)opaque;
-	(void)id;
+	if (server != NULL) {
+		(void)skyuv_socket_runtime_pause(server->runtime, id, opaque);
+	}
 }
 
 static void release_sendbuffer(struct socket_server *server, struct socket_sendbuffer *buffer) {

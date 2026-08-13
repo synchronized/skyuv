@@ -179,6 +179,15 @@ jobs:
             | sed 's/^.*TCP_EVENT /TCP_EVENT /' | sort >portable-events.txt
           diff -u upstream-events.txt portable-events.txt
 
+      - name: 验证 libuv 版 TCP pause/start 语义
+        shell: bash
+        run: |
+          timeout 15s "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
+            "build/${{ matrix.preset }}/3rd/skyuv-portable-socket-controls.conf" \
+            2>&1 | tee portable-socket-controls.log
+          grep -F "TCP_CONTROL pause_resume" portable-socket-controls.log
+          grep -F "skyuv TCP 控制语义基线验证通过" portable-socket-controls.log
+
       - name: 运行原版 Skynet 启动冒烟测试
         working-directory: ${{ runner.temp }}/skynet
         shell: bash

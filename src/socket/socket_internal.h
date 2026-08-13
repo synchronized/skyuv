@@ -20,6 +20,7 @@ enum skyuv_socket_state {
 	SKYUV_SOCKET_STATE_CONNECTING,
 	SKYUV_SOCKET_STATE_ACCEPTED_PAUSED,
 	SKYUV_SOCKET_STATE_CONNECTED,
+	SKYUV_SOCKET_STATE_CONNECTED_PAUSED,
 	SKYUV_SOCKET_STATE_CLOSING,
 };
 
@@ -27,6 +28,7 @@ enum skyuv_socket_command_type {
 	SKYUV_SOCKET_COMMAND_LISTEN = 0,
 	SKYUV_SOCKET_COMMAND_CONNECT,
 	SKYUV_SOCKET_COMMAND_START,
+	SKYUV_SOCKET_COMMAND_PAUSE,
 	SKYUV_SOCKET_COMMAND_SEND,
 	SKYUV_SOCKET_COMMAND_CLOSE,
 	SKYUV_SOCKET_COMMAND_EXIT,
@@ -111,6 +113,7 @@ int skyuv_socket_runtime_listen(struct skyuv_socket_runtime *runtime, const char
 int skyuv_socket_runtime_connect(struct skyuv_socket_runtime *runtime, const char *host, int port,
 								 uintptr_t opaque, int *id);
 int skyuv_socket_runtime_start(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
+int skyuv_socket_runtime_pause(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
 							  enum skyuv_socket_buffer_ownership ownership,
 							  void (*release)(void *data));

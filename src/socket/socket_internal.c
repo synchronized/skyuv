@@ -342,14 +342,21 @@ static void process_listen(struct skyuv_socket_runtime *runtime,
 static void process_start(struct skyuv_socket_runtime *runtime,
 						  struct skyuv_socket_command *command) {
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+	enum skyuv_socket_state state;
 	int result;
 
-	if (entry != NULL && entry_state(entry) == SKYUV_SOCKET_STATE_LISTENING) {
+	if (entry == NULL) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_EINVAL);
+		return;
+	}
+	state = entry_state(entry);
+	if (state == SKYUV_SOCKET_STATE_LISTENING) {
 		entry->opaque = command->opaque;
 		push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
 		return;
 	}
-	if (entry == NULL || entry_state(entry) != SKYUV_SOCKET_STATE_ACCEPTED_PAUSED) {
+	if (state != SKYUV_SOCKET_STATE_ACCEPTED_PAUSED &&
+		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_EINVAL);
 		return;
 	}
@@ -361,6 +368,23 @@ static void process_start(struct skyuv_socket_runtime *runtime,
 	}
 	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED);
 	push_event(runtime, SKYUV_SOCKET_EVENT_OPEN, entry->id, entry->opaque, 0);
+}
+
+static void process_pause(struct skyuv_socket_runtime *runtime,
+						  struct skyuv_socket_command *command) {
+	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
+	int result;
+
+	(void)command->opaque;
+	if (entry == NULL || entry_state(entry) != SKYUV_SOCKET_STATE_CONNECTED) {
+		return;
+	}
+	result = uv_read_stop((uv_stream_t *)&entry->tcp);
+	if (result != 0) {
+		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, entry->id, entry->opaque, result);
+		return;
+	}
+	set_entry_state(entry, SKYUV_SOCKET_STATE_CONNECTED_PAUSED);
 }
 
 static void process_connect(struct skyuv_socket_runtime *runtime,
@@ -405,10 +429,13 @@ static void process_send(struct skyuv_socket_runtime *runtime,
 						 struct skyuv_socket_command *command) {
 	struct skyuv_socket_entry *entry = find_entry(runtime, command->id);
 	struct skyuv_socket_write *write;
+	enum skyuv_socket_state state;
 	uv_buf_t buffer;
 	int result;
 
-	if (entry == NULL || entry_state(entry) != SKYUV_SOCKET_STATE_CONNECTED) {
+	state = entry == NULL ? SKYUV_SOCKET_STATE_INVALID : entry_state(entry);
+	if (state != SKYUV_SOCKET_STATE_CONNECTED &&
+		state != SKYUV_SOCKET_STATE_CONNECTED_PAUSED) {
 		push_event(runtime, SKYUV_SOCKET_EVENT_ERROR, command->id, command->opaque, UV_ENOTCONN);
 		return;
 	}
@@ -481,6 +508,8 @@ static void consume_commands(uv_async_t *async) {
 			process_connect(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_START) {
 			process_start(runtime, command);
+		} else if (command->type == SKYUV_SOCKET_COMMAND_PAUSE) {
+			process_pause(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_SEND) {
 			process_send(runtime, command);
 		} else if (command->type == SKYUV_SOCKET_COMMAND_CLOSE) {
@@ -746,6 +775,27 @@ int skyuv_socket_runtime_start(struct skyuv_socket_runtime *runtime, int id, uin
 		return SKYUV_ERROR_INVALID_STATE;
 	}
 	return SKYUV_OK;
+}
+
+int skyuv_socket_runtime_pause(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque) {
+	struct skyuv_socket_command *command;
+	int result;
+
+	if (runtime == NULL || id <= 0) {
+		return SKYUV_ERROR_INVALID_ARGUMENT;
+	}
+	command = calloc(1, sizeof(*command));
+	if (command == NULL) {
+		return SKYUV_ERROR_OUT_OF_MEMORY;
+	}
+	command->type = SKYUV_SOCKET_COMMAND_PAUSE;
+	command->id = id;
+	command->opaque = opaque;
+	result = skyuv_socket_runtime_submit(runtime, command);
+	if (result != SKYUV_OK) {
+		free(command);
+	}
+	return result;
 }
 
 int skyuv_socket_runtime_send(struct skyuv_socket_runtime *runtime, int id, void *data, size_t size,
