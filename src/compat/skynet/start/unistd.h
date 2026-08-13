@@ -7,7 +7,14 @@
 
 #else
 
+#include <process.h>
 #include <uv.h>
+
+typedef int pid_t;
+
+static pid_t skyuv_compat_getpid(void) {
+	return _getpid();
+}
 
 static unsigned int skyuv_compat_sleep(unsigned int seconds) {
 	uv_sleep(seconds * 1000U);
@@ -21,6 +28,7 @@ static int skyuv_compat_usleep(unsigned int microseconds) {
 
 #define sleep skyuv_compat_sleep
 #define usleep skyuv_compat_usleep
+#define getpid skyuv_compat_getpid
 
 #endif
 

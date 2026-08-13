@@ -121,3 +121,6 @@
 - stdin 队列不再从后台线程调用 `exit(1)`：EOF、读取错误和队列溢出通过
   `readstdin` 的可选第二返回值报告；空行和 CRLF 得到正确处理，分配失败可诊断，
   EOF/错误后回收线程句柄。Windows 管道测试已覆盖普通行、空行、UTF-8 和 EOF。
+- 已接入独立 `bson` 动态模块；Windows 实际编解码测试覆盖嵌套文档、数组、
+  UTF-8、布尔值、null 和固定 ObjectID。ObjectID 所需的原子操作与进程 ID
+  由既有 skyuv 兼容边界提供，不修改上游源码。

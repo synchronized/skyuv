@@ -17,7 +17,7 @@
 |---|---|---|---|---|
 | `skynet` | 核心、序列化、socket、mongo、netpack、memory、multicast、cluster、crypt、sharedata、stm、debugchannel、datasheet、sharetable | 当前仅纳入核心、序列化和 socket | 多个源文件依赖 Skynet 内部符号；`lua-socket` 已完成 Winsock/VLA 适配 | 分批补齐源码，以 `require` 和无外部依赖 API 验证 |
 | `client` | clientsocket、crypt、sha1 | 未构建 | pthread、POSIX socket、`fcntl`、`usleep`、stdin 后台线程生命周期、Winsock 句柄宽度 | 回环 connect/send/recv/shutdown/close；可控 stdin |
-| `bson` | lua-bson | 未构建 | 无显著平台系统调用 | 编解码与错误输入 |
+| `bson` | lua-bson | 已构建、可加载 | ObjectID 初始化需要原子操作、时间和进程 ID，已通过 skyuv 兼容层提供 | 文档、数组、UTF-8、null 与固定 ObjectID 编解码已验证；错误输入待补充 |
 | `md5` | lua-md5 | 未构建 | 独立第三方源码 | 已知摘要向量 |
 | `sproto` | sproto、lsproto | 未构建 | 内部包含 MSVC 整数兼容头 | schema 加载、编码和解码 |
 | `lpeg` | 上游内置 lpeg | 未构建 | 独立第三方源码 | 模式匹配最小用例 |

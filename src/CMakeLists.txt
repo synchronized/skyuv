@@ -169,6 +169,45 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     skyuv_portable_lua_module_client PRIVATE skyuv::lua skyuv::platform skyuv::libuv
   )
 
+  add_library(
+    skyuv_portable_lua_module_bson
+    MODULE "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-bson.c"
+  )
+  set_target_properties(
+    skyuv_portable_lua_module_bson
+    PROPERTIES
+      C_EXTENSIONS TRUE
+      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+      OUTPUT_NAME bson
+      PREFIX ""
+      WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+  )
+  foreach(config IN ITEMS DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+    set_target_properties(
+      skyuv_portable_lua_module_bson
+      PROPERTIES
+        "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+        "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+    )
+  endforeach()
+  target_include_directories(
+    skyuv_portable_lua_module_bson
+    PRIVATE
+      "${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
+      "${PROJECT_SOURCE_DIR}/src/compat/skynet"
+      "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua"
+  )
+  target_compile_options(
+    skyuv_portable_lua_module_bson
+    PRIVATE
+      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
+      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
+  )
+  target_link_libraries(
+    skyuv_portable_lua_module_bson PRIVATE skyuv::lua skyuv::platform skyuv::libuv
+  )
+
   set(
     SKYUV_PORTABLE_LUA_MODULE_SOURCES
     "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-skynet.c"
@@ -273,6 +312,12 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-client-stdin.conf"
     @ONLY
   )
+  set(SKYUV_PORTABLE_START_SERVICE skyuv_bson)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/examples/skyuv-portable-smoke.conf.in"
+    "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-bson.conf"
+    @ONLY
+  )
   if(WIN32 AND BUILD_TESTING)
     add_test(
       NAME skynet.portable.smoke
@@ -331,6 +376,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       skynet.portable.client_stdin
       PROPERTIES
         TIMEOUT 15
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+    add_test(
+      NAME skynet.portable.bson
+      COMMAND
+        pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/scripts/portable-smoke.ps1"
+        -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+        -Config "3rd/skyuv-portable-bson.conf"
+    )
+    set_tests_properties(
+      skynet.portable.bson
+      PROPERTIES
+        TIMEOUT 10
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
     set_tests_properties(
