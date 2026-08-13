@@ -22,7 +22,7 @@
 | 001 | [平台基础层](001-platform-foundation.md) | 已完成 | 000 |
 | 002 | [原子操作抽象](002-atomic.md) | 已完成 | 000 |
 | 003 | [libuv TCP 最小闭环](003-libuv-tcp-minimum.md) | 已完成 | 001、002 |
-| 004 | [Socket 语义兼容](004-socket-semantics.md) | 进行中 | 003 |
+| 004 | [Socket 语义兼容](004-socket-semantics.md) | 已完成 | 003 |
 | 005 | Lua 模块与运行环境 | 待编写 | 004 |
 | 006 | 跨平台交付 | 待编写 | 005 |
 

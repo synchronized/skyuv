@@ -2,13 +2,13 @@
 
 ## 状态
 
-进行中。
+已完成。
 
 ## 背景
 
 阶段 2 已完成 libuv TCP 最小闭环，Windows、macOS 和 Linux 均可构建便携 Skynet，Windows Lua TCP echo 已通过，Linux 原版与 libuv 版关键 TCP 事件序列也已自动对照一致。
 
-当前 `socket_server.h` 仍有部分接口采用降级实现：`pause`、`nodelay` 是空操作，`shutdown` 等同完整关闭，高低优先级发送未区分，`socket_info` 返回空，UDP 与外部 fd `bind` 明确失败。阶段 3 需要补齐常用语义，同时保持 libuv handle 只由所属 loop 线程操作。
+阶段 2 完成时，`socket_server.h` 仍有部分接口采用降级实现：`pause`、`nodelay` 是空操作，`shutdown` 等同完整关闭，高低优先级发送未区分，`socket_info` 返回空，UDP 与外部 fd `bind` 明确失败。阶段 3 在保持 libuv handle 只由所属 loop 线程操作的前提下补齐这些常用语义。
 
 ## 目标
 
@@ -177,7 +177,7 @@
 
 ## 完成记录
 
-已开始：
+实际完成：
 
 - 固化原版 accepted TCP 连接的 pause/start 行为：pause 请求先于客户端发送进入控制队列，恢复前不产生 DATA，start 后收到完整负载；
 - libuv 适配层已增加独立 PAUSE 命令和 `CONNECTED_PAUSED` 状态；pause 在 loop 线程执行 `uv_read_stop`，start 执行 `uv_read_start`、更新 opaque 并产生与原版 transfer 一致的 OPEN 事件；
@@ -189,6 +189,22 @@
 - UDP 原版 Lua 基线已覆盖 IPv4/IPv6 默认目标发送、显式来源地址回复与地址解码；确认 IPv4 地址编码为 7 字节、IPv6 为 19 字节，均为协议字节、网络序端口和原始 IP 字节；
 - libuv UDP 生命周期已支持 IPv4/IPv6 bind、创建后自动接收、兼容来源地址编码、socket.info 类型与统一 close/exit 释放；直接测试已覆盖 IPv4 数据报接收和 7 字节地址布局；
 - UDP 发送已支持 FIFO 默认目标设置、普通 write、7/19 字节显式目标和异步发送所有权；直接测试覆盖默认目标请求与来源地址回复，Linux CI 对照运行完整 IPv4/IPv6 Lua 基线；
+- Unix 已支持接管已连接 TCP socket fd，并验证收发、重复接管失败和关闭所有权；Windows 因 Skynet `int fd` 无法安全表示 Winsock `SOCKET` 而稳定返回失败；非 socket fd 不在兼容范围；
+- 普通 close 已与 shutdown 分离：close 立即停止读取并报告 CLOSE，但会排空既有 TCP 写队列后再释放 handle；shutdown 继续强制关闭；4 MiB 发送后立即 close 的回归测试验证数据不丢失；
+- Windows Visual Studio 多配置生成器的 C 服务和 Lua C 模块统一输出到配置文件声明的目录，最小启动和 Lua TCP echo 均可直接运行；
 - 确认 nodelay 可在已连接 socket 上提交且不产生额外事件；
 - 确认上游 shutdown 是强制关闭而非 `uv_shutdown` 写半关闭，本端和对端最终各观察一次 CLOSE；
 - 修正阶段 2 事件对照：无因果关系的 `connect_error` 与 `listener_accept` 允许交换，CI 比较事件集合，连接内因果顺序继续由 Lua 服务断言。
+
+最终验证：
+
+- Windows VS2022 Debug 严格构建完成，CTest 9/9 通过，socket 内部功能与生命周期测试连续运行 50 轮通过；
+- Linux GCC/Clang Debug/Release、系统分配器 Debug 和 Clang ThreadSanitizer 全部通过，包含原版 Skynet TCP/UDP 行为对照；
+- macOS Apple Clang Debug/Release 构建与测试全部通过；
+- 第三方源码状态检查通过，没有直接修改 `3rd/` 工作树。
+
+已接受差异与后续范围：
+
+- libuv 已提交的 write 不能被后来的高优先级数据抢占，优先级只作用于尚未提交的 skyuv 队列；
+- Unix 外部 fd 仅支持有效的已连接 TCP 流 socket；Windows 原生句柄入口如有需求将在独立平台扩展中设计；
+- DNS 异步解析、Unix domain socket、控制台输入和其他非核心 Lua 模块留给后续阶段。
