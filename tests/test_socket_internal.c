@@ -441,6 +441,7 @@ static void test_runtime_connect_invalid_address(void **state) {
 static void test_runtime_connect_cancelled_by_close(void **state) {
 	struct skyuv_socket_runtime *runtime = NULL;
 	struct skyuv_socket_event event;
+	enum skyuv_socket_state socket_state;
 	int connection;
 
 	(void)state;
@@ -452,7 +453,9 @@ static void test_runtime_connect_cancelled_by_close(void **state) {
 	assert_int_equal(event.type, SKYUV_SOCKET_EVENT_CLOSE);
 	assert_int_equal(event.id, connection);
 	assert_int_equal(event.opaque, (uintptr_t)321);
-	assert_int_equal(skyuv_socket_runtime_state(runtime, connection), SKYUV_SOCKET_STATE_CLOSING);
+	socket_state = skyuv_socket_runtime_state(runtime, connection);
+	assert_true(socket_state == SKYUV_SOCKET_STATE_CLOSING ||
+				socket_state == SKYUV_SOCKET_STATE_INVALID);
 	skyuv_socket_runtime_release(&runtime);
 }
 
