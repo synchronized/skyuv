@@ -11,6 +11,18 @@ add_library(skyuv::socket_core ALIAS skyuv_socket_core)
 target_include_directories(skyuv_socket_core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/socket")
 skyuv_target_compile_warnings(skyuv_socket_core)
 
+add_library(skyuv_socket_server STATIC socket/socket_server_compat.c)
+add_library(skyuv::socket_server ALIAS skyuv_socket_server)
+target_include_directories(
+  skyuv_socket_server
+  PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/socket"
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
+)
+target_link_libraries(skyuv_socket_server PUBLIC skyuv::socket_core)
+skyuv_target_compile_warnings(skyuv_socket_server)
+
 target_include_directories(
   skyuv_platform
   PUBLIC

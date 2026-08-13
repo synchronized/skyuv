@@ -34,6 +34,7 @@ set(
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_harbor.c"
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_env.c"
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_monitor.c"
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_socket.c"
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_log.c"
 )
 
@@ -70,5 +71,5 @@ set_source_files_properties(
 )
 target_link_libraries(
   skyuv_skynet_portable_core
-  PRIVATE skyuv::lua skyuv::platform skyuv::allocator
+  PRIVATE skyuv::lua skyuv::platform skyuv::allocator skyuv::socket_server
 )

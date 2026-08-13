@@ -185,3 +185,6 @@
 - exit 停止接收新命令后遍历并关闭全部 TCP handle，只在所有 close callback 完成后报告 EXIT。
 - 覆盖 listener、双向连接和待完成 write 同时存在时退出，验证槽位清空且发送缓冲区只释放一次。
 - 重复 close 只采用首条命令的 opaque 并产生一个 CLOSE；随后 exit 不会因迟到回调产生重复终止事件。
+- 新增 `socket_server.h` 兼容层，将 Skynet TCP listen/connect/start/send/close/poll/exit 映射到 libuv runtime。
+- MEMORY 缓冲区直接转移所有权，RAWPOINTER 入队前复制，OBJECT 首期复制内容后释放原对象；未支持的 UDP、bind 和统计接口明确失败。
+- 跨平台 Actor 核心开始编译 `skynet_socket.c` 并链接 skyuv socket server，不再依赖 Linux epoll 实现。
