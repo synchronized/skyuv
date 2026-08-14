@@ -556,15 +556,16 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.harbor
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-harbor.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Node1Config "3rd/skyuv-portable-harbor-node1.conf"
-      -Node2Config "3rd/skyuv-portable-harbor-node2.conf"
-      -Node3Config "3rd/skyuv-portable-harbor-node3.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_harbor.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "3rd/skyuv-portable-harbor-node1.conf"
+      "3rd/skyuv-portable-harbor-node2.conf"
+      "3rd/skyuv-portable-harbor-node3.conf"
   )
   set_tests_properties(
     skynet.portable.harbor
     PROPERTIES
+      RUN_SERIAL TRUE
       TIMEOUT 35
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
@@ -593,4 +594,20 @@ if(NOT WIN32 AND BUILD_TESTING)
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
   endforeach()
+  add_test(
+    NAME skynet.portable.harbor
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_harbor.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "3rd/skyuv-portable-harbor-node1.conf"
+      "3rd/skyuv-portable-harbor-node2.conf"
+      "3rd/skyuv-portable-harbor-node3.conf"
+  )
+  set_tests_properties(
+    skynet.portable.harbor
+    PROPERTIES
+      RUN_SERIAL TRUE
+      TIMEOUT 45
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
 endif()
