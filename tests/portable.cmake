@@ -347,9 +347,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.stm
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-stm.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-stm.conf"
   )
   set_tests_properties(
     skynet.portable.stm
@@ -360,9 +359,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.sharetable
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-sharetable.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-sharetable.conf"
   )
   set_tests_properties(
     skynet.portable.sharetable
@@ -373,9 +371,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.sharedata
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-sharedata.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-sharedata.conf"
   )
   set_tests_properties(
     skynet.portable.sharedata
@@ -386,9 +383,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.datasheet
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-datasheet.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-datasheet.conf"
   )
   set_tests_properties(
     skynet.portable.datasheet
@@ -451,9 +447,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.multicast
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-multicast.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-multicast.conf"
   )
   set_tests_properties(
     skynet.portable.multicast
@@ -667,6 +662,21 @@ if(NOT WIN32 AND BUILD_TESTING)
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   foreach(module_name IN ITEMS sproto md5 crypt)
+    add_test(
+      NAME "skynet.portable.${module_name}"
+      COMMAND
+        "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+        "$<TARGET_FILE:skyuv_skynet_portable>"
+        "3rd/skyuv-portable-${module_name}.conf"
+    )
+    set_tests_properties(
+      "skynet.portable.${module_name}"
+      PROPERTIES
+        TIMEOUT 15
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+  endforeach()
+  foreach(module_name IN ITEMS stm sharetable sharedata datasheet multicast)
     add_test(
       NAME "skynet.portable.${module_name}"
       COMMAND

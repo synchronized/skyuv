@@ -214,3 +214,5 @@
 - 第一批无外部服务模块已接入三平台运行测试：`sproto` 覆盖 schema 与编解码，
   `md5` 覆盖摘要、HMAC 和加解密，`skynet.crypt` 覆盖 SHA-1、Base64、Hex、
   XOR 与 DES；`lpeg` 新增独立夹具覆盖模式组合、捕获、完整匹配、UTF-8 和零字节。
+- `stm`、`sharetable`、`sharedata`、`datasheet` 和 `multicast` 已统一使用跨平台
+  运行驱动；三平台验证共享对象、只读表、代理失效、跨 Actor 更新和订阅生命周期。
