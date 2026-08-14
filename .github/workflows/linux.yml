@@ -158,6 +158,21 @@ jobs:
           "build/${{ matrix.preset }}/src/skyuv_skynet_portable"
           "build/${{ matrix.preset }}/3rd/skyuv-portable-process-shutdown.conf"
 
+      - name: 诊断 Linux 信号句柄退出路径
+        if: failure() && matrix.preset == 'linux-gcc-system-debug'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdb
+          gdb -batch \
+            -ex "set pagination off" \
+            -ex "start" \
+            -ex "handle SIGTERM nostop noprint pass" \
+            -ex "python import gdb, os, signal, threading, time; pid = gdb.selected_inferior().pid; threading.Thread(target=lambda: (time.sleep(1), os.kill(pid, signal.SIGTERM)), daemon=True).start()" \
+            -ex "continue" \
+            -ex "thread apply all bt" \
+            --args "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
+              "build/${{ matrix.preset }}/3rd/skyuv-portable-process-shutdown.conf"
+
       - name: 复制原版 Skynet 到临时目录
         run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
 
