@@ -23,6 +23,11 @@
 - [`DEPENDENCIES.md`](DEPENDENCIES.md)：依赖库策略、平台边界与启用条件。
 - [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：Lua 模块接入状态、风险与验证等级。
 
+## 实施记录
+
+- [`records/lua-runtime-stage-4.md`](records/lua-runtime-stage-4.md)：阶段 4 的模块接入、
+  跨平台验证过程和已知差异。
+
 ## 尚待建立的分类
 
 以下分类按需渐进建立，不为填充目录而创建空文档：
@@ -31,6 +36,5 @@
 - Guide：构建、运行、调试和平台操作指南。
 - Concept：Actor、网络线程、句柄所有权等架构说明。
 - ADR：长期有效的架构与兼容性决策。
-- Record：迁移过程、CI 验证和测量结果。
 
 新增文档时应先确认权威来源，并将入口加入本页。
