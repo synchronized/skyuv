@@ -218,3 +218,5 @@
   运行驱动；三平台验证共享对象、只读表、代理失效、跨 Actor 更新和订阅生命周期。
 - `netpack`、`memory` 和 `skyuv.control` 已统一使用跨平台运行驱动；三平台验证
   帧编码与所有权、系统分配器降级接口，以及不依赖平台信号的日志重开入口。
+- 普通启动、`client.socket` 模块加载、`cluster.core`、`debugchannel` 和 Mongo
+  驱动封包已统一使用跨平台运行驱动；macOS 构建矩阵补入 `client.socket` 模块目标。
