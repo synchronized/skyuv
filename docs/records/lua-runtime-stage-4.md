@@ -90,5 +90,6 @@
 - Windows 不支持上游 `int fd` 表达原生宽句柄的接口，不进行有损转换。
 - Windows daemon 保持明确不支持；Windows Service 尚未接入。
 - 非 ASCII DLL 路径受 Lua Windows 动态加载接口限制。
-- cluster 双节点测试仍需统一为跨平台驱动并纳入 Linux/macOS CTest。
+- cluster 双节点测试已使用统一 Python 驱动纳入三平台 CTest，覆盖监听、注册、连接、
+  名称寻址、UTF-8 RPC 和长连接节点的受控终止。
 - TLS、性能、长时间稳定性和发布打包不属于本阶段默认交付。

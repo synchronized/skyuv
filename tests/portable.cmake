@@ -544,20 +544,6 @@ if(WIN32 AND BUILD_TESTING)
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   add_test(
-    NAME skynet.portable.cluster
-    COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-cluster.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -ProviderConfig "3rd/skyuv-portable-cluster-provider.conf"
-      -ConsumerConfig "3rd/skyuv-portable-cluster-consumer.conf"
-  )
-  set_tests_properties(
-    skynet.portable.cluster
-    PROPERTIES
-      TIMEOUT 20
-      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-  )
-  add_test(
     NAME skynet.portable.harbor
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_harbor.py"
@@ -583,6 +569,21 @@ endif()
 
 if(BUILD_TESTING)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(
+    NAME skynet.portable.cluster
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_cluster.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "3rd/skyuv-portable-cluster-provider.conf"
+      "3rd/skyuv-portable-cluster-consumer.conf"
+  )
+  set_tests_properties(
+    skynet.portable.cluster
+    PROPERTIES
+      RUN_SERIAL TRUE
+      TIMEOUT 25
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
   add_test(
     NAME skynet.portable.logger_file
     COMMAND
