@@ -1,0 +1,11 @@
+thread = 2
+logger = "@SKYUV_LOGGER_FILE@"
+harbor = 0
+bootstrap = "snlua bootstrap"
+start = "skyuv_logger_file"
+
+cpath = "@SKYUV_PORTABLE_BINARY_DIR@/cservice/?@SKYUV_PORTABLE_MODULE_SUFFIX@"
+lua_path = "@SKYUV_PORTABLE_SOURCE_DIR@/lualib/?.lua;@SKYUV_PORTABLE_SOURCE_DIR@/lualib/?/init.lua"
+lua_cpath = "@SKYUV_PORTABLE_BINARY_DIR@/luaclib/?@SKYUV_PORTABLE_MODULE_SUFFIX@"
+luaservice = "@SKYUV_PORTABLE_SOURCE_DIR@/service/?.lua;@SKYUV_EXAMPLE_SOURCE_DIR@/?.lua"
+lualoader = "@SKYUV_PORTABLE_SOURCE_DIR@/lualib/loader.lua"
