@@ -139,7 +139,12 @@ jobs:
           grep -F "skyuv SIGHUP 验证已就绪" "$log"
           mv "$log" "$old_log"
           kill -HUP "$server_pid"
-          wait "$server_pid"
+          status=0
+          wait "$server_pid" || status=$?
+          if [ "$status" -ne 134 ]; then
+            echo "SIGHUP 验证节点退出码异常：$status" >&2
+            exit 1
+          fi
           grep -F "skyuv SIGHUP 日志重开验证通过" "$log"
           if grep -qF "skyuv SIGHUP 日志重开验证通过" "$old_log"; then
             echo "SIGHUP 后日志仍写入旧文件" >&2
