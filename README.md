@@ -20,9 +20,8 @@ skyuv 旨在使用 libuv 替换 Skynet 中依赖 Linux 的底层能力，使这�
 - **逐步替换**：网络与并发平台层分别设计、实现和验证。
 - **行为一致**：除平台本身差异外，各系统上的可观察行为应尽可能一致。
 
-完整的技术路线、阶段目标和验收标准见 [项目路线图](docs/ROADMAP.md)。
-第三方库的选型、用途和引入时机见 [依赖决策](docs/DEPENDENCIES.md)。
-当前阶段的具体实施步骤和验收项见 [开发计划](plans/README.md)。
+完整文档索引和推荐阅读顺序见 [文档中心](docs/README.md)。技术路线见
+[项目路线图](docs/ROADMAP.md)，当前阶段的实施步骤见 [开发计划](plans/README.md)。
 
 ## 计划中的目录结构
 
@@ -97,7 +96,7 @@ cmake --build --preset windows-vs2022-debug
 
 ## 参与开发
 
-项目代码采用接近 Skynet 的 C 代码风格：使用制表符缩进、花括号与控制语句同行，并优先保持实现直接、依赖边界清晰。详细协作约定见 [AGENTS.md](AGENTS.md)。
+项目代码采用接近 Skynet 的 C 代码风格：使用制表符缩进、花括号与控制语句同行，并优先保持实现直接、依赖边界清晰。详细协作约定见 [AGENTS.md](AGENTS.md)，文档职责与维护方式见 [文档规范](DOCUMENTATION_GUIDE.md)。
 
 ## 许可证
 

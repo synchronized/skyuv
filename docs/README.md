@@ -1,0 +1,36 @@
+# skyuv 文档中心
+
+这里是 skyuv 项目文档的统一入口。项目概览和快速构建方式见根目录
+[`README.md`](../README.md)，文档职责与维护规则见
+[`DOCUMENTATION_GUIDE.md`](../DOCUMENTATION_GUIDE.md)。
+
+## 推荐阅读顺序
+
+1. [`ROADMAP.md`](ROADMAP.md)：了解总体目标、架构边界和当前阶段。
+2. [`DEPENDENCIES.md`](DEPENDENCIES.md)：了解第三方依赖的选择、用途和引入条件。
+3. [`../plans/README.md`](../plans/README.md)：查看当前阶段的实施计划和验收项。
+4. [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：查看 Lua C 模块与运行环境的真实接入状态。
+
+## 路线图与计划
+
+- [`ROADMAP.md`](ROADMAP.md)：全局阶段、依赖关系和状态摘要。
+- [`../plans/README.md`](../plans/README.md)：现有计划索引；迁移完成前仍是计划的权威入口。
+- [`../plans/005-lua-runtime.md`](../plans/005-lua-runtime.md)：当前进行中的 Lua 模块与运行环境计划。
+- [`../plans/variable-buffer-audit.md`](../plans/variable-buffer-audit.md)：Skynet 可变缓冲区专项审计。
+
+## 参考资料
+
+- [`DEPENDENCIES.md`](DEPENDENCIES.md)：依赖库策略、平台边界与启用条件。
+- [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：Lua 模块接入状态、风险与验证等级。
+
+## 尚待建立的分类
+
+以下分类按需渐进建立，不为填充目录而创建空文档：
+
+- Tutorial：从零完成可运行目标的连续教程。
+- Guide：构建、运行、调试和平台操作指南。
+- Concept：Actor、网络线程、句柄所有权等架构说明。
+- ADR：长期有效的架构与兼容性决策。
+- Record：迁移过程、CI 验证和测量结果。
+
+新增文档时应先确认权威来源，并将入口加入本页。
