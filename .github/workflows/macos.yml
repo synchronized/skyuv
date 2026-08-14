@@ -43,7 +43,7 @@ jobs:
           skyuv_test_time skyuv_test_dynamic skyuv_test_atomic
           skyuv_test_socket_internal
           skyuv_portable_service_logger skyuv_portable_service_snlua
-          skyuv_portable_lua_module_control
+          skyuv_portable_lua_module_control skyuv_portable_lua_module_skynet
 
       - name: 运行测试
         run: ctest --preset "${{ matrix.preset }}"

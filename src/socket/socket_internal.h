@@ -181,6 +181,7 @@ int skyuv_socket_runtime_udp_send(struct skyuv_socket_runtime *runtime, int id,
 int skyuv_socket_runtime_close(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 int skyuv_socket_runtime_shutdown(struct skyuv_socket_runtime *runtime, int id, uintptr_t opaque);
 void skyuv_socket_runtime_updatetime(struct skyuv_socket_runtime *runtime, uint64_t time);
+bool skyuv_socket_runtime_take_process_shutdown(struct skyuv_socket_runtime *runtime);
 struct skyuv_socket_info *skyuv_socket_runtime_info(struct skyuv_socket_runtime *runtime);
 void skyuv_socket_runtime_info_release(struct skyuv_socket_info *info);
 enum skyuv_socket_state skyuv_socket_runtime_state(struct skyuv_socket_runtime *runtime, int id);

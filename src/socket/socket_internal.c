@@ -11,6 +11,8 @@
 
 #include <uv.h>
 
+#include <skyuv/atomic.h>
+
 struct skyuv_socket_entry {
 	uv_tcp_t tcp;
 	uv_udp_t udp;
@@ -92,6 +94,7 @@ struct skyuv_socket_runtime {
 	struct skyuv_socket_entry *pump_head;
 	struct skyuv_socket_entry *pump_tail;
 	uint32_t entry_count;
+	skyuv_atomic_i32 process_shutdown_requested;
 	bool exiting;
 	bool exit_ready;
 	uint64_t current_time;
@@ -102,6 +105,7 @@ static void on_hangup_signal(uv_signal_t *handle, int signal_number) {
 
 	(void)signal_number;
 #ifdef _WIN32
+	skyuv_atomic_i32_store(&runtime->process_shutdown_requested, 1, SKYUV_MEMORY_RELEASE);
 	push_event(runtime, SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN, 0, 0, 0);
 #else
 	push_event(runtime, SKYUV_SOCKET_EVENT_REOPEN_LOG, 0, 0, 0);
@@ -112,6 +116,7 @@ static void on_termination_signal(uv_signal_t *handle, int signal_number) {
 	struct skyuv_socket_runtime *runtime = handle->data;
 
 	(void)signal_number;
+	skyuv_atomic_i32_store(&runtime->process_shutdown_requested, 1, SKYUV_MEMORY_RELEASE);
 	push_event(runtime, SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN, 0, 0, 0);
 }
 
@@ -1308,6 +1313,7 @@ int skyuv_socket_runtime_create(struct skyuv_socket_runtime **runtime) {
 		return SKYUV_ERROR_SYSTEM;
 	}
 	created->async.data = created;
+	skyuv_atomic_i32_init(&created->process_shutdown_requested, 0);
 	result = initialize_process_signal(created, &created->hangup_signal,
 								   &created->hangup_signal_initialized, on_hangup_signal, SIGHUP);
 	if (result != 0) {
@@ -1784,6 +1790,12 @@ void skyuv_socket_runtime_updatetime(struct skyuv_socket_runtime *runtime, uint6
 	skyuv_mutex_lock(&runtime->slots_mutex);
 	runtime->current_time = time;
 	skyuv_mutex_unlock(&runtime->slots_mutex);
+}
+
+bool skyuv_socket_runtime_take_process_shutdown(struct skyuv_socket_runtime *runtime) {
+	return runtime != NULL &&
+		   skyuv_atomic_i32_exchange(&runtime->process_shutdown_requested, 0,
+								 SKYUV_MEMORY_ACQ_REL) != 0;
 }
 
 struct skyuv_socket_info *skyuv_socket_runtime_info(struct skyuv_socket_runtime *runtime) {

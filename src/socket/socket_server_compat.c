@@ -38,6 +38,9 @@ void socket_server_release(struct socket_server *server) {
 void socket_server_updatetime(struct socket_server *server, uint64_t time) {
 	if (server != NULL) {
 		skyuv_socket_runtime_updatetime(server->runtime, time);
+		if (skyuv_socket_runtime_take_process_shutdown(server->runtime)) {
+			skyuv_skynet_shutdown();
+		}
 	}
 }
 
@@ -53,8 +56,6 @@ int socket_server_poll(struct socket_server *server, struct socket_message *resu
 		}
 		if (event.type == SKYUV_SOCKET_EVENT_REOPEN_LOG) {
 			(void)skyuv_skynet_reopen_log();
-		} else if (event.type == SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN) {
-			skyuv_skynet_shutdown();
 		}
 	} while (event.type == SKYUV_SOCKET_EVENT_REOPEN_LOG ||
 			 event.type == SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN);
