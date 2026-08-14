@@ -21,7 +21,7 @@ skyuv 旨在使用 libuv 替换 Skynet 中依赖 Linux 的底层能力，使这�
 - **行为一致**：除平台本身差异外，各系统上的可观察行为应尽可能一致。
 
 完整文档索引和推荐阅读顺序见 [文档中心](docs/README.md)。技术路线见
-[项目路线图](docs/ROADMAP.md)，当前阶段的实施步骤见 [开发计划](plans/README.md)。
+[项目路线图](docs/ROADMAP.md)，当前阶段的实施步骤见 [开发计划](docs/plans/README.md)。
 
 ## 计划中的目录结构
 

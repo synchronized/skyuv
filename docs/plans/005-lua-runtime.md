@@ -12,9 +12,9 @@ Windows 可运行最小节点与 Lua TCP echo，Linux 可执行原版与 libuv �
 本阶段继续处理上游 Lua C 模块、C 服务和运行环境能力，重点消除 pthread、POSIX socket、
 signal、daemon、终端和动态加载路径等平台假设。
 
-当前真实接入状态以 [`docs/LUA_RUNTIME_MATRIX.md`](../docs/LUA_RUNTIME_MATRIX.md) 为准，
+当前真实接入状态以 [`LUA_RUNTIME_MATRIX.md`](../LUA_RUNTIME_MATRIX.md) 为准，
 逐项实施与验证过程见
-[`docs/records/lua-runtime-stage-4.md`](../docs/records/lua-runtime-stage-4.md)。
+[`records/lua-runtime-stage-4.md`](../records/lua-runtime-stage-4.md)。
 
 ## 目标
 
@@ -108,4 +108,4 @@ Windows 限制明确；第三方工作树保持干净且补丁可重复应用。
 - `client.socket` 已在三平台构建和加载，Windows/Linux 已覆盖回环行为，Windows 已覆盖 stdin；
 - signal、daemon、日志重开、路径和进程退出的平台边界已经明确并有相应测试；
 - 详细实施过程、验证范围和已知限制见
-  [`阶段 4 实施记录`](../docs/records/lua-runtime-stage-4.md)。
+  [`阶段 4 实施记录`](../records/lua-runtime-stage-4.md)。

@@ -8,15 +8,15 @@
 
 1. [`ROADMAP.md`](ROADMAP.md)：了解总体目标、架构边界和当前阶段。
 2. [`DEPENDENCIES.md`](DEPENDENCIES.md)：了解第三方依赖的选择、用途和引入条件。
-3. [`../plans/README.md`](../plans/README.md)：查看当前阶段的实施计划和验收项。
+3. [`plans/README.md`](plans/README.md)：查看当前阶段的实施计划和验收项。
 4. [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：查看 Lua C 模块与运行环境的真实接入状态。
 
 ## 路线图与计划
 
 - [`ROADMAP.md`](ROADMAP.md)：全局阶段、依赖关系和状态摘要。
-- [`../plans/README.md`](../plans/README.md)：现有计划索引；迁移完成前仍是计划的权威入口。
-- [`../plans/005-lua-runtime.md`](../plans/005-lua-runtime.md)：当前进行中的 Lua 模块与运行环境计划。
-- [`../plans/variable-buffer-audit.md`](../plans/variable-buffer-audit.md)：Skynet 可变缓冲区专项审计。
+- [`plans/README.md`](plans/README.md)：计划索引与状态定义。
+- [`plans/005-lua-runtime.md`](plans/005-lua-runtime.md)：当前进行中的 Lua 模块与运行环境计划。
+- [`plans/variable-buffer-audit.md`](plans/variable-buffer-audit.md)：Skynet 可变缓冲区专项审计。
 
 ## 参考资料
 

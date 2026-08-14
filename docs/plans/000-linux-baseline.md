@@ -84,7 +84,7 @@ Linux arm64、musl 和其他 Unix 系统不作为本阶段强制验收环境。
 
 ### 上游源码保持干净
 
-本阶段优先通过编译定义、include 路径和 CMake 目标完成接入。确实必须修改上游源码时，按 [`patches/skynet/README.md`](../patches/skynet/README.md) 管理补丁，不直接提交脏的 submodule。
+本阶段优先通过编译定义、include 路径和 CMake 目标完成接入。确实必须修改上游源码时，按 [`patches/skynet/README.md`](../../patches/skynet/README.md) 管理补丁，不直接提交脏的 submodule。
 
 ### 分配器
 

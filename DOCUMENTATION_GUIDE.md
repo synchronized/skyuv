@@ -60,7 +60,7 @@ docs/
 └─ records/                  # 实施、迁移和验证记录
 ```
 
-当前根目录的 `plans/` 是既有计划权威来源。在完成链接迁移前不得同时在 `docs/plans/` 维护副本。
+`docs/plans/` 是计划的唯一权威目录，不得在根目录或其他位置维护计划副本。
 
 ## skyuv 当前权威来源
 
@@ -71,7 +71,7 @@ docs/
 | 全局阶段与优先级 | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | 第三方依赖策略 | [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md) |
 | Lua 模块当前能力 | [`docs/LUA_RUNTIME_MATRIX.md`](docs/LUA_RUNTIME_MATRIX.md) |
-| 当前实施计划 | [`plans/README.md`](plans/README.md) |
+| 当前实施计划 | [`docs/plans/README.md`](docs/plans/README.md) |
 | 工程协作约束 | [`AGENTS.md`](AGENTS.md) |
 
 新增权威文档时必须同步更新此表或文档中心，避免形成隐藏入口。
