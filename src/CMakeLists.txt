@@ -40,18 +40,27 @@ target_link_libraries(
 )
 skyuv_target_compile_warnings(skyuv_socket_server)
 
-set(SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES compat/skynet/skyuv_memory.c)
+set(
+  SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES
+  compat/skynet/skyuv_memory.c
+  compat/skynet/skyuv_runtime.c
+)
 if(WIN32)
   list(APPEND SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES compat/skynet/start/skyuv_daemon.c)
 else()
-  list(APPEND SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES
+  add_library(
+    skyuv_skynet_daemon_upstream STATIC
     "${PROJECT_BINARY_DIR}/3rd/skynet-patched/skynet-src/skynet_daemon.c"
   )
+  target_include_directories(
+    skyuv_skynet_daemon_upstream
+    PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
+  )
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_definitions(skyuv_skynet_daemon_upstream PRIVATE _DEFAULT_SOURCE)
+  endif()
 endif()
 add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES})
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  target_compile_definitions(skyuv_skynet_runtime_compat PRIVATE _DEFAULT_SOURCE)
-endif()
 target_include_directories(
   skyuv_skynet_runtime_compat
   PRIVATE
@@ -79,6 +88,9 @@ target_link_libraries(
     skyuv::socket_server
     skyuv_skynet_runtime_compat
 )
+if(NOT WIN32)
+  target_link_libraries(skyuv_skynet_portable PRIVATE skyuv_skynet_daemon_upstream)
+endif()
 skyuv_target_compile_warnings(skyuv_skynet_portable)
 
 set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
