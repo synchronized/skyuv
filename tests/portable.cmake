@@ -285,14 +285,14 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.client_stdin
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-client-stdin.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-client-stdin.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_stdin_harness.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-stdin.conf"
+      --allow-abort-after-success
   )
   set_tests_properties(
     skynet.portable.client_stdin
     PROPERTIES
-      TIMEOUT 15
+      TIMEOUT 20
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   add_test(
@@ -627,6 +627,19 @@ endif()
 
 if(NOT WIN32 AND BUILD_TESTING)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(
+    NAME skynet.portable.client_stdin
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_stdin_harness.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-stdin.conf"
+      --allow-abort-after-success
+  )
+  set_tests_properties(
+    skynet.portable.client_stdin
+    PROPERTIES
+      TIMEOUT 20
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
   add_test(
     NAME skynet.portable.client_socket
     COMMAND

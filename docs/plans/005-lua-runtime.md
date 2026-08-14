@@ -77,7 +77,7 @@ signal、daemon、终端和动态加载路径等平台假设。
 9. 在 Windows、macOS 和 Linux 运行主要示例与重复加载测试；
 10. 记录平台差异并关闭阶段 4。
 
-当前主要剩余工作是补齐 macOS 的 `client.socket` stdin 行为测试，并完成阶段验收审计。
+当前主要剩余工作是完成跨平台 cluster 联调与阶段验收审计。
 
 ## 测试与验收
 
@@ -105,7 +105,7 @@ Windows 限制明确；第三方工作树保持干净且补丁可重复应用。
 
 - 模块与运行环境清单已经建立，大多数默认 Lua C 模块和核心 C 服务已纳入便携构建；
 - 无外部服务模块、共享数据模块、gate、harbor、logger 和 Mongo 驱动已形成跨平台测试；
-- `client.socket` 已在三平台构建、加载并使用同一驱动覆盖回环行为，Windows 已覆盖 stdin；
+- `client.socket` 已在三平台构建、加载，并使用统一驱动覆盖回环与 stdin 行为；
 - signal、daemon、日志重开、路径和进程退出的平台边界已经明确并有相应测试；
 - 详细实施过程、验证范围和已知限制见
   [`阶段 4 实施记录`](../records/lua-runtime-stage-4.md)。

@@ -26,10 +26,11 @@
   Windows 兼容头遮蔽系统头文件。
 - stdin 线程改为首次调用 `readstdin` 时启动；EOF、读取错误和队列溢出通过可选第二返回值
   报告，不再从后台线程直接终止进程。
-- Windows stdin 测试覆盖普通行、空行、UTF-8 和 EOF，并验证线程句柄回收。
+- 三平台 stdin 测试使用同一 Python 驱动覆盖普通行、空行、UTF-8、EOF、线程句柄回收和
+  成功后的节点退出。
 - 三平台使用同一 Python 驱动覆盖 connect、send/recv、写 shutdown、对端关闭、拒绝连接和
   无效模式；Linux 使用同一 Lua 夹具对照上游与便携版行为。
-- 三平台已经完成模块编译、加载和回环测试；macOS stdin 行为仍是阶段剩余验收项。
+- 三平台已经完成模块编译、加载、回环和 stdin 行为测试。
 
 ## 独立 Lua C 模块
 
@@ -89,5 +90,5 @@
 - Windows 不支持上游 `int fd` 表达原生宽句柄的接口，不进行有损转换。
 - Windows daemon 保持明确不支持；Windows Service 尚未接入。
 - 非 ASCII DLL 路径受 Lua Windows 动态加载接口限制。
-- macOS 尚需补齐与 Windows 同等级的 `client.socket` stdin 行为测试。
+- cluster 双节点测试仍需统一为跨平台驱动并纳入 Linux/macOS CTest。
 - TLS、性能、长时间稳定性和发布打包不属于本阶段默认交付。
