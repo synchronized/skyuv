@@ -47,6 +47,8 @@ jobs:
           skyuv_portable_service_gate
           skyuv_portable_lua_module_control skyuv_portable_lua_module_skynet
           skyuv_portable_lua_module_bson
+          skyuv_portable_lua_module_sproto skyuv_portable_lua_module_lpeg
+          skyuv_portable_lua_module_md5
 
       - name: 运行测试
         run: ctest --preset "${{ matrix.preset }}"

@@ -18,9 +18,9 @@
 | `skynet` | 核心、序列化、socket、mongo、netpack、memory、multicast、cluster、crypt、sharedata、stm、debugchannel、datasheet、sharetable | 已纳入核心、序列化、socket、crypt、stm、sharetable、sharedata、datasheet、netpack、memory、multicast、cluster、debugchannel 和 mongo | 多个源文件依赖 Skynet 内部符号；`lua-socket` 已完成 Winsock/VLA 适配；便携 memory 后端不伪造 jemalloc 服务级统计；multicast 依赖原子引用计数和消息所有权转移；cluster sender 持有长连接，服务退出不等价于节点退出；debugchannel 使用现有跨平台自旋锁适配；mongo 完整功能需要外部 MongoDB Server | multicast 已验证双 Actor 生命周期；cluster 已验证双节点 RPC；debugchannel 已验证队列与 Lua hook；mongo 在 Windows 验证驱动封包和模块加载，并由 Linux MongoDB 8.0 服务容器验证 CRUD 与索引；其余模块分批验证 |
 | `client` | clientsocket、crypt、sha1 | 已构建、可加载 | Windows 保留原生 `SOCKET` 宽度；stdin 延迟启动并报告 EOF/错误/溢出 | Windows 回环和管道输入已验证；Linux 已与上游对照 connect/send/recv/shutdown/close、对端关闭和拒绝连接 |
 | `bson` | lua-bson | 已构建、可加载 | ObjectID 初始化需要原子操作、时间和进程 ID，已通过 skyuv 兼容层提供 | 已验证文档、数组、UTF-8、null、固定 ObjectID，以及类型、键、UTF-8、ObjectID、子类型、有序字典和循环引用错误；错误后可继续编码 |
-| `md5` | lua-md5 | 已构建、可加载 | 独立第三方源码，无新增外部依赖 | 已知摘要、HMAC、异或、加解密往返及错误输入已验证 |
-| `sproto` | sproto、lsproto | 已构建、可加载 | schema 的 Lua 解析器依赖 lpeg | schema 解析、结构编码/解码及 pack/unpack 往返已验证 |
-| `lpeg` | 上游内置 lpeg | 已构建、可加载 | 独立第三方源码，被 sprotoparser 使用 | 已通过 sproto schema 解析进行集成验证；独立模式边界测试待补充 |
+| `md5` | lua-md5 | 已构建、可加载 | 独立第三方源码，无新增外部依赖 | 三平台验证已知摘要、HMAC、异或、加解密往返及错误输入 |
+| `sproto` | sproto、lsproto | 已构建、可加载 | schema 的 Lua 解析器依赖 lpeg | 三平台验证 schema 解析、结构编码/解码及 pack/unpack 往返 |
+| `lpeg` | 上游内置 lpeg | 已构建、可加载 | 独立第三方源码，被 sprotoparser 使用 | 三平台独立验证范围、集合、选择、重复、捕获、完整匹配、UTF-8 与零字节边界，并由 sproto 集成覆盖 |
 | `ltls` | OpenSSL TLS 模块 | 上游默认关闭，skyuv 未构建 | OpenSSL、证书与平台分发 | 不属于本阶段默认交付；依赖策略确定后单独计划 |
 
 ## 运行环境能力

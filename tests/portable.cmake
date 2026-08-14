@@ -129,6 +129,12 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-multicast.conf"
   @ONLY
 )
+set(SKYUV_PORTABLE_START_SERVICE skyuv_lpeg)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-lpeg.conf"
+  @ONLY
+)
 set(SKYUV_PORTABLE_START_SERVICE skyuv_control)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
@@ -305,9 +311,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.sproto
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-sproto.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-sproto.conf"
   )
   set_tests_properties(
     skynet.portable.sproto
@@ -318,9 +323,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.md5
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-md5.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-md5.conf"
   )
   set_tests_properties(
     skynet.portable.md5
@@ -331,9 +335,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.crypt
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-crypt.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-crypt.conf"
   )
   set_tests_properties(
     skynet.portable.crypt
@@ -620,6 +623,18 @@ if(BUILD_TESTING)
       TIMEOUT 15
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
+  add_test(
+    NAME skynet.portable.lpeg
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-lpeg.conf"
+  )
+  set_tests_properties(
+    skynet.portable.lpeg
+    PROPERTIES
+      TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
 endif()
 
 if(NOT WIN32 AND BUILD_TESTING)
@@ -651,6 +666,21 @@ if(NOT WIN32 AND BUILD_TESTING)
       TIMEOUT 15
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
+  foreach(module_name IN ITEMS sproto md5 crypt)
+    add_test(
+      NAME "skynet.portable.${module_name}"
+      COMMAND
+        "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+        "$<TARGET_FILE:skyuv_skynet_portable>"
+        "3rd/skyuv-portable-${module_name}.conf"
+    )
+    set_tests_properties(
+      "skynet.portable.${module_name}"
+      PROPERTIES
+        TIMEOUT 15
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+  endforeach()
   add_test(
     NAME skynet.portable.harbor
     COMMAND

@@ -211,3 +211,6 @@
   非法 UTF-8、错误 ObjectID 长度、非法有序字典、未知 BSON 子类型和循环引用；
   连续触发错误后再次完成编码解码，验证临时缓冲区清理不会破坏模块状态；
   测试已改用跨平台 Python 启动驱动并纳入 Linux/macOS CTest。
+- 第一批无外部服务模块已接入三平台运行测试：`sproto` 覆盖 schema 与编解码，
+  `md5` 覆盖摘要、HMAC 和加解密，`skynet.crypt` 覆盖 SHA-1、Base64、Hex、
+  XOR 与 DES；`lpeg` 新增独立夹具覆盖模式组合、捕获、完整匹配、UTF-8 和零字节。
