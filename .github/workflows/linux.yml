@@ -166,6 +166,7 @@ jobs:
           gdb -batch \
             -ex "set pagination off" \
             -ex "start" \
+            -ex "handle SIGTERM nostop noprint pass" \
             -ex "python import gdb, os, signal, threading, time; pid = gdb.selected_inferior().pid; threading.Thread(target=lambda: (time.sleep(1), os.kill(pid, signal.SIGTERM)), daemon=True).start()" \
             -ex "continue" \
             -ex "thread apply all bt" \
