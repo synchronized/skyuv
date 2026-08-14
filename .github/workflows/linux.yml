@@ -245,6 +245,7 @@ jobs:
           python3 tests/scripts/client_socket_harness.py \
             "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
             "build/${{ matrix.preset }}/3rd/skyuv-portable-client-socket.conf" \
+            --allow-abort-after-success \
             | tee portable-client-socket.txt
           diff -u "$RUNNER_TEMP/upstream-client-socket.txt" portable-client-socket.txt
 

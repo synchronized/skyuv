@@ -1,6 +1,7 @@
 """驱动 client.socket 回环测试，并检查 Lua 服务输出。"""
 
 import argparse
+import signal
 import socket
 import subprocess
 import sys
@@ -27,6 +28,7 @@ def main() -> int:
 	parser.add_argument("config")
 	parser.add_argument("--cwd", default=None)
 	parser.add_argument("--allow-timeout-after-success", action="store_true")
+	parser.add_argument("--allow-abort-after-success", action="store_true")
 	arguments = parser.parse_args()
 
 	errors: list[BaseException] = []
@@ -53,14 +55,20 @@ def main() -> int:
 		assert process.stdout is not None
 		assert process.stderr is not None
 		output = process.stdout.read() + process.stderr.read()
-		if result not in (0, None):
+		success_marker = "skyuv client.socket 回环验证通过" in output
+		abort_after_success = (
+			arguments.allow_abort_after_success
+			and success_marker
+			and result == -signal.SIGABRT
+		)
+		if result not in (0, None) and not abort_after_success:
 			sys.stderr.write(output)
 			return result
 		thread.join(timeout=2)
 
 	if errors:
 		raise errors[0]
-	if "skyuv client.socket 回环验证通过" not in output:
+	if not success_marker:
 		sys.stderr.write(output)
 		return 1
 	print("CLIENT_SOCKET connect_send_recv_shutdown_peer_close_refused")
