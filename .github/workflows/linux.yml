@@ -161,6 +161,8 @@ jobs:
       - name: 诊断 Unix 停止后的 SIGABRT
         if: matrix.preset == 'linux-gcc-system-debug'
         run: |
+          sudo apt-get update
+          sudo apt-get install -y gdb
           gdb -batch \
             -ex "set pagination off" \
             -ex "start" \
