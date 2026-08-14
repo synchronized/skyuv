@@ -153,6 +153,14 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-logger-file.conf"
   @ONLY
 )
+file(TO_CMAKE_PATH
+     "${PROJECT_BINARY_DIR}/missing logger parent/child/skyuv-runtime.log"
+     SKYUV_LOGGER_ERROR_FILE)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-logger-error.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-logger-error.conf"
+  @ONLY
+)
 set(SKYUV_PORTABLE_START_SERVICE skyuv_smoke)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-daemon.conf.in"
@@ -595,6 +603,20 @@ if(BUILD_TESTING)
   )
   set_tests_properties(
     skynet.portable.logger_file
+    PROPERTIES
+      TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.logger_error
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_logger_error.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "3rd/skyuv-portable-logger-error.conf"
+      "${SKYUV_LOGGER_ERROR_FILE}"
+  )
+  set_tests_properties(
+    skynet.portable.logger_error
     PROPERTIES
       TIMEOUT 15
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"

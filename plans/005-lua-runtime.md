@@ -204,3 +204,6 @@
 - `logger` 文件输出测试在三平台使用相同配置和 Python 驱动，覆盖含空格目录、
   UTF-8 日志内容，以及调用 `skyuv.control.reopen_log()` 前后的实际文件写入；
   Linux 继续通过 SIGHUP 测试验证日志轮转后不会写回旧文件。
+- `logger` 错误路径测试使用确定不存在的父目录，验证文件无法创建时 Skynet
+  以非零状态退出、输出 `Can't launch logger service`，且不会遗留目标文件；
+  该用例不依赖管理员权限、只读挂载或平台 ACL 差异。
