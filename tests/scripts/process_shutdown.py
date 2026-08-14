@@ -27,6 +27,8 @@ def main() -> int:
 	try:
 		time.sleep(1)
 		if process.poll() is not None:
+			output, _ = process.communicate()
+			sys.stderr.write(output)
 			raise RuntimeError("Skynet 在停止信号发送前已经退出")
 		if arguments.windows_console_break:
 			os.kill(process.pid, signal.CTRL_BREAK_EVENT)
