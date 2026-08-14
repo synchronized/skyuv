@@ -33,7 +33,7 @@
 | stdin | 已通过 `client.socket` 接入；Windows 管道测试覆盖普通行、空行、UTF-8、EOF 和正常退出 | Unix 与 Windows 控制台编码不同；模块不会因 EOF 或读取错误直接 `exit(1)` |
 | signal | Skynet 服务内部 `SIGNAL` 保持不变；Unix `SIGHUP` 重开日志，`SIGINT/SIGTERM` 正常停止；Windows 的 Ctrl+C、Ctrl+Break 和控制台关闭触发正常停止；三平台可调用 `skyuv.control.reopen_log()` | Windows 不把控制台关闭解释为日志重开；Windows Service 的 SCM 停止通知后续单独接入 |
 | daemon | Unix 链接上游 daemon 实现；Windows 明确失败并输出诊断 | macOS 上游会提示 daemon 已废弃；Windows Service 不在本阶段范围 |
-| 进程退出 | `client.socket` 网络和 stdin 测试均在成功后执行正常 ABORT 并等待节点退出 | cluster/harbor 等持有长连接的多节点驱动仍由测试统一终止 |
+| 进程退出 | `client.socket` 网络和 stdin 测试均在成功后执行 ABORT 并等待节点退出；控制台或终止信号会先触发 Actor 全量退役 | Windows 全量退役后返回 0；Unix 当前沿用 Skynet ABORT 的 `SIGABRT` 退出语义，退出码归一化后续处理；cluster/harbor 等持有长连接的多节点驱动仍由测试统一终止 |
 
 ## 接入顺序
 
