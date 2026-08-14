@@ -201,9 +201,14 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   target_include_directories(
     skyuv_portable_lua_module_client
     PRIVATE
-      "${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
       "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua"
   )
+  if(WIN32)
+    target_include_directories(
+      skyuv_portable_lua_module_client
+      PRIVATE "${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
+    )
+  endif()
   target_link_libraries(
     skyuv_portable_lua_module_client PRIVATE skyuv::lua skyuv::platform skyuv::libuv
   )
