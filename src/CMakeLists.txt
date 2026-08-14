@@ -137,10 +137,9 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
         "${SKYUV_PORTABLE_SKYNET_SOURCE_DIR}"
         "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua"
     )
-    target_compile_options(
-      "skyuv_portable_service_${service_name}"
-      PRIVATE "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FIstdlib.h>"
-    )
+    if(SKYUV_USES_MSVC_FRONTEND)
+      skyuv_target_force_include("skyuv_portable_service_${service_name}" stdlib.h)
+    endif()
     target_link_libraries(
       "skyuv_portable_service_${service_name}"
       PRIVATE
@@ -155,18 +154,19 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   skyuv_add_portable_skynet_service(logger)
   skyuv_add_portable_skynet_service(harbor)
   skyuv_add_portable_skynet_service(gate)
-  target_compile_options(
-    skyuv_portable_service_gate
-    PRIVATE
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_string.h>"
+  if(SKYUV_USES_MSVC_FRONTEND)
+    skyuv_target_force_include(
+      skyuv_portable_service_gate "${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_string.h"
+    )
+  endif()
+  skyuv_target_force_include(
+    skyuv_portable_service_snlua "${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h"
   )
-  target_compile_options(
-    skyuv_portable_service_snlua
-    PRIVATE
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
-      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>"
-      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>"
+  skyuv_target_force_include(
+    skyuv_portable_service_snlua "${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+  )
+  skyuv_target_force_include(
+    skyuv_portable_service_logger "${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_runtime.h"
   )
   target_link_libraries(skyuv_portable_service_snlua PRIVATE skyuv::platform)
   target_include_directories(
@@ -269,11 +269,8 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       "${PROJECT_SOURCE_DIR}/src/compat/skynet"
       "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua"
   )
-  target_compile_options(
-    skyuv_portable_lua_module_bson
-    PRIVATE
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
-      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
+  skyuv_target_force_include(
+    skyuv_portable_lua_module_bson "${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h"
   )
   target_link_libraries(
     skyuv_portable_lua_module_bson PRIVATE skyuv::lua skyuv::platform skyuv::libuv
@@ -430,22 +427,17 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       "${SKYUV_PORTABLE_SERVICE_DIR}"
       "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}"
   )
-  target_compile_options(
-    skyuv_portable_lua_module_skynet
-    PRIVATE
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FIstdlib.h>"
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
-      "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h>"
+  if(SKYUV_USES_MSVC_FRONTEND)
+    skyuv_target_force_include(skyuv_portable_lua_module_skynet stdlib.h)
+  endif()
+  skyuv_target_force_include(
+    skyuv_portable_lua_module_skynet "${PROJECT_SOURCE_DIR}/src/compat/skynet/atomic.h"
   )
-  set_source_files_properties(
-    "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-skynet.c"
-    PROPERTIES COMPILE_OPTIONS
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>;$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h>"
+  skyuv_target_force_include(
+    skyuv_portable_lua_module_skynet "${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
   )
-  set_source_files_properties(
-    "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-debugchannel.c"
-    PROPERTIES COMPILE_OPTIONS
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${PROJECT_SOURCE_DIR}/src/compat/skynet/spinlock.h>;$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${PROJECT_SOURCE_DIR}/src/compat/skynet/spinlock.h>"
+  skyuv_target_force_include(
+    skyuv_portable_lua_module_skynet "${PROJECT_SOURCE_DIR}/src/compat/skynet/spinlock.h"
   )
   target_link_libraries(
     skyuv_portable_lua_module_skynet

@@ -145,28 +145,16 @@ set_source_files_properties(
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_start.c"
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_main.c"
   PROPERTIES
-    COMPILE_OPTIONS "-I${SKYUV_SKYNET_COMPAT_DIR}/start"
+    INCLUDE_DIRECTORIES "${SKYUV_SKYNET_COMPAT_DIR}/start"
 )
-target_compile_options(
-  skyuv_skynet_portable_core
-  PRIVATE
-    "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/atomic.h>"
-    "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/spinlock.h>"
-    "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${SKYUV_SKYNET_COMPAT_DIR}/atomic.h>"
-    "$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${SKYUV_SKYNET_COMPAT_DIR}/spinlock.h>"
-)
-set_source_files_properties(
-  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_timer.c"
-  PROPERTIES
-    COMPILE_OPTIONS
-      "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/skyuv_time.h>;$<$<NOT:$<COMPILE_LANG_AND_ID:C,MSVC>>:-include${SKYUV_SKYNET_COMPAT_DIR}/skyuv_time.h>"
-)
-set_source_files_properties(
-  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_server.c"
-  PROPERTIES
-    COMPILE_OPTIONS
-      "-I${SKYUV_SKYNET_COMPAT_DIR}/tls;$<$<COMPILE_LANG_AND_ID:C,MSVC>:/FI${SKYUV_SKYNET_COMPAT_DIR}/skyuv_string.h>"
-)
+skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/atomic.h")
+skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/spinlock.h")
+skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/skyuv_time.h")
+target_include_directories(skyuv_skynet_portable_core PRIVATE "${SKYUV_SKYNET_COMPAT_DIR}/tls")
+if(SKYUV_USES_MSVC_FRONTEND)
+  skyuv_target_force_include(skyuv_skynet_portable_core
+                             "${SKYUV_SKYNET_COMPAT_DIR}/skyuv_string.h")
+endif()
 target_link_libraries(
   skyuv_skynet_portable_core
   PRIVATE skyuv::lua skyuv::libuv skyuv::platform skyuv::allocator skyuv::socket_server

@@ -3,6 +3,20 @@ option(SKYUV_ENABLE_WARNINGS "启用 skyuv 目标编译警告" ON)
 option(SKYUV_ENABLE_PEDANTIC_WARNINGS "启用 skyuv 目标严格标准警告" ON)
 option(SKYUV_WARNINGS_AS_ERRORS "将 skyuv 目标编译警告视为错误" ON)
 
+set(SKYUV_USES_MSVC_FRONTEND FALSE)
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" OR
+   (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_C_SIMULATE_ID STREQUAL "MSVC"))
+  set(SKYUV_USES_MSVC_FRONTEND TRUE)
+endif()
+
+function(skyuv_target_force_include target header)
+  if(SKYUV_USES_MSVC_FRONTEND)
+    target_compile_options(${target} PRIVATE "/FI${header}")
+  else()
+    target_compile_options(${target} PRIVATE "-include${header}")
+  endif()
+endfunction()
+
 function(skyuv_target_compile_warnings target)
   if(NOT TARGET ${target})
     message(FATAL_ERROR "目标不存在：${target}")
@@ -12,21 +26,19 @@ function(skyuv_target_compile_warnings target)
     return()
   endif()
 
-  target_compile_options(
-    ${target}
-    PRIVATE
-      $<$<COMPILE_LANG_AND_ID:C,MSVC>:/utf-8>
-      $<$<COMPILE_LANG_AND_ID:C,MSVC>:/W4>
-      $<$<COMPILE_LANG_AND_ID:C,GNU,Clang,AppleClang>:-Wall>
-      $<$<COMPILE_LANG_AND_ID:C,GNU,Clang,AppleClang>:-Wextra>
-  )
+  # clang-cl 的编译器 ID 是 Clang，但使用 MSVC 命令行前端。
+  # 不得向它传递 Clang GNU 前端的 -Wall；该选项在 clang-cl 中会启用
+  # 大量不属于 /W4 的兼容性诊断，并把 Windows SDK 与第三方头文件一并报错。
+  if(SKYUV_USES_MSVC_FRONTEND)
+    target_compile_options(${target} PRIVATE /utf-8 /W4)
+    set(SKYUV_TARGET_USES_MSVC_FRONTEND TRUE)
+  else()
+    target_compile_options(${target} PRIVATE -Wall -Wextra)
+    set(SKYUV_TARGET_USES_MSVC_FRONTEND FALSE)
+  endif()
 
-  if(SKYUV_ENABLE_PEDANTIC_WARNINGS)
-    target_compile_options(
-      ${target}
-      PRIVATE
-        $<$<COMPILE_LANG_AND_ID:C,GNU,Clang,AppleClang>:-Wpedantic>
-    )
+  if(SKYUV_ENABLE_PEDANTIC_WARNINGS AND NOT SKYUV_TARGET_USES_MSVC_FRONTEND)
+    target_compile_options(${target} PRIVATE -Wpedantic)
   endif()
 
   if(NOT SKYUV_WARNINGS_AS_ERRORS)
@@ -42,7 +54,7 @@ function(skyuv_target_compile_warnings target)
   target_compile_options(
     ${target}
     PRIVATE
-      $<$<COMPILE_LANG_AND_ID:C,MSVC>:/WX>
-      $<$<COMPILE_LANG_AND_ID:C,GNU,Clang,AppleClang>:-Werror>
+      $<$<BOOL:${SKYUV_TARGET_USES_MSVC_FRONTEND}>:/WX>
+      $<$<NOT:$<BOOL:${SKYUV_TARGET_USES_MSVC_FRONTEND}>>:-Werror>
   )
 endfunction()
