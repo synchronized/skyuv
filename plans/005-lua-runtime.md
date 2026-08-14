@@ -190,3 +190,8 @@
 - 修正 daemon 平台实现选择：Linux 和 macOS 便携目标重新使用上游
   `skynet_daemon.c`，Windows 保持不支持并在配置了 `daemon` 时以非零状态退出，
   同时输出包含 pidfile 的明确诊断；Windows 自动测试覆盖该失败路径。
+- 增加跨平台日志控制模块 `skyuv.control`，其 `reopen_log()` 向 logger 投递
+  `PTYPE_SYSTEM`，Windows 已完成模块加载和调用测试。Unix 的 `SIGHUP` watcher
+  位于现有 socket libuv loop 中，只向 socket 兼容层产生进程信号事件，再复用
+  同一日志重开动作；Linux CI 通过重命名日志、发送 `SIGHUP` 和核对新旧文件验证
+  实际重开语义。Skynet 服务内部 `SIGNAL` 命令未修改。

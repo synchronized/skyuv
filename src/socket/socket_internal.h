@@ -53,6 +53,7 @@ enum skyuv_socket_event_type {
 	SKYUV_SOCKET_EVENT_EXIT,
 	SKYUV_SOCKET_EVENT_UDP,
 	SKYUV_SOCKET_EVENT_WARNING,
+	SKYUV_SOCKET_EVENT_PROCESS_SIGNAL,
 };
 
 enum skyuv_socket_buffer_ownership {

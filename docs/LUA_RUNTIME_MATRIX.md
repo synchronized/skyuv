@@ -31,7 +31,7 @@
 | 模块输出目录 | Windows VS 多配置与单配置已统一 | Linux/macOS 继续使用同一无配置子目录布局 |
 | Lua 搜索路径 | 最小配置可加载 `cservice`、`lualib`、`luaclib`；Windows 自动测试覆盖含空格的 Lua C 模块目录 | Windows 内置 Lua 的 `package.loadlib` 仍使用 ANSI 系统接口，非 ASCII DLL 路径暂不支持；普通 Lua 源码路径不受该动态库限制 |
 | stdin | 已通过 `client.socket` 接入；Windows 管道测试覆盖普通行、空行、UTF-8、EOF 和正常退出 | Unix 与 Windows 控制台编码不同；模块不会因 EOF 或读取错误直接 `exit(1)` |
-| signal | Unix 保留上游行为；Windows 使用最小兼容定义 | Windows 不伪造 POSIX 信号 |
+| signal | Skynet 服务内部 `SIGNAL` 保持不变；Unix `SIGHUP` 由 socket loop 的 `uv_signal_t` 转为 logger 系统消息；三平台可调用 `skyuv.control.reopen_log()` | Windows 不伪造 POSIX `SIGHUP`，日志重开使用显式管理入口；控制台关闭与 Ctrl+C 后续单独设计 |
 | daemon | Unix 链接上游 daemon 实现；Windows 明确失败并输出诊断 | macOS 上游会提示 daemon 已废弃；Windows Service 不在本阶段范围 |
 | 进程退出 | `client.socket` 网络和 stdin 测试均在成功后执行正常 ABORT 并等待节点退出 | cluster/harbor 等持有长连接的多节点驱动仍由测试统一终止 |
 

@@ -129,6 +129,18 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-multicast.conf"
   @ONLY
 )
+set(SKYUV_PORTABLE_START_SERVICE skyuv_control)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-control.conf"
+  @ONLY
+)
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/skyuv-signal.log" SKYUV_SIGNAL_LOG)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-signal.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-signal.conf"
+  @ONLY
+)
 set(SKYUV_PORTABLE_START_SERVICE skyuv_smoke)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-daemon.conf.in"
@@ -421,6 +433,19 @@ if(WIN32 AND BUILD_TESTING)
   )
   set_tests_properties(
     skynet.portable.multicast
+    PROPERTIES
+      TIMEOUT 10
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.control
+    COMMAND
+      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
+      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -Config "3rd/skyuv-portable-control.conf"
+  )
+  set_tests_properties(
+    skynet.portable.control
     PROPERTIES
       TIMEOUT 10
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"

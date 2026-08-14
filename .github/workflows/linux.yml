@@ -59,6 +59,7 @@ jobs:
           skyuv_skynet_portable skyuv_portable_service_snlua
           skyuv_portable_service_logger skyuv_portable_service_harbor
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
+          skyuv_portable_lua_module_control
           skyuv_lua_module_client skyuv_socket_core skyuv_test_socket_internal
           skyuv_test_lua skyuv_test_allocator skyuv_test_thread skyuv_test_time
           skyuv_test_dynamic skyuv_test_atomic
@@ -118,6 +119,33 @@ jobs:
           shutdown_line=$(grep -nF "skyuv 正常关闭验证开始" skyuv-baseline.log | head -1 | cut -d: -f1)
           test "$message_line" -lt "$timer_line"
           test "$timer_line" -lt "$shutdown_line"
+
+      - name: 验证 SIGHUP 日志重开
+        shell: bash
+        run: |
+          log="build/${{ matrix.preset }}/skyuv-signal.log"
+          old_log="${log}.old"
+          rm -f "$log" "$old_log"
+          "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
+            "build/${{ matrix.preset }}/3rd/skyuv-portable-signal.conf" &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 100); do
+            if grep -qF "skyuv SIGHUP 验证已就绪" "$log" 2>/dev/null; then
+              break
+            fi
+            sleep 0.05
+          done
+          grep -F "skyuv SIGHUP 验证已就绪" "$log"
+          mv "$log" "$old_log"
+          kill -HUP "$server_pid"
+          wait "$server_pid"
+          grep -F "skyuv SIGHUP 日志重开验证通过" "$log"
+          if grep -qF "skyuv SIGHUP 日志重开验证通过" "$old_log"; then
+            echo "SIGHUP 后日志仍写入旧文件" >&2
+            exit 1
+          fi
+          trap - EXIT
 
       - name: 复制原版 Skynet 到临时目录
         run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"

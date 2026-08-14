@@ -1,4 +1,5 @@
 #include "socket_internal.h"
+#include "../compat/skynet/skyuv_control.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -43,10 +44,17 @@ void socket_server_updatetime(struct socket_server *server, uint64_t time) {
 int socket_server_poll(struct socket_server *server, struct socket_message *result, int *more) {
 	struct skyuv_socket_event event;
 
-	if (server == NULL || result == NULL ||
-		skyuv_socket_runtime_poll(server->runtime, &event) != SKYUV_OK) {
+	if (server == NULL || result == NULL) {
 		return SOCKET_ERR;
 	}
+	do {
+		if (skyuv_socket_runtime_poll(server->runtime, &event) != SKYUV_OK) {
+			return SOCKET_ERR;
+		}
+		if (event.type == SKYUV_SOCKET_EVENT_PROCESS_SIGNAL) {
+			(void)skyuv_skynet_reopen_log();
+		}
+	} while (event.type == SKYUV_SOCKET_EVENT_PROCESS_SIGNAL);
 	result->id = event.id;
 	result->opaque = event.opaque;
 	result->ud = event.type == SKYUV_SOCKET_EVENT_DATA || event.type == SKYUV_SOCKET_EVENT_UDP

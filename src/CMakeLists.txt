@@ -27,6 +27,14 @@ target_include_directories(
     "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
 )
 add_library(skyuv_socket_info STATIC socket/socket_info_compat.c)
+
+add_library(skyuv_skynet_control STATIC compat/skynet/skyuv_control.c)
+set_target_properties(skyuv_skynet_control PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(
+  skyuv_skynet_control
+  PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
+)
+skyuv_target_compile_warnings(skyuv_skynet_control)
 target_include_directories(
   skyuv_socket_info
   PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
@@ -36,7 +44,8 @@ skyuv_target_compile_warnings(skyuv_socket_info)
 target_link_libraries(
   skyuv_socket_server
   PUBLIC skyuv::socket_core
-  PRIVATE skyuv_socket_info skyuv::libuv
+	PRIVATE skyuv_socket_info skyuv::libuv
+	PRIVATE skyuv_skynet_control
 )
 skyuv_target_compile_warnings(skyuv_socket_server)
 
@@ -198,6 +207,38 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   target_link_libraries(
     skyuv_portable_lua_module_client PRIVATE skyuv::lua skyuv::platform skyuv::libuv
   )
+
+  add_library(
+    skyuv_portable_lua_module_control MODULE compat/skynet/lua-control.c
+  )
+  set_target_properties(
+    skyuv_portable_lua_module_control
+    PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/skyuv"
+      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/skyuv"
+      OUTPUT_NAME control
+      PREFIX ""
+      WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+  )
+  foreach(config IN ITEMS DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+    set_target_properties(
+      skyuv_portable_lua_module_control
+      PROPERTIES
+        "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/skyuv"
+        "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/skyuv"
+    )
+  endforeach()
+  target_include_directories(
+    skyuv_portable_lua_module_control
+    PRIVATE
+      "${PROJECT_SOURCE_DIR}/src/compat/skynet"
+      "${PROJECT_SOURCE_DIR}/3rd/skynet/3rd/lua"
+  )
+  target_link_libraries(
+    skyuv_portable_lua_module_control
+    PRIVATE skyuv::lua skyuv_skynet_control skyuv_skynet_portable
+  )
+  skyuv_target_compile_warnings(skyuv_portable_lua_module_control)
 
   add_library(
     skyuv_portable_lua_module_bson

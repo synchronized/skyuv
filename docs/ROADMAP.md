@@ -323,6 +323,15 @@ skyuv 提供自己的接口，内部映射到 libuv：
 - 信号处理；
 - Windows 进程和终端行为。
 
+信号与管理边界：
+
+- Skynet 的服务内部 `SIGNAL` 命令属于 Actor 控制机制，不依赖操作系统信号，
+  三平台原样保留；
+- Linux 和 macOS 的 `SIGHUP` 由现有 socket libuv loop 上的 `uv_signal_t` 接收，
+  转换为 logger 的 `PTYPE_SYSTEM` 消息，不在异步信号处理函数中操作 Actor；
+- Windows 不模拟 Unix `kill -HUP`，使用 `skyuv.control.reopen_log()` 显式请求日志重开；
+- libuv watcher、socket handle 与 async handle 统一遵守 loop 线程和 close callback 生命周期。
+
 验收标准：
 
 - 主要自带示例和测试可运行；
