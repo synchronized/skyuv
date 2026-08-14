@@ -141,7 +141,7 @@ jobs:
           kill -HUP "$server_pid"
           status=0
           wait "$server_pid" || status=$?
-          if [ "$status" -ne 134 ]; then
+          if [ "$status" -ne 0 ]; then
             echo "SIGHUP 验证节点退出码异常：$status" >&2
             exit 1
           fi
