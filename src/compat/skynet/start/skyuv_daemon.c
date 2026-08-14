@@ -1,11 +1,14 @@
 #include "skynet_daemon.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 int daemon_init(const char *pidfile) {
 	/* Windows 和首期跨平台目标不支持 daemon 模式。 */
-	(void)pidfile;
+	fprintf(stderr,
+		"skyuv: daemon mode is not supported on Windows (pidfile: %s)\n",
+		pidfile == NULL ? "" : pidfile);
 	return 1;
 }
 

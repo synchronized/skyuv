@@ -129,6 +129,12 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-multicast.conf"
   @ONLY
 )
+set(SKYUV_PORTABLE_START_SERVICE skyuv_smoke)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-daemon.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-daemon.conf"
+  @ONLY
+)
 set(SKYUV_PORTABLE_START_SERVICE skyuv_cluster_core)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
@@ -432,6 +438,19 @@ if(WIN32 AND BUILD_TESTING)
     skynet.portable.paths
     PROPERTIES
       TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.daemon_unsupported
+    COMMAND
+      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-daemon.ps1"
+      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -Config "3rd/skyuv-portable-daemon.conf"
+  )
+  set_tests_properties(
+    skynet.portable.daemon_unsupported
+    PROPERTIES
+      TIMEOUT 10
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   add_test(

@@ -40,11 +40,14 @@ target_link_libraries(
 )
 skyuv_target_compile_warnings(skyuv_socket_server)
 
-set(
-  SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES
-  compat/skynet/start/skyuv_daemon.c
-  compat/skynet/skyuv_memory.c
-)
+set(SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES compat/skynet/skyuv_memory.c)
+if(WIN32)
+  list(APPEND SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES compat/skynet/start/skyuv_daemon.c)
+else()
+  list(APPEND SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES
+    "${PROJECT_BINARY_DIR}/3rd/skynet-patched/skynet-src/skynet_daemon.c"
+  )
+endif()
 add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES})
 target_include_directories(
   skyuv_skynet_runtime_compat

@@ -16,7 +16,7 @@
 | 产物 | 上游组成 | 当前状态 | 依赖与风险 | 计划验证 |
 |---|---|---|---|---|
 | `skynet` | 核心、序列化、socket、mongo、netpack、memory、multicast、cluster、crypt、sharedata、stm、debugchannel、datasheet、sharetable | 已纳入核心、序列化、socket、crypt、stm、sharetable、sharedata、datasheet、netpack、memory、multicast、cluster、debugchannel 和 mongo | 多个源文件依赖 Skynet 内部符号；`lua-socket` 已完成 Winsock/VLA 适配；便携 memory 后端不伪造 jemalloc 服务级统计；multicast 依赖原子引用计数和消息所有权转移；cluster sender 持有长连接，服务退出不等价于节点退出；debugchannel 使用现有跨平台自旋锁适配；mongo 完整功能需要外部 MongoDB Server | multicast 已验证双 Actor 生命周期；cluster 已验证双节点 RPC；debugchannel 已验证队列与 Lua hook；mongo 在 Windows 验证驱动封包和模块加载，并由 Linux MongoDB 8.0 服务容器验证 CRUD 与索引；其余模块分批验证 |
-| `client` | clientsocket、crypt、sha1 | 未构建 | pthread、POSIX socket、`fcntl`、`usleep`、stdin 后台线程生命周期、Winsock 句柄宽度 | 回环 connect/send/recv/shutdown/close；可控 stdin |
+| `client` | clientsocket、crypt、sha1 | 已构建、可加载 | Windows 保留原生 `SOCKET` 宽度；stdin 延迟启动并报告 EOF/错误/溢出 | Windows 回环和管道输入已验证；Linux 已与上游对照 connect/send/recv/shutdown/close、对端关闭和拒绝连接 |
 | `bson` | lua-bson | 已构建、可加载 | ObjectID 初始化需要原子操作、时间和进程 ID，已通过 skyuv 兼容层提供 | 文档、数组、UTF-8、null 与固定 ObjectID 编解码已验证；错误输入待补充 |
 | `md5` | lua-md5 | 已构建、可加载 | 独立第三方源码，无新增外部依赖 | 已知摘要、HMAC、异或、加解密往返及错误输入已验证 |
 | `sproto` | sproto、lsproto | 已构建、可加载 | schema 的 Lua 解析器依赖 lpeg | schema 解析、结构编码/解码及 pack/unpack 往返已验证 |
@@ -27,13 +27,13 @@
 
 | 能力 | 当前状态 | 平台边界 |
 |---|---|---|
-| 动态库加载 | 已通过 skyuv 动态加载接口接入 | 扩展名、搜索路径和错误文本仍需矩阵测试 |
+| 动态库加载 | 已通过 skyuv 动态加载接口接入；三平台单元测试覆盖加载、符号查询、缺失文件、缺失符号、重复打开/关闭和错误文本 | Windows 含空格模块路径已验证；Lua C 模块非 ASCII DLL 路径限制见下项 |
 | 模块输出目录 | Windows VS 多配置与单配置已统一 | Linux/macOS 继续使用同一无配置子目录布局 |
 | Lua 搜索路径 | 最小配置可加载 `cservice`、`lualib`、`luaclib`；Windows 自动测试覆盖含空格的 Lua C 模块目录 | Windows 内置 Lua 的 `package.loadlib` 仍使用 ANSI 系统接口，非 ASCII DLL 路径暂不支持；普通 Lua 源码路径不受该动态库限制 |
-| stdin | 便携构建未接入 `client.socket` | Unix 与 Windows 管道/控制台 EOF、编码不同；不得直接 `exit(1)` |
+| stdin | 已通过 `client.socket` 接入；Windows 管道测试覆盖普通行、空行、UTF-8、EOF 和正常退出 | Unix 与 Windows 控制台编码不同；模块不会因 EOF 或读取错误直接 `exit(1)` |
 | signal | Unix 保留上游行为；Windows 使用最小兼容定义 | Windows 不伪造 POSIX 信号 |
-| daemon | Unix 使用上游能力；Windows 明确不支持 | Windows Service 不在本阶段范围 |
-| 进程退出 | 测试脚本观察成功标志后终止常驻节点 | 需增加模块线程与 socket 正常回收验证 |
+| daemon | Unix 链接上游 daemon 实现；Windows 明确失败并输出诊断 | macOS 上游会提示 daemon 已废弃；Windows Service 不在本阶段范围 |
+| 进程退出 | `client.socket` 网络和 stdin 测试均在成功后执行正常 ABORT 并等待节点退出 | cluster/harbor 等持有长连接的多节点驱动仍由测试统一终止 |
 
 ## 接入顺序
 

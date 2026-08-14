@@ -187,3 +187,6 @@
 - Windows 路径测试会从含空格的临时目录加载 C 服务和 Lua C 模块。非 ASCII DLL
   路径受内置 Lua `package.loadlib` 的 ANSI Windows 接口限制，当前明确记录为不支持；
   若后续消除此限制，应以独立 Lua 补丁或自定义模块搜索器处理。
+- 修正 daemon 平台实现选择：Linux 和 macOS 便携目标重新使用上游
+  `skynet_daemon.c`，Windows 保持不支持并在配置了 `daemon` 时以非零状态退出，
+  同时输出包含 pidfile 的明确诊断；Windows 自动测试覆盖该失败路径。
