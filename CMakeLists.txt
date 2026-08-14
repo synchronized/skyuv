@@ -8,7 +8,12 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 option(SKYUV_BUILD_TESTS "构建 skyuv 测试" ON)
 option(SKYUV_BUILD_SHARED "将 skyuv 构建为动态库" OFF)
-option(SKYUV_USE_SHARED_LIBUV "链接动态版本的 libuv" OFF)
+if(WIN32)
+  set(SKYUV_SHARED_LIBUV_DEFAULT OFF)
+else()
+  set(SKYUV_SHARED_LIBUV_DEFAULT ON)
+endif()
+option(SKYUV_USE_SHARED_LIBUV "链接动态版本的 libuv" ${SKYUV_SHARED_LIBUV_DEFAULT})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(skyuv_warnings)

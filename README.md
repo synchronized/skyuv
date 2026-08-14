@@ -54,7 +54,7 @@ git clone --recurse-submodules https://github.com/synchronized/skyuv.git
 git submodule update --init --recursive
 ```
 
-libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。默认构建并链接静态 libuv；需要动态版本时可设置 `SKYUV_USE_SHARED_LIBUV=ON`。启用 `SKYUV_BUILD_TESTS` 时会提供测试依赖 `cmocka::cmocka`。Linux 上已开始在不修改 Skynet 源码的前提下，通过 CMake 选择性构建其核心模块。
+libuv 已接入 CMake，并提供统一目标 `skyuv::libuv`。Linux 和 macOS 默认链接动态 libuv，确保主程序与动态模块共享同一个进程级运行时；Windows 默认静态链接，也可通过 `SKYUV_USE_SHARED_LIBUV` 显式调整。启用 `SKYUV_BUILD_TESTS` 时会提供测试依赖 `cmocka::cmocka`。Linux 上已开始在不修改 Skynet 源码的前提下，通过 CMake 选择性构建其核心模块。
 
 ## 构建要求
 
