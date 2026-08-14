@@ -225,9 +225,13 @@ jobs:
       - name: 对照 libuv 版 TCP 原始事件序列
         shell: bash
         run: |
+          set +e
           timeout 15s "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
             "build/${{ matrix.preset }}/3rd/skyuv-portable-tcp-events.conf" \
             2>&1 | tee portable-tcp-events.log
+          status=${PIPESTATUS[0]}
+          set -e
+          test "$status" -eq 134
           grep -F "skyuv TCP 原始事件基线验证通过" portable-tcp-events.log
           grep -F "TCP_EVENT " "$RUNNER_TEMP/skynet/upstream-tcp-events.log" \
             | sed 's/^.*TCP_EVENT /TCP_EVENT /' | sort >upstream-events.txt
@@ -247,9 +251,13 @@ jobs:
       - name: 验证 libuv 版 TCP pause/start 语义
         shell: bash
         run: |
+          set +e
           timeout 15s "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
             "build/${{ matrix.preset }}/3rd/skyuv-portable-socket-controls.conf" \
             2>&1 | tee portable-socket-controls.log
+          status=${PIPESTATUS[0]}
+          set -e
+          test "$status" -eq 134
           grep -F "TCP_CONTROL pause_resume" portable-socket-controls.log
           grep -F "TCP_CONTROL shutdown_close" portable-socket-controls.log
           grep -F "skyuv TCP 控制语义基线验证通过" portable-socket-controls.log
@@ -257,9 +265,13 @@ jobs:
       - name: 对照 libuv 版 UDP 事件语义
         shell: bash
         run: |
+          set +e
           timeout 15s "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
             "build/${{ matrix.preset }}/3rd/skyuv-portable-udp-events.conf" \
             2>&1 | tee portable-udp-events.log
+          status=${PIPESTATUS[0]}
+          set -e
+          test "$status" -eq 134
           grep -F "UDP_EVENT ipv4_receive address_size=7" portable-udp-events.log
           grep -F "UDP_EVENT ipv4_reply" portable-udp-events.log
           grep -F "UDP_EVENT ipv6_receive address_size=19" portable-udp-events.log
