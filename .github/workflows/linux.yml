@@ -169,6 +169,9 @@ jobs:
             -ex "handle SIGTERM nostop noprint pass" \
             -ex "python import gdb, os, signal, threading, time; pid = gdb.selected_inferior().pid; threading.Thread(target=lambda: (time.sleep(1), os.kill(pid, signal.SIGTERM)), daemon=True).start()" \
             -ex "continue" \
+            -ex "frame 5" \
+            -ex "print errno" \
+            -ex "print uv__signal_lock_pipefd" \
             -ex "thread apply all bt" \
             --args "build/${{ matrix.preset }}/src/skyuv_skynet_portable" \
               "build/${{ matrix.preset }}/3rd/skyuv-portable-process-shutdown.conf"
