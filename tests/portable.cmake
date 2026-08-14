@@ -271,14 +271,15 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.client_socket
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-client-socket.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-client-socket.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_socket_harness.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-socket.conf"
+      --allow-abort-after-success
   )
   set_tests_properties(
     skynet.portable.client_socket
     PROPERTIES
-      TIMEOUT 15
+      RUN_SERIAL TRUE
+      TIMEOUT 20
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   add_test(
@@ -626,6 +627,20 @@ endif()
 
 if(NOT WIN32 AND BUILD_TESTING)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(
+    NAME skynet.portable.client_socket
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_socket_harness.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-socket.conf"
+      --allow-abort-after-success
+  )
+  set_tests_properties(
+    skynet.portable.client_socket
+    PROPERTIES
+      RUN_SERIAL TRUE
+      TIMEOUT 20
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
   foreach(module_name IN ITEMS smoke client_module cluster_core debugchannel mongo_driver)
     string(REPLACE "_" "-" config_name "${module_name}")
     add_test(

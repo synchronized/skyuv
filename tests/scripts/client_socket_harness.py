@@ -45,6 +45,8 @@ def main() -> int:
 			stdout=subprocess.PIPE,
 			stderr=subprocess.PIPE,
 			text=True,
+			encoding="utf-8",
+			errors="replace",
 		)
 		try:
 			result = process.wait(timeout=15)
