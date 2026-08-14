@@ -12,6 +12,7 @@ struct skynet_message {
 
 uint32_t skynet_handle_findname(const char *name);
 int skynet_context_push(uint32_t handle, struct skynet_message *message);
+void skynet_handle_retireall(void);
 
 enum {
 	SKYUV_SKYNET_PTYPE_SYSTEM = 4,
@@ -30,4 +31,8 @@ int skyuv_skynet_reopen_log(void) {
 	message.data = NULL;
 	message.sz = (size_t)SKYUV_SKYNET_PTYPE_SYSTEM << SKYUV_SKYNET_MESSAGE_TYPE_SHIFT;
 	return skynet_context_push(logger, &message) == 0;
+}
+
+void skyuv_skynet_shutdown(void) {
+	skynet_handle_retireall();
 }

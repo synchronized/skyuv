@@ -76,10 +76,12 @@ static void push_event(struct skyuv_socket_runtime *runtime,
 struct skyuv_socket_runtime {
 	uv_loop_t loop;
 	uv_async_t async;
-#ifndef _WIN32
 	uv_signal_t hangup_signal;
 	bool hangup_signal_initialized;
-#endif
+	uv_signal_t interrupt_signal;
+	bool interrupt_signal_initialized;
+	uv_signal_t termination_signal;
+	bool termination_signal_initialized;
 	struct skyuv_socket_command_queue commands;
 	skyuv_mutex slots_mutex;
 	struct skyuv_socket_entry **slots;
@@ -95,13 +97,42 @@ struct skyuv_socket_runtime {
 	uint64_t current_time;
 };
 
-#ifndef _WIN32
 static void on_hangup_signal(uv_signal_t *handle, int signal_number) {
 	struct skyuv_socket_runtime *runtime = handle->data;
 
-	push_event(runtime, SKYUV_SOCKET_EVENT_PROCESS_SIGNAL, 0, 0, signal_number);
-}
+	(void)signal_number;
+#ifdef _WIN32
+	push_event(runtime, SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN, 0, 0, 0);
+#else
+	push_event(runtime, SKYUV_SOCKET_EVENT_REOPEN_LOG, 0, 0, 0);
 #endif
+}
+
+static void on_termination_signal(uv_signal_t *handle, int signal_number) {
+	struct skyuv_socket_runtime *runtime = handle->data;
+
+	(void)signal_number;
+	push_event(runtime, SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN, 0, 0, 0);
+}
+
+static int initialize_process_signal(struct skyuv_socket_runtime *runtime, uv_signal_t *signal,
+								 bool *initialized, uv_signal_cb callback, int signal_number) {
+	int result = uv_signal_init(&runtime->loop, signal);
+
+	if (result != 0) {
+		return result;
+	}
+	signal->data = runtime;
+	*initialized = true;
+	return uv_signal_start(signal, callback, signal_number);
+}
+
+static void close_process_signal(uv_signal_t *signal, bool initialized) {
+	if (initialized && !uv_is_closing((uv_handle_t *)signal)) {
+		(void)uv_signal_stop(signal);
+		uv_close((uv_handle_t *)signal, NULL);
+	}
+}
 
 static void cache_tcp_name(struct skyuv_socket_entry *entry, bool peer) {
 	struct sockaddr_storage address;
@@ -1277,37 +1308,43 @@ int skyuv_socket_runtime_create(struct skyuv_socket_runtime **runtime) {
 		return SKYUV_ERROR_SYSTEM;
 	}
 	created->async.data = created;
-#ifndef _WIN32
-	result = uv_signal_init(&created->loop, &created->hangup_signal);
+	result = initialize_process_signal(created, &created->hangup_signal,
+								   &created->hangup_signal_initialized, on_hangup_signal, SIGHUP);
 	if (result != 0) {
-		uv_close((uv_handle_t *)&created->async, NULL);
-		(void)uv_run(&created->loop, UV_RUN_DEFAULT);
-		skyuv_mutex_destroy(&created->slots_mutex);
-		skyuv_socket_command_queue_destroy(&created->commands);
-		(void)uv_loop_close(&created->loop);
-		free(created->slots);
-		free(created->generations);
-		free(created);
-		return SKYUV_ERROR_SYSTEM;
+		goto signal_error;
 	}
-	created->hangup_signal.data = created;
-	created->hangup_signal_initialized = true;
-	result = uv_signal_start(&created->hangup_signal, on_hangup_signal, SIGHUP);
+	result = initialize_process_signal(created, &created->interrupt_signal,
+								   &created->interrupt_signal_initialized, on_termination_signal,
+								   SIGINT);
 	if (result != 0) {
-		uv_close((uv_handle_t *)&created->hangup_signal, NULL);
-		uv_close((uv_handle_t *)&created->async, NULL);
-		(void)uv_run(&created->loop, UV_RUN_DEFAULT);
-		skyuv_mutex_destroy(&created->slots_mutex);
-		skyuv_socket_command_queue_destroy(&created->commands);
-		(void)uv_loop_close(&created->loop);
-		free(created->slots);
-		free(created->generations);
-		free(created);
-		return SKYUV_ERROR_SYSTEM;
+		goto signal_error;
 	}
+	result = initialize_process_signal(created, &created->termination_signal,
+								   &created->termination_signal_initialized, on_termination_signal,
+#ifdef _WIN32
+								   SIGBREAK);
+#else
+								   SIGTERM);
 #endif
+	if (result != 0) {
+		goto signal_error;
+	}
 	*runtime = created;
 	return SKYUV_OK;
+
+signal_error:
+	close_process_signal(&created->termination_signal, created->termination_signal_initialized);
+	close_process_signal(&created->interrupt_signal, created->interrupt_signal_initialized);
+	close_process_signal(&created->hangup_signal, created->hangup_signal_initialized);
+	uv_close((uv_handle_t *)&created->async, NULL);
+	(void)uv_run(&created->loop, UV_RUN_DEFAULT);
+	skyuv_mutex_destroy(&created->slots_mutex);
+	skyuv_socket_command_queue_destroy(&created->commands);
+	(void)uv_loop_close(&created->loop);
+	free(created->slots);
+	free(created->generations);
+	free(created);
+	return SKYUV_ERROR_SYSTEM;
 }
 
 static char *copy_string(const char *value) {
@@ -1908,13 +1945,9 @@ void skyuv_socket_runtime_release(struct skyuv_socket_runtime **runtime) {
 	if (!uv_is_closing((uv_handle_t *)&released->async)) {
 		uv_close((uv_handle_t *)&released->async, NULL);
 	}
-#ifndef _WIN32
-	if (released->hangup_signal_initialized &&
-		!uv_is_closing((uv_handle_t *)&released->hangup_signal)) {
-		(void)uv_signal_stop(&released->hangup_signal);
-		uv_close((uv_handle_t *)&released->hangup_signal, NULL);
-	}
-#endif
+	close_process_signal(&released->termination_signal, released->termination_signal_initialized);
+	close_process_signal(&released->interrupt_signal, released->interrupt_signal_initialized);
+	close_process_signal(&released->hangup_signal, released->hangup_signal_initialized);
 	while (uv_run(&released->loop, UV_RUN_DEFAULT) != 0) {
 	}
 	(void)uv_loop_close(&released->loop);

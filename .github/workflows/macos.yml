@@ -46,3 +46,9 @@ jobs:
 
       - name: 运行测试
         run: ctest --preset "${{ matrix.preset }}"
+
+      - name: 验证 SIGTERM 正常停止
+        run: >-
+          python3 tests/scripts/process_shutdown.py
+          "build/${{ matrix.preset }}/src/skyuv_skynet_portable"
+          "build/${{ matrix.preset }}/3rd/skyuv-portable-process-shutdown.conf"

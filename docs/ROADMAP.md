@@ -330,6 +330,9 @@ skyuv 提供自己的接口，内部映射到 libuv：
 - Linux 和 macOS 的 `SIGHUP` 由现有 socket libuv loop 上的 `uv_signal_t` 接收，
   转换为 logger 的 `PTYPE_SYSTEM` 消息，不在异步信号处理函数中操作 Actor；
 - Windows 不模拟 Unix `kill -HUP`，使用 `skyuv.control.reopen_log()` 显式请求日志重开；
+- Unix 的 `SIGINT/SIGTERM`，以及 Windows 的 Ctrl+C、Ctrl+Break 和控制台关闭，
+  均由 libuv watcher 转换为 Actor 全量退役请求，随后复用现有正常退出链；
+- Windows Service 的停止、关机等 SCM 通知不属于控制台信号，留待独立服务宿主接入；
 - libuv watcher、socket handle 与 async handle 统一遵守 loop 线程和 close callback 生命周期。
 
 验收标准：

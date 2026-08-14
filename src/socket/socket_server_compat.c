@@ -51,10 +51,13 @@ int socket_server_poll(struct socket_server *server, struct socket_message *resu
 		if (skyuv_socket_runtime_poll(server->runtime, &event) != SKYUV_OK) {
 			return SOCKET_ERR;
 		}
-		if (event.type == SKYUV_SOCKET_EVENT_PROCESS_SIGNAL) {
+		if (event.type == SKYUV_SOCKET_EVENT_REOPEN_LOG) {
 			(void)skyuv_skynet_reopen_log();
+		} else if (event.type == SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN) {
+			skyuv_skynet_shutdown();
 		}
-	} while (event.type == SKYUV_SOCKET_EVENT_PROCESS_SIGNAL);
+	} while (event.type == SKYUV_SOCKET_EVENT_REOPEN_LOG ||
+			 event.type == SKYUV_SOCKET_EVENT_PROCESS_SHUTDOWN);
 	result->id = event.id;
 	result->opaque = event.opaque;
 	result->ud = event.type == SKYUV_SOCKET_EVENT_DATA || event.type == SKYUV_SOCKET_EVENT_UDP

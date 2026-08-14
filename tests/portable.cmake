@@ -135,6 +135,12 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-control.conf"
   @ONLY
 )
+set(SKYUV_PORTABLE_START_SERVICE skyuv_process_shutdown)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-process-shutdown.conf"
+  @ONLY
+)
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/skyuv-signal.log" SKYUV_SIGNAL_LOG)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-signal.conf.in"
@@ -209,6 +215,8 @@ configure_file(
   @ONLY
 )
 if(WIN32 AND BUILD_TESTING)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
   add_test(
     NAME skynet.portable.smoke
     COMMAND
@@ -443,6 +451,20 @@ if(WIN32 AND BUILD_TESTING)
       pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
       -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
       -Config "3rd/skyuv-portable-control.conf"
+  )
+  add_test(
+    NAME skynet.portable.console_break
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/process_shutdown.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "3rd/skyuv-portable-process-shutdown.conf"
+      --windows-console-break
+  )
+  set_tests_properties(
+    skynet.portable.console_break
+    PROPERTIES
+      TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   set_tests_properties(
     skynet.portable.control

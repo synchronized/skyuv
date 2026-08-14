@@ -152,6 +152,12 @@ jobs:
           fi
           trap - EXIT
 
+      - name: 验证 SIGTERM 正常停止
+        run: >-
+          python3 tests/scripts/process_shutdown.py
+          "build/${{ matrix.preset }}/src/skyuv_skynet_portable"
+          "build/${{ matrix.preset }}/3rd/skyuv-portable-process-shutdown.conf"
+
       - name: 复制原版 Skynet 到临时目录
         run: cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
 

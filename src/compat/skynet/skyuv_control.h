@@ -2,5 +2,6 @@
 #define SKYUV_COMPAT_SKYNET_CONTROL_H
 
 int skyuv_skynet_reopen_log(void);
+void skyuv_skynet_shutdown(void);
 
 #endif
