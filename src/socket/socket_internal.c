@@ -1075,6 +1075,10 @@ static void process_exit(struct skyuv_socket_runtime *runtime) {
 			uv_close(entry_handle(entry), close_entry);
 		}
 	}
+	/* libuv 的信号监听必须在所属 loop 线程停止，不能留到主线程释放阶段。 */
+	close_process_signal(&runtime->termination_signal, runtime->termination_signal_initialized);
+	close_process_signal(&runtime->interrupt_signal, runtime->interrupt_signal_initialized);
+	close_process_signal(&runtime->hangup_signal, runtime->hangup_signal_initialized);
 	uv_close((uv_handle_t *)&runtime->async, NULL);
 	update_exit_ready(runtime);
 }

@@ -43,8 +43,7 @@ def main() -> int:
 	if "skyuv 进程停止验证已就绪" not in output:
 		sys.stderr.write(output)
 		return 1
-	expected_results = (0,) if arguments.windows_console_break else (0, -signal.SIGABRT)
-	if process.returncode not in expected_results:
+	if process.returncode != 0:
 		sys.stderr.write(output)
 		return process.returncode
 	print("PROCESS_SHUTDOWN actor_retired")
