@@ -396,9 +396,9 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.gate
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-gate.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-gate.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_gate.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-gate.conf"
+      --kind gate
   )
   set_tests_properties(
     skynet.portable.gate
@@ -409,9 +409,9 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.cgate
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-cgate.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-cgate.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_gate.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-cgate.conf"
+      --kind cgate
   )
   set_tests_properties(
     skynet.portable.cgate
@@ -574,4 +574,23 @@ if(WIN32 AND BUILD_TESTING)
       TIMEOUT 15
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
+endif()
+
+if(NOT WIN32 AND BUILD_TESTING)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  foreach(gate_kind IN ITEMS gate cgate)
+    add_test(
+      NAME "skynet.portable.${gate_kind}"
+      COMMAND
+        "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_gate.py"
+        "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-${gate_kind}.conf"
+        --kind "${gate_kind}"
+    )
+    set_tests_properties(
+      "skynet.portable.${gate_kind}"
+      PROPERTIES
+        TIMEOUT 20
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    )
+  endforeach()
 endif()

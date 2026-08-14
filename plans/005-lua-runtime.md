@@ -195,3 +195,6 @@
   位于现有 socket libuv loop 中，只向 socket 兼容层产生进程信号事件，再复用
   同一日志重开动作；Linux CI 通过重命名日志、发送 `SIGHUP` 和核对新旧文件验证
   实际重开语义。Skynet 服务内部 `SIGNAL` 命令未修改。
+- `gate` 与 C `gate` 的运行测试已统一为跨平台 Python 驱动，三平台使用相同
+  TCP 客户端覆盖拆分帧、合并帧、二进制载荷、回显和连接关闭；Linux/macOS
+  工作流显式构建便携 Skynet、`gate` 服务及其运行依赖，不再只验证编译。
