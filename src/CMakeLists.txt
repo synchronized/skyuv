@@ -49,6 +49,9 @@ else()
   )
 endif()
 add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES})
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_compile_definitions(skyuv_skynet_runtime_compat PRIVATE _DEFAULT_SOURCE)
+endif()
 target_include_directories(
   skyuv_skynet_runtime_compat
   PRIVATE
