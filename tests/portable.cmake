@@ -293,9 +293,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.bson
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-bson.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-bson.conf"
   )
   set_tests_properties(
     skynet.portable.bson
@@ -640,6 +639,18 @@ if(NOT WIN32 AND BUILD_TESTING)
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
   endforeach()
+  add_test(
+    NAME skynet.portable.bson
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-bson.conf"
+  )
+  set_tests_properties(
+    skynet.portable.bson
+    PROPERTIES
+      TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
   add_test(
     NAME skynet.portable.harbor
     COMMAND

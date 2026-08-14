@@ -60,6 +60,7 @@ jobs:
           skyuv_portable_service_logger skyuv_portable_service_harbor
           skyuv_portable_service_gate
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
+          skyuv_portable_lua_module_bson
           skyuv_portable_lua_module_control
           skyuv_lua_module_client skyuv_socket_core skyuv_test_socket_internal
           skyuv_test_lua skyuv_test_allocator skyuv_test_thread skyuv_test_time
