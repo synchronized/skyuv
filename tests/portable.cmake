@@ -395,9 +395,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.netpack
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-netpack.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-netpack.conf"
   )
   set_tests_properties(
     skynet.portable.netpack
@@ -434,9 +433,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.memory
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-memory.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-memory.conf"
   )
   set_tests_properties(
     skynet.portable.memory
@@ -459,9 +457,8 @@ if(WIN32 AND BUILD_TESTING)
   add_test(
     NAME skynet.portable.control
     COMMAND
-      pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-smoke.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
-      -Config "3rd/skyuv-portable-control.conf"
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-control.conf"
   )
   add_test(
     NAME skynet.portable.console_break
@@ -676,7 +673,7 @@ if(NOT WIN32 AND BUILD_TESTING)
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
     )
   endforeach()
-  foreach(module_name IN ITEMS stm sharetable sharedata datasheet multicast)
+  foreach(module_name IN ITEMS stm sharetable sharedata datasheet multicast netpack memory control)
     add_test(
       NAME "skynet.portable.${module_name}"
       COMMAND
