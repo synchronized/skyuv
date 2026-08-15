@@ -41,6 +41,22 @@ add_test(
 set_tests_properties(
   benchmark.udp_request_reply PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
+if(TARGET skyuv_skynet_portable)
+  add_test(
+    NAME benchmark.actor_ping_pong
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/actor_ping_pong.py"
+      --implementation skyuv --build-type "$<CONFIG>" --allocator "${SKYUV_ALLOCATOR}"
+      --compiler "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}"
+      --warmup 0.02 --duration 0.05 --iterations 2
+      --executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor.conf"
+      --output "${PROJECT_BINARY_DIR}/benchmarks/actor-ping-pong-test.json"
+  )
+  set_tests_properties(
+    benchmark.actor_ping_pong PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+  )
+endif()
 
 add_executable(skyuv_test_allocator test_allocator.c)
 target_link_libraries(skyuv_test_allocator PRIVATE skyuv::allocator cmocka::cmocka)

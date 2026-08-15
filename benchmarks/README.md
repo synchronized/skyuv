@@ -72,3 +72,21 @@ python benchmarks/udp_request_reply.py `
 
 每个响应都会校验来源地址和完整内容。结果记录发送、接收、超时丢包、包速率以及成功响应的
 p50、p95、p99 和最大延迟；首期固定单个在途请求，后续再用独立场景扩展并发窗口。
+
+## Actor ping-pong
+
+Actor 基准由 Python 启动器运行两个独立 Skynet Lua 服务，测量跨服务 `call/return` 往返：
+
+```powershell
+python benchmarks/actor_ping_pong.py `
+  --implementation skyuv `
+  --build-type Release `
+  --allocator system `
+  --compiler "MSVC 19.x" `
+  --executable build/windows-vs2022-release/src/Release/skyuv_skynet_portable.exe `
+  --config build/windows-vs2022-release/3rd/skyuv-benchmark-actor.conf `
+  --output build/benchmarks/actor-ping-pong.json
+```
+
+Lua 服务使用纳秒级 `skynet.hpc()` 记录每次往返延迟；Python 汇总每轮吞吐，以及各轮延迟
+分位数的中位数。测试原版 Skynet 时只需替换可执行文件和等价配置，启动器与 Lua 服务保持不变。

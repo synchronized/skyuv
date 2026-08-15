@@ -118,6 +118,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   小块读取和读取间隔制造积压，保存每轮接收字节数与吞吐；正式运行需同时保留服务端日志。
 - UDP request/reply 夹具已完成：同一客户端逐包校验响应来源与内容，记录发送、接收、超时丢包、
   包速率和成功响应延迟分位数；首期固定一个在途请求以建立稳定基础数据。
+- Actor 单路 ping-pong 夹具已完成：两个独立 Lua 服务通过同步 call/return 往返，使用纳秒级
+  `skynet.hpc()` 记录吞吐与延迟；同一 Python 启动器可运行 skyuv 和原版 Skynet。
 
 ## 测试与验收
 
