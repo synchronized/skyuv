@@ -24,6 +24,14 @@ add_test(
 set_tests_properties(
   benchmark.tcp_short_connection PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
+add_test(
+  NAME benchmark.tcp_backpressure
+  COMMAND
+    "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tcp_backpressure_benchmark_test.py"
+)
+set_tests_properties(
+  benchmark.tcp_backpressure PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+)
 
 add_executable(skyuv_test_allocator test_allocator.c)
 target_link_libraries(skyuv_test_allocator PRIVATE skyuv::allocator cmocka::cmocka)

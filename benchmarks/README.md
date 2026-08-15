@@ -36,3 +36,22 @@ python benchmarks/tcp_short_connection.py `
 
 该场景用于观察 connect、accept、close 和 socket ID 回收的综合成本。正式对照时必须与长连接
 基准使用相同主机、编译模式、分配器、消息尺寸和测量轮数。
+
+## TCP 慢接收端与背压
+
+背压服务持续写入固定内容，客户端先暂停读取，再按指定间隔小块读取：
+
+```powershell
+python benchmarks/tcp_backpressure.py `
+  --implementation skyuv `
+  --build-type Release `
+  --allocator system `
+  --compiler "MSVC 19.x" `
+  --initial-pause 0.2 `
+  --read-delay 0.005 `
+  --read-size 4096 `
+  --output build/benchmarks/tcp-backpressure.json
+```
+
+结果记录每轮读取次数、接收字节数和接收吞吐。服务端日志中的
+`SKYUV_BACKPRESSURE_WARNING` 表明 Skynet 写队列已跨过 warning 阈值；正式运行需同时保存服务端日志。
