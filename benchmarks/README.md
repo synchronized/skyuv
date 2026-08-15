@@ -109,3 +109,9 @@ python benchmarks/actor_multi_producer.py `
 
 每个生产者发送完成后通过同源 barrier 确认此前消息均已消费。结果校验发送/接收总数一致，
 并记录各生产者消息数的最小值、最大值和公平性比例 `min/max`。
+
+## Actor 环形传递
+
+环形基准默认让令牌依次经过 8 个 Actor。完整一圈计为一次延迟样本，每次跨 Actor 转发计为
+一个操作；使用 `actor_ping_pong.py` 并指定 `--actors 8`、环形配置和
+`SKYUV_ACTOR_RING_SAMPLE` 标记即可运行。结果记录 hop 吞吐和完整环路的延迟分位数。

@@ -13,23 +13,26 @@ from pathlib import Path
 from protocol import ExitCode, add_common_arguments, collect_environment, create_result, write_result
 
 
-SAMPLE_PATTERN = re.compile(
-	r"SKYUV_ACTOR_SAMPLE\s+(\d+)\s+(\d+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)"
-)
-
-
 def build_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(description=__doc__)
 	add_common_arguments(parser)
 	parser.add_argument("--executable", type=Path, required=True, help="Skynet 可执行文件")
 	parser.add_argument("--config", type=Path, required=True, help="Actor 基准配置文件")
 	parser.add_argument("--process-timeout", type=float, default=120.0, help="基准进程总超时秒数")
+	parser.add_argument("--actors", type=int, default=2, help="参与的 Actor 数量")
+	parser.add_argument("--benchmark-name", default="actor_ping_pong", help="结果中的基准名称")
+	parser.add_argument("--scenario", default="two_service_call_return", help="结果中的场景名称")
+	parser.add_argument("--sample-marker", default="SKYUV_ACTOR_SAMPLE", help="Lua 样本日志标记")
 	return parser
 
 
-def parse_samples(output: str) -> list[dict[str, object]]:
+def parse_samples(output: str, marker: str) -> list[dict[str, object]]:
+	pattern = re.compile(
+		re.escape(marker)
+		+ r"\s+(\d+)\s+(\d+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)"
+	)
 	samples: list[dict[str, object]] = []
-	for match in SAMPLE_PATTERN.finditer(output):
+	for match in pattern.finditer(output):
 		iteration, operations, elapsed, p50, p95, p99, maximum = match.groups()
 		duration = float(elapsed)
 		count = int(operations)
@@ -51,12 +54,12 @@ def parse_samples(output: str) -> list[dict[str, object]]:
 def main(arguments: list[str] | None = None) -> int:
 	parser = build_parser()
 	args = parser.parse_args(arguments)
-	if args.process_timeout <= 0:
-		parser.error("进程超时必须大于 0")
+	if args.process_timeout <= 0 or args.actors <= 0:
+		parser.error("进程超时和 Actor 数量必须大于 0")
 
-	result = create_result("actor_ping_pong", "two_service_call_return", args, collect_environment(Path.cwd()))
+	result = create_result(args.benchmark_name, args.scenario, args, collect_environment(Path.cwd()))
 	result["parameters"].update({
-		"actor_count": 2,
+		"actor_count": args.actors,
 		"executable": str(args.executable),
 		"config": str(args.config),
 	})
@@ -65,6 +68,7 @@ def main(arguments: list[str] | None = None) -> int:
 		"SKYUV_BENCHMARK_WARMUP": str(args.warmup),
 		"SKYUV_BENCHMARK_DURATION": str(args.duration),
 		"SKYUV_BENCHMARK_ITERATIONS": str(args.iterations),
+		"SKYUV_BENCHMARK_ACTORS": str(args.actors),
 	})
 
 	try:
@@ -83,7 +87,7 @@ def main(arguments: list[str] | None = None) -> int:
 		combined_output = completed.stdout + "\n" + completed.stderr
 		if completed.returncode != 0:
 			raise RuntimeError(f"Skynet 退出码为 {completed.returncode}：{combined_output[-2000:]}")
-		result["samples"] = parse_samples(combined_output)
+		result["samples"] = parse_samples(combined_output, args.sample_marker)
 		if len(result["samples"]) != args.iterations:
 			raise ValueError(f"期望 {args.iterations} 轮，实际解析到 {len(result['samples'])} 轮")
 	except (OSError, subprocess.TimeoutExpired, RuntimeError, ValueError) as error:
