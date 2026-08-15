@@ -414,3 +414,29 @@ jobs:
 
       - name: 运行并发测试
         run: ctest --preset linux-clang-tsan -R "platform\\.(thread|atomic)"
+
+  address-undefined-sanitizer:
+    name: Clang AddressSanitizer + UndefinedBehaviorSanitizer
+    runs-on: ubuntu-24.04
+    env:
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1:strict_string_checks=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: 配置 AddressSanitizer 与 UndefinedBehaviorSanitizer
+        run: cmake --preset linux-clang-asan-ubsan
+
+      - name: 构建内存与未定义行为测试
+        run: >-
+          cmake --build --preset linux-clang-asan-ubsan --target
+          skyuv_test_allocator skyuv_test_thread skyuv_test_time skyuv_test_atomic
+          skyuv_test_socket_internal skyuv_test_socket_stress
+
+      - name: 运行内存与未定义行为测试
+        run: >-
+          ctest --preset linux-clang-asan-ubsan
+          -R "^(allocator\\.basic|platform\\.(thread|time|atomic)|socket\\.(internal|stress))$"

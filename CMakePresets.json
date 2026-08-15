@@ -168,6 +168,16 @@
       }
     },
     {
+      "name": "linux-clang-asan-ubsan",
+      "displayName": "Linux Clang AddressSanitizer + UndefinedBehaviorSanitizer",
+      "inherits": ["platform-linux", "toolchain-clang", "config-debug"],
+      "cacheVariables": {
+        "SKYUV_ALLOCATOR": "system",
+        "CMAKE_C_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
+      }
+    },
+    {
       "name": "macos-clang-debug",
       "displayName": "macOS Apple Clang Debug",
       "inherits": ["platform-macos", "toolchain-clang", "config-debug"]
@@ -199,6 +209,7 @@
     { "name": "linux-gcc-release", "configurePreset": "linux-gcc-release" },
     { "name": "linux-gcc-system-debug", "configurePreset": "linux-gcc-system-debug" },
     { "name": "linux-clang-tsan", "configurePreset": "linux-clang-tsan" },
+    { "name": "linux-clang-asan-ubsan", "configurePreset": "linux-clang-asan-ubsan" },
     { "name": "macos-clang-debug", "configurePreset": "macos-clang-debug" },
     { "name": "macos-clang-release", "configurePreset": "macos-clang-release" }
   ],
@@ -275,6 +286,11 @@
       "name": "linux-clang-tsan",
       "inherits": "test-default",
       "configurePreset": "linux-clang-tsan"
+    },
+    {
+      "name": "linux-clang-asan-ubsan",
+      "inherits": "test-default",
+      "configurePreset": "linux-clang-asan-ubsan"
     },
     {
       "name": "macos-clang-debug",

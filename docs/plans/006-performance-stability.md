@@ -138,6 +138,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   除保存接收吞吐外，还要求双方日志均出现写队列 warning 标记。
 - UDP request/reply 已接入独立配对编排：通过共同就绪标记确认服务端启动，再以相同数据报尺寸、
   响应超时和测量轮次驱动双方；至此 Actor、TCP 长短连接、背压和 UDP 五类原版对照均已覆盖。
+- 步骤 5 已完成：增加 Linux Clang ASan/UBSan Debug Preset，固定使用 system allocator；CI 对
+  分配器、线程、时间、原子和 socket runtime 核心测试启用越界、释放后使用、泄漏及未定义行为检测。
 
 ## 测试与验收
 
