@@ -82,6 +82,9 @@ python benchmarks/udp_request_reply.py `
 每个响应都会校验来源地址和完整内容。结果记录发送、接收、超时丢包、包速率以及成功响应的
 p50、p95、p99 和最大延迟；首期固定单个在途请求，后续再用独立场景扩展并发窗口。
 
+`compare_udp.py` 通过双方共同输出的就绪标记判断 UDP 服务可用，再以相同数据报尺寸、响应超时
+和测量参数依次运行客户端，保存原始结果、服务端日志及 `udp-request-reply-comparison.json`。
+
 ## Actor ping-pong
 
 Actor 基准由 Python 启动器运行两个独立 Skynet Lua 服务，测量跨服务 `call/return` 往返：

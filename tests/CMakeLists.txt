@@ -91,6 +91,21 @@ add_test(
 set_tests_properties(
   benchmark.udp_request_reply PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
+add_test(
+  NAME benchmark.udp_comparison_protocol
+  COMMAND
+    "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/compare_udp.py"
+    --skyuv-executable "${Python3_EXECUTABLE}"
+    --skyuv-config "${PROJECT_SOURCE_DIR}/tests/fixtures/benchmark_udp_server.py"
+    --upstream-executable "${Python3_EXECUTABLE}"
+    --upstream-config "${PROJECT_SOURCE_DIR}/tests/fixtures/benchmark_udp_server.py"
+    --build-type "Release" --allocator "system" --compiler "protocol-test"
+    --port 25287 --message-size 31 --warmup 0.01 --duration 0.03 --iterations 1
+    --output-directory "${PROJECT_BINARY_DIR}/benchmarks/udp-comparison-test"
+)
+set_tests_properties(
+  benchmark.udp_comparison_protocol PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+)
 if(TARGET skyuv_skynet_portable)
   add_test(
     NAME benchmark.actor_ping_pong
