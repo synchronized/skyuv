@@ -15,6 +15,8 @@
 Linux 通过 `/proc` 提供，Windows 和 macOS 会明确写入 `available: false`。
 工作流最后使用 `baseline_report.py` 从环境、配对清单和原始结果生成 `report.md`，报告展示双方
 吞吐、延迟、CPU、峰值 RSS 及相对差异；JSON 始终是权威数据源，不手工维护报告数据。
+固定机完成两个独立时段采集后，使用 `baseline_noise.py` 比较两个 artifact 目录；工具会先检查
+Runner、CPU、工具链、频率策略、提交和场景参数一致，再输出结构化 JSON 与 Markdown 漂移报告。
 
 ## TCP 长连接 echo
 

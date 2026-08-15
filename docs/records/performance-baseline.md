@@ -17,6 +17,9 @@
 UDP request/reply。artifact 同时包含 CPU、内存、频率策略、工具链、提交与子模块版本信息，
 每个场景保存 skyuv、原版 Skynet、服务端日志和配对清单。
 
+两个独立时段的 artifact 解压后，使用 `benchmarks/baseline_noise.py` 生成结构化比较结果和
+Markdown 报告。只有环境、提交、工具链与参数一致的两次采集才允许进入噪声评估。
+
 ## 首轮结果
 
 尚未采集。固定 Runner 未部署前，共享 Runner 的缩短版验证不得填写到本节。
