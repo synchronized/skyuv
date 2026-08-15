@@ -25,13 +25,17 @@ def main() -> int:
 		assert metrics["available"] is True
 		assert metrics["peak_rss_bytes"] >= 4 * 1024 * 1024
 		assert metrics["total_cpu_seconds"] >= 0
+		assert metrics["average_cpu_cores"] is not None
 	else:
 		assert metrics["available"] is False
+		assert metrics["average_cpu_cores"] is None
+	assert metrics["monitored_wall_seconds"] >= 0.1
 
 	waited = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(0.05)"])
 	return_code, waited_metrics = wait_with_metrics(waited)
 	assert return_code == 0
 	assert waited_metrics["available"] is (platform.system() == "Linux")
+	assert waited_metrics["monitored_wall_seconds"] >= 0.04
 	return 0
 
 

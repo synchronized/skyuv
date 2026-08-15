@@ -28,8 +28,10 @@ METRIC_NAMES = {
 	"latency_max_ms": "最大延迟(ms)",
 	"packet_loss_ratio": "丢包率",
 	"total_cpu_seconds": "CPU(s)",
+	"average_cpu_cores": "平均 CPU 核数",
 	"peak_rss_bytes": "峰值 RSS(bytes)",
 	"client_total_cpu_seconds": "客户端 CPU(s)",
+	"client_average_cpu_cores": "客户端平均 CPU 核数",
 	"client_peak_rss_bytes": "客户端峰值 RSS(bytes)",
 }
 
@@ -75,8 +77,10 @@ def load_run(directory: Path) -> tuple[dict[str, Any], dict[tuple[str, str], dic
 					"latency_max_ms": latency.get("max"),
 					"packet_loss_ratio": summary.get("packet_loss_ratio"),
 					"total_cpu_seconds": metrics.get("total_cpu_seconds"),
+					"average_cpu_cores": metrics.get("average_cpu_cores"),
 					"peak_rss_bytes": metrics.get("peak_rss_bytes"),
 					"client_total_cpu_seconds": client_metrics.get("total_cpu_seconds"),
+					"client_average_cpu_cores": client_metrics.get("average_cpu_cores"),
 					"client_peak_rss_bytes": client_metrics.get("peak_rss_bytes"),
 				},
 			}

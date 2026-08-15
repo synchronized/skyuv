@@ -22,8 +22,10 @@ class ProcessMetrics:
 		self.peak_rss_bytes = 0
 		self._stop = threading.Event()
 		self._thread: threading.Thread | None = None
+		self._started_at: float | None = None
 
 	def start(self) -> None:
+		self._started_at = time.monotonic()
 		if not self.available:
 			return
 		self._sample()
@@ -34,14 +36,18 @@ class ProcessMetrics:
 		if self._thread is not None:
 			self._stop.set()
 			self._thread.join()
-		self._sample()
+			self._sample()
+		wall_seconds = 0.0 if self._started_at is None else time.monotonic() - self._started_at
+		total_cpu_seconds = self.user_seconds + self.system_seconds
 		return {
 			"available": self.available,
 			"source": "linux-procfs" if self.available else "unsupported-platform",
 			"user_cpu_seconds": self.user_seconds,
 			"system_cpu_seconds": self.system_seconds,
-			"total_cpu_seconds": self.user_seconds + self.system_seconds,
+			"total_cpu_seconds": total_cpu_seconds,
 			"peak_rss_bytes": self.peak_rss_bytes,
+			"monitored_wall_seconds": wall_seconds,
+			"average_cpu_cores": total_cpu_seconds / wall_seconds if self.available and wall_seconds > 0 else None,
 		}
 
 	def _run(self) -> None:

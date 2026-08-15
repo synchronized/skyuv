@@ -40,8 +40,14 @@ def main() -> int:
 			results.append({
 				"implementation": implementation,
 				"result": filename,
-				"process_metrics": {"total_cpu_seconds": 1.25, "peak_rss_bytes": rss},
-				"client_process_metrics": {"total_cpu_seconds": 0.5, "peak_rss_bytes": 3 * 1024 * 1024},
+				"process_metrics": {
+					"total_cpu_seconds": 1.25, "average_cpu_cores": 0.5, "peak_rss_bytes": rss,
+				},
+				"client_process_metrics": {
+					"total_cpu_seconds": 0.5,
+					"average_cpu_cores": 0.95 if implementation == "skyuv" else 0.4,
+					"peak_rss_bytes": 3 * 1024 * 1024,
+				},
 			})
 		write_json(scenario / "tcp-echo-comparison.json", {
 			"benchmark": "tcp_echo",
@@ -61,6 +67,7 @@ def main() -> int:
 		assert "skyuv 相对原版吞吐差异：**-10.00%**" in report
 		assert "1.00 MiB" in report
 		assert "客户端 CPU(s)" in report
+		assert "客户端瓶颈提示" in report
 		assert "3.00 MiB" in report
 		assert "test-cpu \\| fixed" in report
 		assert "[tcp-echo-skyuv.json](tcp-echo/tcp-echo-skyuv.json)" in report

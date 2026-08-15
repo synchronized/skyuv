@@ -15,6 +15,8 @@
 Linux 通过 `/proc` 提供，Windows 和 macOS 会明确写入 `available: false`。
 TCP 与 UDP 清单还分别记录共同 Python 客户端的 CPU 时间和峰值 RSS，用于识别客户端先达到
 瓶颈而污染服务端对照的情况；Actor 负载运行在被测 Skynet 进程内，不另设客户端指标。
+资源指标同时记录监控时长和平均占用核数；平均 1.0 核表示窗口内约占满一个逻辑核，报告会在
+客户端达到 0.90 核时给出瓶颈提示，但该提示本身不作为性能失败门槛。
 工作流最后使用 `baseline_report.py` 从环境、配对清单和原始结果生成 `report.md`，报告展示双方
 吞吐、延迟、CPU、峰值 RSS 及相对差异；JSON 始终是权威数据源，不手工维护报告数据。
 固定机完成两个独立时段采集后，使用 `baseline_noise.py` 比较两个 artifact 目录；工具会先检查

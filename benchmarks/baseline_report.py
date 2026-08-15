@@ -89,6 +89,7 @@ def generate_report(input_directory: Path) -> str:
 		manifest = load_json(manifest_path)
 		name = manifest.get("benchmark", manifest_path.parent.name)
 		rows = []
+		client_saturation = []
 		throughputs: dict[str, float] = {}
 		unit = ""
 		for entry in manifest.get("results", []):
@@ -102,13 +103,18 @@ def generate_report(input_directory: Path) -> str:
 			latency = summary.get("latency_ms", {})
 			metrics = entry.get("process_metrics", {})
 			client_metrics = entry.get("client_process_metrics", {})
+			client_average_cores = client_metrics.get("average_cpu_cores")
+			if isinstance(client_average_cores, (int, float)) and client_average_cores >= 0.9:
+				client_saturation.append(f"{implementation} 客户端平均占用 {client_average_cores:.2f} 核")
 			rows.append(
 				f"| {implementation} | {format_number(value)} | {format_number(latency.get('p50'), 3)} | "
 				f"{format_number(latency.get('p95'), 3)} | {format_number(latency.get('p99'), 3)} | "
 				f"{format_number(summary.get('packet_loss_ratio'), 4)} | "
 				f"{format_number(metrics.get('total_cpu_seconds'), 3)} | "
+				f"{format_number(metrics.get('average_cpu_cores'), 3)} | "
 				f"{format_bytes(metrics.get('peak_rss_bytes'))} | "
 				f"{format_number(client_metrics.get('total_cpu_seconds'), 3)} | "
+				f"{format_number(client_average_cores, 3)} | "
 				f"{format_bytes(client_metrics.get('peak_rss_bytes'))} | "
 				f"[{entry['result']}]({manifest_path.parent.name}/{entry['result']}) |"
 			)
@@ -119,10 +125,12 @@ def generate_report(input_directory: Path) -> str:
 			"",
 			f"吞吐单位：`{unit or 'unknown'}`。",
 			"",
-			"| 实现 | 中位吞吐 | p50 延迟(ms) | p95 延迟(ms) | p99 延迟(ms) | 丢包率 | 服务端 CPU(s) | 服务端峰值 RSS | 客户端 CPU(s) | 客户端峰值 RSS | 原始结果 |",
-			"| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+			"| 实现 | 中位吞吐 | p50 延迟(ms) | p95 延迟(ms) | p99 延迟(ms) | 丢包率 | 服务端 CPU(s) | 服务端平均核 | 服务端峰值 RSS | 客户端 CPU(s) | 客户端平均核 | 客户端峰值 RSS | 原始结果 |",
+			"| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
 			*rows,
 		])
+		if client_saturation:
+			lines.extend(["", f"> 客户端瓶颈提示：{'；'.join(client_saturation)}。"])
 		upstream = throughputs.get("upstream")
 		skyuv = throughputs.get("skyuv")
 		if upstream and skyuv is not None:
