@@ -1,0 +1,66 @@
+name: 长时稳定性 Soak
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 要运行的目标平台
+        required: true
+        default: linux
+        type: choice
+        options:
+          - linux
+          - windows
+          - macos
+      duration_seconds:
+        description: 重复运行 stability CTest 的总时长（秒）
+        required: true
+        default: "3600"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: soak-${{ github.ref }}-${{ inputs.platform }}
+  cancel-in-progress: false
+
+jobs:
+  soak:
+    name: ${{ inputs.platform }} soak
+    runs-on: ${{ inputs.platform == 'linux' && 'ubuntu-24.04' || inputs.platform == 'macos' && 'macos-15' || 'windows-2022' }}
+    env:
+      SOAK_PRESET: ${{ inputs.platform == 'linux' && 'linux-clang-release' || inputs.platform == 'macos' && 'macos-clang-release' || 'windows-vs2022-release' }}
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: 安装 Linux 构建工具
+        if: inputs.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes autoconf automake libtool ninja-build
+
+      - name: 配置 skyuv
+        run: cmake --preset "${{ env.SOAK_PRESET }}"
+
+      - name: 构建稳定性测试
+        run: cmake --build --preset "${{ env.SOAK_PRESET }}" --parallel 2
+
+      - name: 运行长时稳定性循环
+        run: >-
+          python benchmarks/soak.py
+          --duration-seconds "${{ inputs.duration_seconds }}"
+          --output-directory "build/soak-${{ inputs.platform }}"
+          -- ctest --preset "${{ env.SOAK_PRESET }}" -L stability
+
+      - name: 上传长时稳定性结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: soak-${{ inputs.platform }}-${{ github.run_id }}
+          path: build/soak-${{ inputs.platform }}/
+          if-no-files-found: error
+          retention-days: 30

@@ -143,6 +143,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
 - 步骤 6 已完成：短连接、背压、UDP、Actor 多生产者、Actor 环、集中定时器、socket runtime
   压力以及带未完成写请求退出均以缩短参数注册到三平台 CTest；Unix 的 SIGTERM 生命周期验证
   已从工作流散落命令收口为 CTest，并统一使用 `stability` 标签标识稳定性子集。
+- 步骤 7 已完成：新增手动长时 soak 工作流，单次选择 Linux、Windows 或 macOS，默认重复运行
+  `stability` CTest 1 小时；逐轮日志和持续更新的结构化汇总在成功或失败时都会上传并保留 30 天。
 
 ## 测试与验收
 

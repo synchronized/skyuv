@@ -3,6 +3,12 @@
 基准与功能测试分开：这里的程序采集数据，不在共享 CI Runner 上设置绝对性能门槛。
 结果格式由 `result.schema.json` 定义，通用参数和环境元数据由 `protocol.py` 提供。
 
+## 长时稳定性编排
+
+`soak.py` 在指定时长内重复执行 `--` 后的命令，每轮保存独立日志，并持续原子更新
+`soak-summary.json`。手动工作流“长时稳定性 Soak”可选择 Linux、Windows 或 macOS，默认运行
+1 小时的 `stability` CTest 子集；即使某轮失败，已生成日志和汇总仍会作为 artifact 上传并保留 30 天。
+
 ## TCP 长连接 echo
 
 先启动 skyuv 或原版 Skynet 的固定长度 echo 服务，再运行同一个客户端：

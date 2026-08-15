@@ -11,6 +11,11 @@ add_test(
 )
 set_tests_properties(benchmark.protocol PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 add_test(
+  NAME benchmark.soak_protocol
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/soak_protocol_test.py"
+)
+set_tests_properties(benchmark.soak_protocol PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+add_test(
   NAME benchmark.tcp_echo
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tcp_echo_benchmark_test.py"
 )
