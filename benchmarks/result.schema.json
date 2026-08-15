@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://synchronized.github.io/skyuv/schemas/benchmark-result-v1.json",
+  "title": "skyuv 基准结果",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "benchmark",
+    "implementation",
+    "environment",
+    "parameters",
+    "samples",
+    "summary",
+    "status"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "scenario"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "scenario": { "type": "string", "minLength": 1 }
+      }
+    },
+    "implementation": { "enum": ["upstream", "skyuv"] },
+    "environment": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "timestamp_utc",
+        "commit",
+        "dirty",
+        "operating_system",
+        "os_release",
+        "architecture",
+        "cpu",
+        "cpu_count",
+        "python",
+        "compiler",
+        "build_type",
+        "allocator"
+      ],
+      "properties": {
+        "timestamp_utc": { "type": "string", "format": "date-time" },
+        "commit": { "type": "string", "minLength": 1 },
+        "dirty": { "type": "boolean" },
+        "operating_system": { "type": "string", "minLength": 1 },
+        "os_release": { "type": "string" },
+        "architecture": { "type": "string", "minLength": 1 },
+        "cpu": { "type": "string", "minLength": 1 },
+        "cpu_count": { "type": "integer", "minimum": 0 },
+        "python": { "type": "string", "minLength": 1 },
+        "compiler": { "type": "string", "minLength": 1 },
+        "build_type": { "type": "string", "minLength": 1 },
+        "allocator": { "type": "string", "minLength": 1 }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["duration_seconds", "warmup_seconds", "iterations", "seed"],
+      "properties": {
+        "duration_seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "warmup_seconds": { "type": "number", "minimum": 0 },
+        "iterations": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["iteration", "duration_seconds", "operations"],
+        "properties": {
+          "iteration": { "type": "integer", "minimum": 1 },
+          "duration_seconds": { "type": "number", "exclusiveMinimum": 0 },
+          "operations": { "type": "integer", "minimum": 0 },
+          "throughput_ops_per_second": { "type": "number", "minimum": 0 },
+          "latency_ms": { "$ref": "#/$defs/latency" },
+          "cpu_seconds": { "type": "number", "minimum": 0 },
+          "peak_rss_bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "throughput_ops_per_second_median": { "type": "number", "minimum": 0 },
+        "latency_ms": { "$ref": "#/$defs/latency" },
+        "cpu_seconds_median": { "type": "number", "minimum": 0 },
+        "peak_rss_bytes_max": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "status": { "enum": ["success", "error"] },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exit_code", "message"],
+      "properties": {
+        "exit_code": { "type": "integer", "minimum": 2, "maximum": 5 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "latency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["p50", "p95", "p99", "max"],
+      "properties": {
+        "p50": { "type": "number", "minimum": 0 },
+        "p95": { "type": "number", "minimum": 0 },
+        "p99": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "error" } } },
+      "then": { "required": ["error"] }
+    }
+  ]
+}

@@ -4,6 +4,13 @@ endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/portable.cmake")
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(
+  NAME benchmark.protocol
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/benchmark_protocol_test.py"
+)
+set_tests_properties(benchmark.protocol PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 add_executable(skyuv_test_allocator test_allocator.c)
 target_link_libraries(skyuv_test_allocator PRIVATE skyuv::allocator cmocka::cmocka)
 skyuv_target_compile_warnings(skyuv_test_allocator)
