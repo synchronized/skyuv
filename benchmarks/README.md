@@ -115,3 +115,9 @@ python benchmarks/actor_multi_producer.py `
 环形基准默认让令牌依次经过 8 个 Actor。完整一圈计为一次延迟样本，每次跨 Actor 转发计为
 一个操作；使用 `actor_ping_pong.py` 并指定 `--actors 8`、环形配置和
 `SKYUV_ACTOR_RING_SAMPLE` 标记即可运行。结果记录 hop 吞吐和完整环路的延迟分位数。
+
+## 定时器集中触发
+
+定时器基准在每轮注册指定数量的同截止时间 `skynet.timeout`，默认正式参数为 10,000 个。
+`--duration` 表示注册到截止时间的秒数，`--timer-count` 表示每轮数量。结果校验所有回调均触发，
+并记录从计划截止时间到实际回调执行时刻的 p50、p95、p99 和最大偏差。

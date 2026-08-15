@@ -85,6 +85,22 @@ if(TARGET skyuv_skynet_portable)
   set_tests_properties(
     benchmark.actor_ring PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
   )
+  add_test(
+    NAME benchmark.timer_burst
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/actor_ping_pong.py"
+      --implementation skyuv --build-type "$<CONFIG>" --allocator "${SKYUV_ALLOCATOR}"
+      --compiler "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}"
+      --warmup 0.02 --duration 0.05 --iterations 2 --actors 1 --timer-count 1000
+      --benchmark-name timer_burst --scenario concentrated_deadline
+      --sample-marker SKYUV_TIMER_BURST_SAMPLE
+      --executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-timer-burst.conf"
+      --output "${PROJECT_BINARY_DIR}/benchmarks/timer-burst-test.json"
+  )
+  set_tests_properties(
+    benchmark.timer_burst PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+  )
 endif()
 
 add_executable(skyuv_test_allocator test_allocator.c)

@@ -52,6 +52,11 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor-ring.conf"
   @ONLY
 )
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-benchmark-timer-burst.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-timer-burst.conf"
+  @ONLY
+)
 set(SKYUV_PORTABLE_START_SERVICE skyuv_tcp_events)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"

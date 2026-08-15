@@ -23,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
 	parser.add_argument("--benchmark-name", default="actor_ping_pong", help="结果中的基准名称")
 	parser.add_argument("--scenario", default="two_service_call_return", help="结果中的场景名称")
 	parser.add_argument("--sample-marker", default="SKYUV_ACTOR_SAMPLE", help="Lua 样本日志标记")
+	parser.add_argument("--timer-count", type=int, help="定时器场景每轮注册数量")
 	return parser
 
 
@@ -54,7 +55,7 @@ def parse_samples(output: str, marker: str) -> list[dict[str, object]]:
 def main(arguments: list[str] | None = None) -> int:
 	parser = build_parser()
 	args = parser.parse_args(arguments)
-	if args.process_timeout <= 0 or args.actors <= 0:
+	if args.process_timeout <= 0 or args.actors <= 0 or (args.timer_count is not None and args.timer_count <= 0):
 		parser.error("进程超时和 Actor 数量必须大于 0")
 
 	result = create_result(args.benchmark_name, args.scenario, args, collect_environment(Path.cwd()))
@@ -63,6 +64,8 @@ def main(arguments: list[str] | None = None) -> int:
 		"executable": str(args.executable),
 		"config": str(args.config),
 	})
+	if args.timer_count is not None:
+		result["parameters"]["timer_count"] = args.timer_count
 	environment = os.environ.copy()
 	environment.update({
 		"SKYUV_BENCHMARK_WARMUP": str(args.warmup),
@@ -70,6 +73,8 @@ def main(arguments: list[str] | None = None) -> int:
 		"SKYUV_BENCHMARK_ITERATIONS": str(args.iterations),
 		"SKYUV_BENCHMARK_ACTORS": str(args.actors),
 	})
+	if args.timer_count is not None:
+		environment["SKYUV_BENCHMARK_TIMER_COUNT"] = str(args.timer_count)
 
 	try:
 		config = args.config.resolve()
