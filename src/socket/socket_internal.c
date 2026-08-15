@@ -299,7 +299,8 @@ static int reserve_entry(struct skyuv_socket_runtime *runtime, uintptr_t opaque,
 
 	skyuv_mutex_lock(&runtime->slots_mutex);
 	for (checked = 0; checked < SKYUV_SOCKET_SLOT_COUNT; ++checked) {
-		uint16_t slot = (uint16_t)runtime->next_slot++;
+		uint16_t slot =
+			(uint16_t)(runtime->next_slot++ & (SKYUV_SOCKET_SLOT_COUNT - 1U));
 		struct skyuv_socket_entry *entry;
 
 		if (runtime->slots[slot] != NULL) {
@@ -1987,7 +1988,7 @@ void skyuv_socket_runtime_release(struct skyuv_socket_runtime **runtime) {
 }
 
 uint16_t skyuv_socket_id_slot(int id) {
-	return (uint16_t)((uint32_t)id & UINT32_C(0xffff));
+	return (uint16_t)((uint32_t)id & (SKYUV_SOCKET_SLOT_COUNT - 1U));
 }
 
 uint16_t skyuv_socket_id_generation(int id) {
@@ -2008,6 +2009,11 @@ int skyuv_socket_id_make(uint16_t slot, uint16_t generation) {
 	if (generation == 0U || generation > SKYUV_SOCKET_GENERATION_MAX) {
 		return -1;
 	}
+#if SKYUV_SOCKET_SLOT_BITS < 16
+	if ((uint32_t)slot >= SKYUV_SOCKET_SLOT_COUNT) {
+		return -1;
+	}
+#endif
 	id = ((uint32_t)generation << SKYUV_SOCKET_SLOT_BITS) | slot;
 	return (int)id;
 }

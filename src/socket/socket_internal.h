@@ -8,7 +8,12 @@
 #include <skyuv/error.h>
 #include <skyuv/thread.h>
 
+#ifndef SKYUV_SOCKET_SLOT_BITS
 #define SKYUV_SOCKET_SLOT_BITS 16U
+#endif
+#if SKYUV_SOCKET_SLOT_BITS == 0 || SKYUV_SOCKET_SLOT_BITS > 16
+#error "SKYUV_SOCKET_SLOT_BITS 必须在 1 到 16 之间"
+#endif
 #define SKYUV_SOCKET_SLOT_COUNT (UINT32_C(1) << SKYUV_SOCKET_SLOT_BITS)
 #define SKYUV_SOCKET_GENERATION_MAX UINT16_C(0x7fff)
 #define SKYUV_SOCKET_WARNING_SIZE (1024U * 1024U)

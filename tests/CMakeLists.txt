@@ -64,6 +64,35 @@ endif()
 skyuv_target_compile_warnings(skyuv_test_socket_internal)
 add_test(NAME socket.internal COMMAND skyuv_test_socket_internal)
 
+add_library(skyuv_socket_stress_core STATIC "${PROJECT_SOURCE_DIR}/src/socket/socket_internal.c")
+target_include_directories(
+  skyuv_socket_stress_core PRIVATE "${PROJECT_SOURCE_DIR}/src/socket" "${PROJECT_SOURCE_DIR}/include"
+)
+target_compile_definitions(skyuv_socket_stress_core PRIVATE SKYUV_SOCKET_SLOT_BITS=8)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_compile_definitions(skyuv_socket_stress_core PRIVATE _POSIX_C_SOURCE=200112L)
+endif()
+if(UNIX)
+  target_compile_definitions(skyuv_socket_stress_core PRIVATE SKYUV_SOCKET_EXTERNAL_FD=1)
+else()
+  target_compile_definitions(skyuv_socket_stress_core PRIVATE SKYUV_SOCKET_EXTERNAL_FD=0)
+endif()
+target_link_libraries(skyuv_socket_stress_core PRIVATE skyuv::platform skyuv::libuv)
+skyuv_target_compile_warnings(skyuv_socket_stress_core)
+
+add_executable(skyuv_test_socket_stress test_socket_stress.c)
+target_include_directories(
+  skyuv_test_socket_stress PRIVATE "${PROJECT_SOURCE_DIR}/src/socket" "${PROJECT_SOURCE_DIR}/include"
+)
+target_compile_definitions(skyuv_test_socket_stress PRIVATE SKYUV_SOCKET_SLOT_BITS=8)
+target_link_libraries(
+  skyuv_test_socket_stress
+  PRIVATE skyuv_socket_stress_core skyuv::platform skyuv::libuv cmocka::cmocka
+)
+skyuv_target_compile_warnings(skyuv_test_socket_stress)
+add_test(NAME socket.stress COMMAND skyuv_test_socket_stress)
+set_tests_properties(socket.stress PROPERTIES TIMEOUT 20)
+
 if(TARGET skyuv_lua)
   add_executable(skyuv_test_lua test_lua.c)
   target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)
