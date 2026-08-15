@@ -11,7 +11,7 @@ import sys
 import time
 from pathlib import Path
 
-from process_metrics import ProcessMetrics
+from process_metrics import ProcessMetrics, wait_with_metrics
 
 
 def wait_until_ready(process: subprocess.Popen[bytes], host: str, port: int, timeout: float) -> None:
@@ -120,9 +120,10 @@ def main() -> int:
 						])
 					else:
 						command.extend(["--message-size", str(args.message_size)])
-					completed = subprocess.run(command, check=False)
-					if completed.returncode != 0:
-						return completed.returncode
+					client = subprocess.Popen(command)
+					client_return_code, client_metrics = wait_with_metrics(client)
+					if client_return_code != 0:
+						return client_return_code
 				finally:
 					metrics = monitor.stop()
 					stop_process(process)
@@ -140,6 +141,7 @@ def main() -> int:
 			"server_log": log_path.name,
 			"required_log_marker_found": marker_found,
 			"process_metrics": metrics,
+			"client_process_metrics": client_metrics,
 		})
 
 	manifest = {

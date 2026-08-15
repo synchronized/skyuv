@@ -11,7 +11,7 @@ from pathlib import Path
 def main() -> int:
 	repository = Path(__file__).resolve().parents[2]
 	sys.path.insert(0, str(repository / "benchmarks"))
-	from process_metrics import ProcessMetrics
+	from process_metrics import ProcessMetrics, wait_with_metrics
 
 	process = subprocess.Popen([
 		sys.executable, "-c",
@@ -27,6 +27,11 @@ def main() -> int:
 		assert metrics["total_cpu_seconds"] >= 0
 	else:
 		assert metrics["available"] is False
+
+	waited = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(0.05)"])
+	return_code, waited_metrics = wait_with_metrics(waited)
+	assert return_code == 0
+	assert waited_metrics["available"] is (platform.system() == "Linux")
 	return 0
 
 

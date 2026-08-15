@@ -29,6 +29,8 @@ METRIC_NAMES = {
 	"packet_loss_ratio": "丢包率",
 	"total_cpu_seconds": "CPU(s)",
 	"peak_rss_bytes": "峰值 RSS(bytes)",
+	"client_total_cpu_seconds": "客户端 CPU(s)",
+	"client_peak_rss_bytes": "客户端峰值 RSS(bytes)",
 }
 
 
@@ -57,6 +59,7 @@ def load_run(directory: Path) -> tuple[dict[str, Any], dict[tuple[str, str], dic
 			summary = result.get("summary", {})
 			latency = summary.get("latency_ms", {})
 			metrics = entry.get("process_metrics", {})
+			client_metrics = entry.get("client_process_metrics", {})
 			throughput = summary.get(
 				"throughput_ops_per_second_median",
 				summary.get("throughput_bytes_per_second_median"),
@@ -73,6 +76,8 @@ def load_run(directory: Path) -> tuple[dict[str, Any], dict[tuple[str, str], dic
 					"packet_loss_ratio": summary.get("packet_loss_ratio"),
 					"total_cpu_seconds": metrics.get("total_cpu_seconds"),
 					"peak_rss_bytes": metrics.get("peak_rss_bytes"),
+					"client_total_cpu_seconds": client_metrics.get("total_cpu_seconds"),
+					"client_peak_rss_bytes": client_metrics.get("peak_rss_bytes"),
 				},
 			}
 	if not measurements:

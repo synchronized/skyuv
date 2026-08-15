@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import platform
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -64,3 +65,20 @@ class ProcessMetrics:
 				parts = line.split()
 				if len(parts) >= 2:
 					self.peak_rss_bytes = max(self.peak_rss_bytes, int(parts[1]) * 1024)
+
+
+def wait_with_metrics(process: subprocess.Popen[bytes]) -> tuple[int, dict[str, object]]:
+	"""等待子进程退出，并返回退出码及其资源指标。"""
+
+	monitor = ProcessMetrics(process.pid)
+	monitor.start()
+	try:
+		return_code = process.wait()
+	except BaseException:
+		if process.poll() is None:
+			process.kill()
+			process.wait()
+		raise
+	finally:
+		metrics = monitor.stop()
+	return return_code, metrics

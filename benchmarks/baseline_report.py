@@ -101,12 +101,15 @@ def generate_report(input_directory: Path) -> str:
 				throughputs[implementation] = float(value)
 			latency = summary.get("latency_ms", {})
 			metrics = entry.get("process_metrics", {})
+			client_metrics = entry.get("client_process_metrics", {})
 			rows.append(
 				f"| {implementation} | {format_number(value)} | {format_number(latency.get('p50'), 3)} | "
 				f"{format_number(latency.get('p95'), 3)} | {format_number(latency.get('p99'), 3)} | "
 				f"{format_number(summary.get('packet_loss_ratio'), 4)} | "
 				f"{format_number(metrics.get('total_cpu_seconds'), 3)} | "
 				f"{format_bytes(metrics.get('peak_rss_bytes'))} | "
+				f"{format_number(client_metrics.get('total_cpu_seconds'), 3)} | "
+				f"{format_bytes(client_metrics.get('peak_rss_bytes'))} | "
 				f"[{entry['result']}]({manifest_path.parent.name}/{entry['result']}) |"
 			)
 
@@ -116,8 +119,8 @@ def generate_report(input_directory: Path) -> str:
 			"",
 			f"吞吐单位：`{unit or 'unknown'}`。",
 			"",
-			"| 实现 | 中位吞吐 | p50 延迟(ms) | p95 延迟(ms) | p99 延迟(ms) | 丢包率 | CPU(s) | 峰值 RSS | 原始结果 |",
-			"| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+			"| 实现 | 中位吞吐 | p50 延迟(ms) | p95 延迟(ms) | p99 延迟(ms) | 丢包率 | 服务端 CPU(s) | 服务端峰值 RSS | 客户端 CPU(s) | 客户端峰值 RSS | 原始结果 |",
+			"| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
 			*rows,
 		])
 		upstream = throughputs.get("upstream")

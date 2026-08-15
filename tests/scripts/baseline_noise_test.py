@@ -46,6 +46,7 @@ def create_run(root: Path, throughput: float, cpu: str = "Model name: test-cpu")
 			"implementation": "skyuv",
 			"result": "skyuv.json",
 			"process_metrics": {"total_cpu_seconds": 2.0, "peak_rss_bytes": 1024},
+			"client_process_metrics": {"total_cpu_seconds": 1.0, "peak_rss_bytes": 2048},
 		}],
 	})
 
@@ -62,6 +63,7 @@ def main() -> int:
 		assert comparison["authoritative"] is True
 		throughput = comparison["comparisons"][0]["metrics"]["throughput"]
 		assert abs(throughput["change_percent"] - (-10.0)) < 0.0001
+		assert "client_total_cpu_seconds" in comparison["comparisons"][0]["metrics"]
 		report = baseline_noise.render_markdown(comparison)
 		assert "权威固定机比较" in report
 		assert "-10.00%" in report

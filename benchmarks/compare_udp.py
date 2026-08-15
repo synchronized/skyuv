@@ -10,7 +10,7 @@ import sys
 import time
 from pathlib import Path
 
-from process_metrics import ProcessMetrics
+from process_metrics import ProcessMetrics, wait_with_metrics
 
 
 def wait_for_marker(
@@ -87,7 +87,7 @@ def main() -> int:
 				monitor.start()
 				try:
 					wait_for_marker(process, log_path, args.ready_marker, args.startup_timeout)
-					completed = subprocess.run([
+					client = subprocess.Popen([
 						sys.executable, str(runner),
 						"--implementation", implementation,
 						"--build-type", args.build_type,
@@ -101,9 +101,10 @@ def main() -> int:
 						"--duration", str(args.duration),
 						"--iterations", str(args.iterations),
 						"--output", str(output.resolve()),
-					], check=False)
-					if completed.returncode != 0:
-						return completed.returncode
+					])
+					client_return_code, client_metrics = wait_with_metrics(client)
+					if client_return_code != 0:
+						return client_return_code
 				finally:
 					metrics = monitor.stop()
 					stop_process(process)
@@ -115,6 +116,7 @@ def main() -> int:
 			"result": output.name,
 			"server_log": log_path.name,
 			"process_metrics": metrics,
+			"client_process_metrics": client_metrics,
 		})
 
 	manifest = {

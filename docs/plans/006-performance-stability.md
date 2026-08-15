@@ -156,6 +156,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   再以 JSON 和 Markdown 输出吞吐、尾延迟、CPU 与峰值 RSS 的观测漂移；两个样本不冒充长期分布。
 - 固定 Runner 预检已接入权威采集入口：构建前检查 Linux/x64、必需工具、内存、磁盘、工作树
   和各核心调频策略，失败快照仍随 artifact 保存；部署与排错步骤已有独立操作指南。
+- TCP 与 UDP 配对清单已补充共同 Python 客户端的 CPU 时间和峰值 RSS，可在解释服务端差异前
+  先判断负载驱动是否成为瓶颈；Actor 负载位于被测 Skynet 进程内，无独立客户端进程。
 
 ## 测试与验收
 
