@@ -145,6 +145,9 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   已从工作流散落命令收口为 CTest，并统一使用 `stability` 标签标识稳定性子集。
 - 步骤 7 已完成：新增手动长时 soak 工作流，单次选择 Linux、Windows 或 macOS，默认重复运行
   `stability` CTest 1 小时；逐轮日志和持续更新的结构化汇总在成功或失败时都会上传并保留 30 天。
+- 步骤 8 的采集设施已完成：手动 Linux 基线工作流统一采集五类配对结果及 CPU、内存、频率策略、
+  工具链和源码版本；Hosted Runner 仅验证流程，权威首轮数据仍等待带 `skyuv-benchmark` 标签的
+  固定自托管 Runner 部署，并须在两个独立时段采集后才能完成本步骤。
 
 ## 测试与验收
 

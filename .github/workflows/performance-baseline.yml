@@ -1,0 +1,163 @@
+name: Linux 性能基线
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_kind:
+        description: Hosted 仅验证流程；固定自托管结果才是权威基线
+        required: true
+        default: github-hosted
+        type: choice
+        options:
+          - github-hosted
+          - self-hosted-fixed
+      warmup_seconds:
+        description: 每个场景预热秒数
+        required: true
+        default: "2"
+        type: string
+      duration_seconds:
+        description: 每轮测量秒数
+        required: true
+        default: "10"
+        type: string
+      iterations:
+        description: 每个场景测量轮数
+        required: true
+        default: "5"
+        type: string
+      message_size:
+        description: TCP 与 UDP 消息字节数
+        required: true
+        default: "64"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-baseline-${{ github.ref }}-${{ inputs.runner_kind }}
+  cancel-in-progress: false
+
+jobs:
+  baseline:
+    name: ${{ inputs.runner_kind }} 基线采集
+    runs-on: ${{ inputs.runner_kind == 'self-hosted-fixed' && fromJSON('["self-hosted","linux","x64","skyuv-benchmark"]') || 'ubuntu-24.04' }}
+    env:
+      BASELINE_OUTPUT: build/performance-baseline
+      BASELINE_AUTHORITATIVE: ${{ inputs.runner_kind == 'self-hosted-fixed' && 'true' || 'false' }}
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: 安装 Hosted Runner 构建工具
+        if: inputs.runner_kind == 'github-hosted'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes autoconf automake libtool ninja-build
+
+      - name: 配置并构建 skyuv Release
+        run: |
+          cmake --preset linux-clang-release
+          cmake --build --preset linux-clang-release --parallel 2
+
+      - name: 构建原版 Skynet
+        run: |
+          cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
+          make -C "$RUNNER_TEMP/skynet" linux CC=clang -j2
+
+      - name: 准备原版基准服务
+        run: |
+          cmake -E copy tests/fixtures/skyuv_benchmark_actor_ping_pong.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_actor_ping_pong.lua"
+          cmake -E copy tests/fixtures/skyuv_benchmark_actor_peer.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_actor_peer.lua"
+          cmake -E copy tests/fixtures/skyuv_benchmark_tcp_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_tcp_echo.lua"
+          cmake -E copy tests/fixtures/skyuv_benchmark_tcp_backpressure.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_tcp_backpressure.lua"
+          cmake -E copy tests/fixtures/skyuv_benchmark_udp_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_udp_echo.lua"
+          cmake -E copy examples/upstream-actor-ping-pong.conf "$RUNNER_TEMP/skynet/actor-ping-pong.conf"
+          cmake -E copy examples/upstream-benchmark-tcp-echo.conf "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
+          cmake -E copy examples/upstream-benchmark-tcp-backpressure.conf "$RUNNER_TEMP/skynet/benchmark-tcp-backpressure.conf"
+          cmake -E copy examples/upstream-benchmark-udp-echo.conf "$RUNNER_TEMP/skynet/benchmark-udp-echo.conf"
+          echo "BASELINE_COMPILER=$(clang --version | head -n 1)" >> "$GITHUB_ENV"
+
+      - name: 采集主机和版本信息
+        run: >-
+          python3 benchmarks/baseline_environment.py
+          --runner-kind "${{ inputs.runner_kind }}"
+          --authoritative "${{ env.BASELINE_AUTHORITATIVE }}"
+          --output "${{ env.BASELINE_OUTPUT }}/environment.json"
+
+      - name: 采集 Actor ping-pong
+        run: >-
+          python3 benchmarks/compare_actor.py
+          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-actor.conf
+          --upstream-executable "$RUNNER_TEMP/skynet/skynet"
+          --upstream-config "$RUNNER_TEMP/skynet/actor-ping-pong.conf"
+          --build-type Release --allocator jemalloc --compiler "$BASELINE_COMPILER"
+          --warmup "${{ inputs.warmup_seconds }}" --duration "${{ inputs.duration_seconds }}"
+          --iterations "${{ inputs.iterations }}"
+          --output-directory "${{ env.BASELINE_OUTPUT }}/actor-ping-pong"
+
+      - name: 采集 TCP 长连接
+        run: >-
+          python3 benchmarks/compare_tcp.py
+          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
+          --upstream-executable "$RUNNER_TEMP/skynet/skynet"
+          --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
+          --build-type Release --allocator jemalloc --compiler "$BASELINE_COMPILER"
+          --message-size "${{ inputs.message_size }}"
+          --warmup "${{ inputs.warmup_seconds }}" --duration "${{ inputs.duration_seconds }}"
+          --iterations "${{ inputs.iterations }}"
+          --output-directory "${{ env.BASELINE_OUTPUT }}/tcp-echo"
+
+      - name: 采集 TCP 短连接
+        run: >-
+          python3 benchmarks/compare_tcp.py
+          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
+          --upstream-executable "$RUNNER_TEMP/skynet/skynet"
+          --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
+          --build-type Release --allocator jemalloc --compiler "$BASELINE_COMPILER"
+          --scenario tcp_short_connection --message-size "${{ inputs.message_size }}"
+          --warmup "${{ inputs.warmup_seconds }}" --duration "${{ inputs.duration_seconds }}"
+          --iterations "${{ inputs.iterations }}"
+          --output-directory "${{ env.BASELINE_OUTPUT }}/tcp-short-connection"
+
+      - name: 采集 TCP 背压
+        run: >-
+          python3 benchmarks/compare_tcp.py
+          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-backpressure.conf
+          --upstream-executable "$RUNNER_TEMP/skynet/skynet"
+          --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-backpressure.conf"
+          --build-type Release --allocator jemalloc --compiler "$BASELINE_COMPILER"
+          --scenario tcp_backpressure --port 25284
+          --warmup "${{ inputs.warmup_seconds }}" --duration "${{ inputs.duration_seconds }}"
+          --iterations "${{ inputs.iterations }}" --initial-pause 0.2
+          --read-delay 0.005 --read-size 4096 --require-log-marker SKYUV_BACKPRESSURE_WARNING
+          --output-directory "${{ env.BASELINE_OUTPUT }}/tcp-backpressure"
+
+      - name: 采集 UDP request/reply
+        run: >-
+          python3 benchmarks/compare_udp.py
+          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-udp-echo.conf
+          --upstream-executable "$RUNNER_TEMP/skynet/skynet"
+          --upstream-config "$RUNNER_TEMP/skynet/benchmark-udp-echo.conf"
+          --build-type Release --allocator jemalloc --compiler "$BASELINE_COMPILER"
+          --message-size "${{ inputs.message_size }}"
+          --warmup "${{ inputs.warmup_seconds }}" --duration "${{ inputs.duration_seconds }}"
+          --iterations "${{ inputs.iterations }}"
+          --output-directory "${{ env.BASELINE_OUTPUT }}/udp-request-reply"
+
+      - name: 上传基线原始结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-baseline-${{ inputs.runner_kind }}-${{ github.run_id }}
+          path: ${{ env.BASELINE_OUTPUT }}/
+          if-no-files-found: error
+          retention-days: 90

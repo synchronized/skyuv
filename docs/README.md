@@ -28,6 +28,8 @@
 
 - [`records/lua-runtime-stage-4.md`](records/lua-runtime-stage-4.md)：阶段 4 的模块接入、
   跨平台验证过程和已知差异。
+- [`records/performance-baseline.md`](records/performance-baseline.md)：固定 Linux 环境的性能基线
+  权威性规则、采集内容和首轮结果状态。
 
 ## 尚待建立的分类
 
