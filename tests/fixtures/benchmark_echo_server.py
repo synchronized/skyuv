@@ -17,8 +17,9 @@ class EchoServer(socketserver.TCPServer):
 
 
 message_size = int(os.environ.get("SKYUV_BENCHMARK_MESSAGE_SIZE", "64"))
+port = int(os.environ.get("SKYUV_BENCHMARK_PORT", "25282"))
 if message_size <= 0:
 	raise ValueError("消息尺寸必须大于零")
 
-with EchoServer(("127.0.0.1", 25282), EchoHandler) as server:
+with EchoServer(("127.0.0.1", port), EchoHandler) as server:
 	server.serve_forever()

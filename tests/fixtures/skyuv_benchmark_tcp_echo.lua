@@ -2,7 +2,7 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 
 local host = "127.0.0.1"
-local port = 25281
+local port = tonumber(os.getenv "SKYUV_BENCHMARK_PORT") or 25281
 local message_size = tonumber(skynet.getenv "benchmark_message_size")
 	or tonumber(os.getenv "SKYUV_BENCHMARK_MESSAGE_SIZE") or 64
 

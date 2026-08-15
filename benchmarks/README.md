@@ -41,6 +41,9 @@ python benchmarks/tcp_short_connection.py `
 该场景用于观察 connect、accept、close 和 socket ID 回收的综合成本。正式对照时必须与长连接
 基准使用相同主机、编译模式、分配器、消息尺寸和测量轮数。
 
+使用 `compare_tcp.py --scenario tcp_short_connection` 可复用长连接场景的服务端启动、就绪等待、
+日志保存与清理流程，生成 `tcp-short-connection-comparison.json` 及双方原始结果。
+
 ## TCP 慢接收端与背压
 
 背压服务持续写入固定内容，客户端先暂停读取，再按指定间隔小块读取：

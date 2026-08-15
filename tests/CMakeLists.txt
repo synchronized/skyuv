@@ -31,6 +31,23 @@ set_tests_properties(
   benchmark.tcp_comparison_protocol PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
 add_test(
+  NAME benchmark.tcp_short_comparison_protocol
+  COMMAND
+    "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/compare_tcp.py"
+    --skyuv-executable "${Python3_EXECUTABLE}"
+    --skyuv-config "${PROJECT_SOURCE_DIR}/tests/fixtures/benchmark_echo_server.py"
+    --upstream-executable "${Python3_EXECUTABLE}"
+    --upstream-config "${PROJECT_SOURCE_DIR}/tests/fixtures/benchmark_echo_server.py"
+    --build-type "Release" --allocator "system" --compiler "protocol-test"
+    --scenario tcp_short_connection --port 25283 --message-size 23
+    --warmup 0.01 --duration 0.02 --iterations 1
+    --output-directory "${PROJECT_BINARY_DIR}/benchmarks/tcp-short-comparison-test"
+)
+set_tests_properties(
+  benchmark.tcp_short_comparison_protocol
+  PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+)
+add_test(
   NAME benchmark.tcp_short_connection
   COMMAND
     "${Python3_EXECUTABLE}"

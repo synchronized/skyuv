@@ -226,6 +226,18 @@ jobs:
           --compiler "${{ matrix.compiler }}" --warmup 0.01 --duration 0.03 --iterations 1
           --output-directory "$RUNNER_TEMP/tcp-comparison"
 
+      - name: 运行 TCP 短连接配对对照协议
+        run: >-
+          python3 benchmarks/compare_tcp.py
+          --skyuv-executable "build/${{ matrix.preset }}/src/skyuv_skynet_portable"
+          --skyuv-config "build/${{ matrix.preset }}/3rd/skyuv-benchmark-tcp-echo.conf"
+          --upstream-executable "$RUNNER_TEMP/skynet/skynet"
+          --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
+          --build-type "${{ matrix.build_type }}" --allocator "${{ matrix.allocator }}"
+          --compiler "${{ matrix.compiler }}" --scenario tcp_short_connection
+          --warmup 0.01 --duration 0.03 --iterations 1
+          --output-directory "$RUNNER_TEMP/tcp-short-comparison"
+
       - name: 运行原版 client.socket 行为基线
         shell: bash
         run: |

@@ -1,4 +1,4 @@
-"""使用相同客户端和参数依次运行 skyuv 与原版 Skynet TCP echo 基准。"""
+"""使用相同客户端和参数依次运行 skyuv 与原版 Skynet TCP 基准。"""
 
 from __future__ import annotations
 
@@ -45,6 +45,10 @@ def main() -> int:
 	parser.add_argument("--build-type", required=True)
 	parser.add_argument("--allocator", required=True)
 	parser.add_argument("--compiler", required=True)
+	parser.add_argument(
+		"--scenario", choices=("tcp_echo", "tcp_short_connection"), default="tcp_echo",
+		help="要运行的 TCP 客户端场景",
+	)
 	parser.add_argument("--host", default="127.0.0.1")
 	parser.add_argument("--port", type=int, default=25281)
 	parser.add_argument("--message-size", type=int, default=64)
@@ -58,17 +62,19 @@ def main() -> int:
 		parser.error("端口、消息尺寸和启动超时必须有效")
 
 	args.output_directory.mkdir(parents=True, exist_ok=True)
-	runner = Path(__file__).with_name("tcp_echo.py")
+	runner = Path(__file__).with_name(f"{args.scenario}.py")
+	result_prefix = args.scenario.replace("_", "-")
 	results = []
 	for implementation, executable, config in (
 		("skyuv", args.skyuv_executable, args.skyuv_config),
 		("upstream", args.upstream_executable, args.upstream_config),
 	):
 		config = config.resolve()
-		log_path = args.output_directory / f"tcp-echo-{implementation}-server.log"
-		output = args.output_directory / f"tcp-echo-{implementation}.json"
+		log_path = args.output_directory / f"{result_prefix}-{implementation}-server.log"
+		output = args.output_directory / f"{result_prefix}-{implementation}.json"
 		environment = os.environ.copy()
 		environment["SKYUV_BENCHMARK_MESSAGE_SIZE"] = str(args.message_size)
+		environment["SKYUV_BENCHMARK_PORT"] = str(args.port)
 		try:
 			with log_path.open("wb") as log:
 				process = subprocess.Popen(
@@ -97,12 +103,12 @@ def main() -> int:
 				finally:
 					stop_process(process)
 		except (OSError, RuntimeError, TimeoutError, subprocess.TimeoutExpired) as error:
-			print(f"{implementation} TCP echo 配对运行失败：{error}", file=sys.stderr)
+			print(f"{implementation} {args.scenario} 配对运行失败：{error}", file=sys.stderr)
 			return 3
 		results.append({"implementation": implementation, "result": output.name, "server_log": log_path.name})
 
 	manifest = {
-		"benchmark": "tcp_echo",
+		"benchmark": args.scenario,
 		"paired": True,
 		"parameters": {
 			"host": args.host,
@@ -117,10 +123,10 @@ def main() -> int:
 		},
 		"results": results,
 	}
-	(args.output_directory / "tcp-echo-comparison.json").write_text(
+	(args.output_directory / f"{result_prefix}-comparison.json").write_text(
 		json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
 	)
-	print("TCP echo 配对对照完成")
+	print(f"{args.scenario} 配对对照完成")
 	return 0
 
 
