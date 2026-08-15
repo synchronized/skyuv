@@ -7,7 +7,8 @@
 
 `soak.py` 在指定时长内重复执行 `--` 后的命令，每轮保存独立日志，并持续原子更新
 `soak-summary.json`。手动工作流“长时稳定性 Soak”可选择 Linux、Windows 或 macOS，默认运行
-1 小时的 `stability` CTest 子集；即使某轮失败，已生成日志和汇总仍会作为 artifact 上传并保留 30 天。
+1 小时的 `stability` CTest 子集。编排器会对子进程链强制启用 Python UTF-8 模式，保证 Windows
+管道捕获中文输出时不受系统代码页影响；即使某轮失败，已生成日志和汇总仍会作为 artifact 上传并保留 30 天。
 
 手动工作流“Linux 性能基线”统一运行五类原版/skyuv 配对，并保存主机与工具链元数据。只有
 带 `skyuv-benchmark` 标签的固定自托管 Runner 结果可作为权威基线；GitHub Hosted 模式仅验证流程。

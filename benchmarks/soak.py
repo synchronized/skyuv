@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -49,10 +50,20 @@ def main() -> int:
 	write_summary(args.output_directory / "soak-summary.json", summary)
 
 	iteration = 0
+	command_environment = os.environ.copy()
+	command_environment["PYTHONUTF8"] = "1"
+	command_environment["PYTHONIOENCODING"] = "utf-8"
 	while True:
 		iteration += 1
 		iteration_started = time.monotonic()
-		completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+		completed = subprocess.run(
+			command,
+			capture_output=True,
+			text=True,
+			encoding="utf-8",
+			errors="replace",
+			env=command_environment,
+		)
 		elapsed = time.monotonic() - iteration_started
 		log_name = f"iteration-{iteration:05d}.log"
 		(args.output_directory / log_name).write_text(

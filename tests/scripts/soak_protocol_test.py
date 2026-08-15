@@ -16,7 +16,8 @@ def main() -> int:
 		completed = subprocess.run([
 			sys.executable, str(repository / "benchmarks" / "soak.py"),
 			"--duration-seconds", "60", "--max-iterations", "2",
-			"--output-directory", str(output), "--", sys.executable, "--version",
+			"--output-directory", str(output), "--", sys.executable, "-c",
+			"import sys; print('长时稳定性'); assert sys.stdout.encoding.lower().replace('-', '') == 'utf8'",
 		], check=False)
 		if completed.returncode != 0:
 			return completed.returncode
@@ -25,6 +26,7 @@ def main() -> int:
 		assert summary["completed_iterations"] == 2
 		assert len(summary["iterations"]) == 2
 		assert all((output / item["log"]).is_file() for item in summary["iterations"])
+		assert all("长时稳定性" in (output / item["log"]).read_text(encoding="utf-8") for item in summary["iterations"])
 	return 0
 
 
