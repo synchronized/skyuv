@@ -57,6 +57,23 @@ if(TARGET skyuv_skynet_portable)
     benchmark.actor_ping_pong PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
   )
   add_test(
+    NAME benchmark.actor_comparison_protocol
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/compare_actor.py"
+      --skyuv-executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --skyuv-config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor.conf"
+      --upstream-executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --upstream-config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor.conf"
+      --build-type "$<CONFIG>" --allocator "${SKYUV_ALLOCATOR}"
+      --compiler "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}"
+      --warmup 0.01 --duration 0.03 --iterations 1
+      --output-directory "${PROJECT_BINARY_DIR}/benchmarks/actor-comparison-test"
+  )
+  set_tests_properties(
+    benchmark.actor_comparison_protocol
+    PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+  )
+  add_test(
     NAME benchmark.actor_multi_producer
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/actor_multi_producer.py"

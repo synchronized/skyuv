@@ -91,6 +91,9 @@ python benchmarks/actor_ping_pong.py `
 Lua 服务使用纳秒级 `skynet.hpc()` 记录每次往返延迟；Python 汇总每轮吞吐，以及各轮延迟
 分位数的中位数。测试原版 Skynet 时只需替换可执行文件和等价配置，启动器与 Lua 服务保持不变。
 
+`compare_actor.py` 接收两套可执行文件和配置，以完全相同参数依次运行二者，并生成两个原始结果
+和 `actor-ping-pong-comparison.json` 配对清单。共享 CI 仅验证协议可运行，输出不作为性能结论。
+
 ## Actor 多生产者
 
 多生产者基准默认启动 4 个生产者 Actor，向单个消费者 Actor 异步发送消息：

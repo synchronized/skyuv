@@ -128,6 +128,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   并记录计划截止时间到实际执行时刻的 p50、p95、p99 和最大偏差。
 - 写入期间退出夹具已完成：客户端停止读取，服务端排队约 32 MiB 写入后接收外部停止信号，
   验证 Windows Console Break 与 Unix SIGTERM 均能回收未完成请求并正常退出。
+- 步骤 4 已开始：Actor ping-pong 已提供配对对照编排器，同一进程以相同参数依次驱动 skyuv
+  与原版 Skynet，分别保存原始 JSON，并生成记录公共参数和结果路径的配对清单。
 
 ## 测试与验收
 
