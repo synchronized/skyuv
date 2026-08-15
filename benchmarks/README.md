@@ -55,3 +55,20 @@ python benchmarks/tcp_backpressure.py `
 
 结果记录每轮读取次数、接收字节数和接收吞吐。服务端日志中的
 `SKYUV_BACKPRESSURE_WARNING` 表明 Skynet 写队列已跨过 warning 阈值；正式运行需同时保存服务端日志。
+
+## UDP request/reply
+
+UDP 基准使用顺序 request/reply 建立可重复的基础数据：
+
+```powershell
+python benchmarks/udp_request_reply.py `
+  --implementation skyuv `
+  --build-type Release `
+  --allocator system `
+  --compiler "MSVC 19.x" `
+  --message-size 64 `
+  --output build/benchmarks/udp-request-reply.json
+```
+
+每个响应都会校验来源地址和完整内容。结果记录发送、接收、超时丢包、包速率以及成功响应的
+p50、p95、p99 和最大延迟；首期固定单个在途请求，后续再用独立场景扩展并发窗口。
