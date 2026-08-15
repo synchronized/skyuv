@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -13,12 +14,14 @@ def main() -> int:
 	repository = Path(__file__).resolve().parents[2]
 	with tempfile.TemporaryDirectory() as directory:
 		output = Path(directory)
+		environment = os.environ.copy()
+		environment["PYTHONIOENCODING"] = "cp1252"
 		completed = subprocess.run([
 			sys.executable, str(repository / "benchmarks" / "soak.py"),
 			"--duration-seconds", "60", "--max-iterations", "2",
 			"--output-directory", str(output), "--", sys.executable, "-c",
 			"import sys; print('长时稳定性'); assert sys.stdout.encoding.lower().replace('-', '') == 'utf8'",
-		], check=False)
+		], check=False, env=environment)
 		if completed.returncode != 0:
 			return completed.returncode
 		summary = json.loads((output / "soak-summary.json").read_text(encoding="utf-8"))

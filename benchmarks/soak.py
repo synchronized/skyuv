@@ -21,7 +21,17 @@ def write_summary(path: Path, summary: dict[str, object]) -> None:
 	temporary.replace(path)
 
 
+def configure_output_encoding() -> None:
+	"""确保 Windows 非交互管道也能输出中文进度。"""
+
+	for stream in (sys.stdout, sys.stderr):
+		reconfigure = getattr(stream, "reconfigure", None)
+		if reconfigure is not None:
+			reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> int:
+	configure_output_encoding()
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--duration-seconds", type=float, default=3600.0)
 	parser.add_argument("--max-iterations", type=int, help="测试协议使用的最大轮数")
