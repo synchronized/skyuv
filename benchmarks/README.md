@@ -11,6 +11,8 @@
 
 手动工作流“Linux 性能基线”统一运行五类原版/skyuv 配对，并保存主机与工具链元数据。只有
 带 `skyuv-benchmark` 标签的固定自托管 Runner 结果可作为权威基线；GitHub Hosted 模式仅验证流程。
+配对清单还记录双方服务进程的用户态、内核态、总 CPU 时间和峰值 RSS；该资源采样当前只在
+Linux 通过 `/proc` 提供，Windows 和 macOS 会明确写入 `available: false`。
 
 ## TCP 长连接 echo
 

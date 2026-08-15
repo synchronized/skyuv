@@ -48,7 +48,12 @@ def main() -> int:
 		completed = subprocess.run(command, check=False)
 		if completed.returncode != 0:
 			return completed.returncode
-		results.append({"implementation": implementation, "result": output.name})
+		result = json.loads(output.read_text(encoding="utf-8"))
+		results.append({
+			"implementation": implementation,
+			"result": output.name,
+			"process_metrics": result["summary"]["process_metrics"],
+		})
 
 	manifest = {
 		"benchmark": "actor_ping_pong",

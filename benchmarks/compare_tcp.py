@@ -11,6 +11,8 @@ import sys
 import time
 from pathlib import Path
 
+from process_metrics import ProcessMetrics
+
 
 def wait_until_ready(process: subprocess.Popen[bytes], host: str, port: int, timeout: float) -> None:
 	deadline = time.monotonic() + timeout
@@ -93,6 +95,8 @@ def main() -> int:
 					[str(executable.resolve()), config.name], cwd=config.parent, env=environment,
 					stdout=log, stderr=subprocess.STDOUT,
 				)
+				monitor = ProcessMetrics(process.pid)
+				monitor.start()
 				try:
 					wait_until_ready(process, args.host, args.port, args.startup_timeout)
 					command = [
@@ -120,6 +124,7 @@ def main() -> int:
 					if completed.returncode != 0:
 						return completed.returncode
 				finally:
+					metrics = monitor.stop()
 					stop_process(process)
 		except (OSError, RuntimeError, TimeoutError, subprocess.TimeoutExpired) as error:
 			print(f"{implementation} {args.scenario} 配对运行失败：{error}", file=sys.stderr)
@@ -134,6 +139,7 @@ def main() -> int:
 			"result": output.name,
 			"server_log": log_path.name,
 			"required_log_marker_found": marker_found,
+			"process_metrics": metrics,
 		})
 
 	manifest = {

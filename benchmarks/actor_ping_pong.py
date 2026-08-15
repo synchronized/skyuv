@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from protocol import ExitCode, add_common_arguments, collect_environment, create_result, write_result
+from process_metrics import ProcessMetrics
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -78,20 +79,29 @@ def main(arguments: list[str] | None = None) -> int:
 
 	try:
 		config = args.config.resolve()
-		completed = subprocess.run(
+		process = subprocess.Popen(
 			[str(args.executable.resolve()), config.name],
 			cwd=config.parent,
 			env=environment,
-			capture_output=True,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE,
 			text=True,
 			encoding="utf-8",
 			errors="replace",
-			timeout=args.process_timeout,
-			check=False,
 		)
-		combined_output = completed.stdout + "\n" + completed.stderr
-		if completed.returncode != 0:
-			raise RuntimeError(f"Skynet 退出码为 {completed.returncode}：{combined_output[-2000:]}")
+		monitor = ProcessMetrics(process.pid)
+		monitor.start()
+		try:
+			stdout, stderr = process.communicate(timeout=args.process_timeout)
+		except subprocess.TimeoutExpired:
+			process.kill()
+			process.communicate()
+			raise
+		finally:
+			process_metrics = monitor.stop()
+		combined_output = stdout + "\n" + stderr
+		if process.returncode != 0:
+			raise RuntimeError(f"Skynet 退出码为 {process.returncode}：{combined_output[-2000:]}")
 		result["samples"] = parse_samples(combined_output, args.sample_marker)
 		if len(result["samples"]) != args.iterations:
 			raise ValueError(f"期望 {args.iterations} 轮，实际解析到 {len(result['samples'])} 轮")
@@ -109,6 +119,7 @@ def main(arguments: list[str] | None = None) -> int:
 			name: statistics.median(sample["latency_ms"][name] for sample in result["samples"])
 			for name in ("p50", "p95", "p99", "max")
 		},
+		"process_metrics": process_metrics,
 	}
 	write_result(args.output, result)
 	print(f"Actor ping-pong 基准完成：中位吞吐 {result['summary']['throughput_ops_per_second_median']:.2f} ops/s")

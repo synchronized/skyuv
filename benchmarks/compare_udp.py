@@ -10,6 +10,8 @@ import sys
 import time
 from pathlib import Path
 
+from process_metrics import ProcessMetrics
+
 
 def wait_for_marker(
 	process: subprocess.Popen[bytes], log_path: Path, marker: str, timeout: float
@@ -81,6 +83,8 @@ def main() -> int:
 					[str(executable.resolve()), config.name], cwd=config.parent, env=environment,
 					stdout=log, stderr=subprocess.STDOUT,
 				)
+				monitor = ProcessMetrics(process.pid)
+				monitor.start()
 				try:
 					wait_for_marker(process, log_path, args.ready_marker, args.startup_timeout)
 					completed = subprocess.run([
@@ -101,11 +105,17 @@ def main() -> int:
 					if completed.returncode != 0:
 						return completed.returncode
 				finally:
+					metrics = monitor.stop()
 					stop_process(process)
 		except (OSError, RuntimeError, TimeoutError, subprocess.TimeoutExpired) as error:
 			print(f"{implementation} UDP 配对运行失败：{error}", file=sys.stderr)
 			return 3
-		results.append({"implementation": implementation, "result": output.name, "server_log": log_path.name})
+		results.append({
+			"implementation": implementation,
+			"result": output.name,
+			"server_log": log_path.name,
+			"process_metrics": metrics,
+		})
 
 	manifest = {
 		"benchmark": "udp_request_reply",

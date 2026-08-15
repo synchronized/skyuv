@@ -148,6 +148,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
 - 步骤 8 的采集设施已完成：手动 Linux 基线工作流统一采集五类配对结果及 CPU、内存、频率策略、
   工具链和源码版本；Hosted Runner 仅验证流程，权威首轮数据仍等待带 `skyuv-benchmark` 标签的
   固定自托管 Runner 部署，并须在两个独立时段采集后才能完成本步骤。
+- 配对编排已补充 Linux 服务进程资源采样：Actor、TCP 和 UDP 清单分别记录 skyuv 与原版的
+  用户态、内核态和总 CPU 时间及峰值 RSS；其他平台明确标记资源指标不可用。
 
 ## 测试与验收
 
