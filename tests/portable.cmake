@@ -189,6 +189,12 @@ configure_file(
   "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-process-shutdown.conf"
   @ONLY
 )
+set(SKYUV_PORTABLE_START_SERVICE skyuv_write_shutdown)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-smoke.conf.in"
+  "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-write-shutdown.conf"
+  @ONLY
+)
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/skyuv-signal.log" SKYUV_SIGNAL_LOG)
 configure_file(
   "${PROJECT_SOURCE_DIR}/tests/fixtures/skyuv-portable-signal.conf.in"
@@ -514,6 +520,17 @@ if(WIN32 AND BUILD_TESTING)
     PROPERTIES
       TIMEOUT 15
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.write_shutdown
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/write_shutdown.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-write-shutdown.conf"
+      --windows-console-break
+  )
+  set_tests_properties(
+    skynet.portable.write_shutdown
+    PROPERTIES RUN_SERIAL TRUE TIMEOUT 20 WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   set_tests_properties(
     skynet.portable.control
