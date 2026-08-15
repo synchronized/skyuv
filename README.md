@@ -37,7 +37,7 @@ skyuv/
 └── tests/               # 跨平台测试
 ```
 
-当前已完成 Linux 兼容基线、跨平台基础层、libuv TCP 最小闭环和常用 Socket 语义兼容。Windows 已能启动最小 Skynet 节点并运行 Lua TCP echo；Linux 会自动对照原版 epoll 与 libuv 版的关键 TCP/UDP 事件序列。UDP、写队列优先级与 warning、socket info 均已实现；Unix 支持接管已连接 TCP socket fd，Windows 受上游 `int fd` ABI 限制而明确返回失败。下一阶段将处理核心网络之外的 Lua 模块和运行环境。
+当前已完成 Linux 兼容基线、跨平台基础层、libuv TCP 最小闭环、常用 Socket 语义兼容，以及 Lua 模块和运行环境。Windows、Linux 和 macOS 均可启动便携 Skynet，并通过 client.socket、gate、harbor、cluster、共享数据和常用 Lua C 模块测试；Linux 会自动对照原版 epoll 与 libuv 版的关键 TCP/UDP 行为。Unix 支持接管已连接 TCP socket fd，Windows 受上游 `int fd` ABI 限制而明确返回失败。下一阶段将开展性能和稳定性验证。
 
 ## 获取源码
 

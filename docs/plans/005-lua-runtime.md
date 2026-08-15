@@ -2,7 +2,7 @@
 
 ## 状态
 
-进行中。
+已完成。
 
 ## 背景
 
@@ -77,7 +77,7 @@ signal、daemon、终端和动态加载路径等平台假设。
 9. 在 Windows、macOS 和 Linux 运行主要示例与重复加载测试；
 10. 记录平台差异并关闭阶段 4。
 
-跨平台 cluster 双节点联调已经完成，当前主要剩余工作是阶段验收审计。
+跨平台 cluster 双节点联调和阶段验收审计均已完成。
 
 ## 测试与验收
 
@@ -99,7 +99,7 @@ Windows 限制明确；第三方工作树保持干净且补丁可重复应用。
 - 阻塞 stdin 无法靠普通标志可靠唤醒，需持续验证进程退出与模块生命周期；
 - 外部服务模块必须区分构建、加载、协议和完整集成四种验证等级；
 - signal 和终端语义无法可靠映射时保持明确限制，不增加脆弱模拟层；
-- macOS 回环和 stdin 测试是否暴露新的 pthread、终端或退出差异仍待验证。
+- macOS 回环和 stdin 测试已通过，未发现新的 pthread、终端或退出差异。
 
 ## 完成摘要
 
@@ -107,5 +107,9 @@ Windows 限制明确；第三方工作树保持干净且补丁可重复应用。
 - 无外部服务模块、共享数据模块、gate、harbor、logger 和 Mongo 驱动已形成跨平台测试；
 - `client.socket` 已在三平台构建、加载，并使用统一驱动覆盖回环与 stdin 行为；
 - signal、daemon、日志重开、路径和进程退出的平台边界已经明确并有相应测试；
+- Windows VS2022 Debug 严格构建与 CTest 37/37 通过；Linux GCC/Clang、系统分配器、
+  ThreadSanitizer 及 macOS Apple Clang Debug/Release 的最终验收 CI 全部通过；
+- 最终验收运行：Linux GitHub Actions `31796140259`，macOS GitHub Actions
+  `31796143957`；第三方源码状态检查通过；
 - 详细实施过程、验证范围和已知限制见
   [`阶段 4 实施记录`](../records/lua-runtime-stage-4.md)。

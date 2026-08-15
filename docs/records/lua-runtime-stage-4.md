@@ -63,7 +63,7 @@
   使用新 ID 的替代节点加入，并在所有路径回收子进程。
 - harbor 联调修复了 `socket.start` 接管已连接 socket 时的服务所有权转移，避免数据继续
   投递给已执行 `socket.abandon` 的旧服务。
-- cluster.core 覆盖名称、节点、trace 帧和成功/失败响应编解码；Windows 双节点测试覆盖
+- cluster.core 覆盖名称、节点、trace 帧和成功/失败响应编解码；三平台双节点测试覆盖
   监听、注册、连接、名称寻址和 UTF-8 RPC。cluster sender 的长连接由驱动统一终止。
 - logger 三平台覆盖含空格路径、UTF-8 内容、显式 reopen 前后写入，以及父目录不存在时的
   非零退出和明确诊断；Linux 另验证 SIGHUP 轮转。
@@ -84,6 +84,15 @@
 - gate、harbor、logger 分别使用面向协议和生命周期的跨平台 Python 驱动。
 - 成功后应等待正常退出；仅 cluster、harbor 等有设计内长连接的多节点测试由驱动统一终止。
 - Linux 与 macOS 完整矩阵采用手动触发和每周回归；源码、构建或测试变化必须查看到最终结果。
+
+## 阶段验收
+
+- Windows VS2022 Debug 严格构建完成，CTest 37/37 通过；clang-cl 的 cluster 定向验证通过。
+- Linux 最终验收运行 `31796140259` 通过，覆盖 GCC/Clang Debug/Release、系统分配器和
+  ThreadSanitizer；各构建矩阵均执行 cluster 双节点测试。
+- macOS 最终验收运行 `31796143957` 通过，Apple Clang Debug/Release 均执行完整 CTest，
+  包括 client.socket 回环、stdin 和 cluster 双节点测试。
+- 第三方源码状态检查通过，所有 Skynet 调整均由可重复应用的补丁生成到构建目录。
 
 ## 当前差异与遗留项
 
