@@ -130,6 +130,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   验证 Windows Console Break 与 Unix SIGTERM 均能回收未完成请求并正常退出。
 - 步骤 4 已开始：Actor ping-pong 已提供配对对照编排器，同一进程以相同参数依次驱动 skyuv
   与原版 Skynet，分别保存原始 JSON，并生成记录公共参数和结果路径的配对清单。
+- TCP 长连接 echo 已接入配对编排：同一客户端以相同消息尺寸和测量参数依次驱动两个服务端，
+  保存各自原始结果、服务端日志以及公共参数清单，Linux CI 负责验证原版对照可运行。
 
 ## 测试与验收
 
