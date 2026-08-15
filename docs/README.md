@@ -16,6 +16,7 @@
 - [`ROADMAP.md`](ROADMAP.md)：全局阶段、依赖关系和状态摘要。
 - [`plans/README.md`](plans/README.md)：计划索引与状态定义。
 - [`plans/005-lua-runtime.md`](plans/005-lua-runtime.md)：已完成的 Lua 模块与运行环境计划及验收摘要。
+- [`plans/006-performance-stability.md`](plans/006-performance-stability.md)：性能基准、压力测试和长时稳定性计划。
 - [`plans/variable-buffer-audit.md`](plans/variable-buffer-audit.md)：Skynet 可变缓冲区专项审计。
 
 ## 参考资料
