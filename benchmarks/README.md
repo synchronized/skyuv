@@ -17,6 +17,8 @@ Linux 通过 `/proc` 提供，Windows 和 macOS 会明确写入 `available: fals
 吞吐、延迟、CPU、峰值 RSS 及相对差异；JSON 始终是权威数据源，不手工维护报告数据。
 固定机完成两个独立时段采集后，使用 `baseline_noise.py` 比较两个 artifact 目录；工具会先检查
 Runner、CPU、工具链、频率策略、提交和场景参数一致，再输出结构化 JSON 与 Markdown 漂移报告。
+固定 Runner 在采集前由 `runner_preflight.py` 检查平台、架构、工具、内存、磁盘、工作树和调频
+策略；部署步骤与故障处理见 [`固定 Linux 性能 Runner 配置指南`](../docs/guides/performance-runner.md)。
 
 ## TCP 长连接 echo
 

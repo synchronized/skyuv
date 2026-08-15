@@ -24,6 +24,10 @@
 - [`DEPENDENCIES.md`](DEPENDENCIES.md)：依赖库策略、平台边界与启用条件。
 - [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：Lua 模块接入状态、风险与验证等级。
 
+## 操作指南
+
+- [`guides/performance-runner.md`](guides/performance-runner.md)：部署并预检固定 Linux 性能 Runner。
+
 ## 实施记录
 
 - [`records/lua-runtime-stage-4.md`](records/lua-runtime-stage-4.md)：阶段 4 的模块接入、

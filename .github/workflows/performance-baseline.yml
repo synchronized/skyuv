@@ -58,6 +58,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes autoconf automake libtool ninja-build
 
+      - name: 预检固定性能 Runner
+        if: inputs.runner_kind == 'self-hosted-fixed'
+        run: >-
+          python3 benchmarks/runner_preflight.py
+          --repository .
+          --output "${{ env.BASELINE_OUTPUT }}/preflight.json"
+
       - name: 配置并构建 skyuv Release
         run: |
           cmake --preset linux-clang-release
