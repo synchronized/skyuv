@@ -85,6 +85,9 @@ target_include_directories(
   skyuv_test_socket_stress PRIVATE "${PROJECT_SOURCE_DIR}/src/socket" "${PROJECT_SOURCE_DIR}/include"
 )
 target_compile_definitions(skyuv_test_socket_stress PRIVATE SKYUV_SOCKET_SLOT_BITS=8)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_compile_definitions(skyuv_test_socket_stress PRIVATE _POSIX_C_SOURCE=200112L)
+endif()
 target_link_libraries(
   skyuv_test_socket_stress
   PRIVATE skyuv_socket_stress_core skyuv::platform skyuv::libuv cmocka::cmocka
