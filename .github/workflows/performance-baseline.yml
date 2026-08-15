@@ -153,6 +153,13 @@ jobs:
           --iterations "${{ inputs.iterations }}"
           --output-directory "${{ env.BASELINE_OUTPUT }}/udp-request-reply"
 
+      - name: 生成基线报告
+        if: always()
+        run: >-
+          python3 benchmarks/baseline_report.py
+          --input-directory "${{ env.BASELINE_OUTPUT }}"
+          --output "${{ env.BASELINE_OUTPUT }}/report.md"
+
       - name: 上传基线原始结果
         if: always()
         uses: actions/upload-artifact@v4

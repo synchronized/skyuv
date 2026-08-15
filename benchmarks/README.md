@@ -13,6 +13,8 @@
 带 `skyuv-benchmark` 标签的固定自托管 Runner 结果可作为权威基线；GitHub Hosted 模式仅验证流程。
 配对清单还记录双方服务进程的用户态、内核态、总 CPU 时间和峰值 RSS；该资源采样当前只在
 Linux 通过 `/proc` 提供，Windows 和 macOS 会明确写入 `available: false`。
+工作流最后使用 `baseline_report.py` 从环境、配对清单和原始结果生成 `report.md`，报告展示双方
+吞吐、延迟、CPU、峰值 RSS 及相对差异；JSON 始终是权威数据源，不手工维护报告数据。
 
 ## TCP 长连接 echo
 
