@@ -90,3 +90,22 @@ python benchmarks/actor_ping_pong.py `
 
 Lua 服务使用纳秒级 `skynet.hpc()` 记录每次往返延迟；Python 汇总每轮吞吐，以及各轮延迟
 分位数的中位数。测试原版 Skynet 时只需替换可执行文件和等价配置，启动器与 Lua 服务保持不变。
+
+## Actor 多生产者
+
+多生产者基准默认启动 4 个生产者 Actor，向单个消费者 Actor 异步发送消息：
+
+```powershell
+python benchmarks/actor_multi_producer.py `
+  --implementation skyuv `
+  --build-type Release `
+  --allocator system `
+  --compiler "MSVC 19.x" `
+  --producers 4 `
+  --executable build/windows-vs2022-release/src/Release/skyuv_skynet_portable.exe `
+  --config build/windows-vs2022-release/3rd/skyuv-benchmark-actor-multi.conf `
+  --output build/benchmarks/actor-multi-producer.json
+```
+
+每个生产者发送完成后通过同源 barrier 确认此前消息均已消费。结果校验发送/接收总数一致，
+并记录各生产者消息数的最小值、最大值和公平性比例 `min/max`。

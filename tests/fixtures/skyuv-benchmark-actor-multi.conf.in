@@ -1,0 +1,16 @@
+thread = 4
+logger = nil
+harbor = 0
+bootstrap = "snlua bootstrap"
+start = "skyuv_benchmark_actor_multi_producer"
+
+benchmark_warmup = "$SKYUV_BENCHMARK_WARMUP"
+benchmark_duration = "$SKYUV_BENCHMARK_DURATION"
+benchmark_iterations = "$SKYUV_BENCHMARK_ITERATIONS"
+benchmark_producers = "$SKYUV_BENCHMARK_PRODUCERS"
+
+cpath = "@SKYUV_PORTABLE_BINARY_DIR@/cservice/?@SKYUV_PORTABLE_MODULE_SUFFIX@"
+lua_path = "@SKYUV_PORTABLE_SOURCE_DIR@/lualib/?.lua;@SKYUV_PORTABLE_SOURCE_DIR@/lualib/?/init.lua"
+lua_cpath = "@SKYUV_PORTABLE_BINARY_DIR@/luaclib/?@SKYUV_PORTABLE_MODULE_SUFFIX@"
+luaservice = "@SKYUV_PORTABLE_SOURCE_DIR@/service/?.lua;@SKYUV_EXAMPLE_SOURCE_DIR@/?.lua"
+lualoader = "@SKYUV_PORTABLE_SOURCE_DIR@/lualib/loader.lua"

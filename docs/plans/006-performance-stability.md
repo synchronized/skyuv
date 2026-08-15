@@ -120,6 +120,8 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   包速率和成功响应延迟分位数；首期固定一个在途请求以建立稳定基础数据。
 - Actor 单路 ping-pong 夹具已完成：两个独立 Lua 服务通过同步 call/return 往返，使用纳秒级
   `skynet.hpc()` 记录吞吐与延迟；同一 Python 启动器可运行 skyuv 和原版 Skynet。
+- Actor 多生产者夹具已完成：默认 4 个生产者并发向单消费者异步发送，通过同源 barrier 保证
+  消费完成，校验消息计数并记录总吞吐、生产者最小/最大消息数及公平性比例。
 
 ## 测试与验收
 
