@@ -48,6 +48,24 @@ set_tests_properties(
   PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
 add_test(
+  NAME benchmark.tcp_backpressure_comparison_protocol
+  COMMAND
+    "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/compare_tcp.py"
+    --skyuv-executable "${Python3_EXECUTABLE}"
+    --skyuv-config "${PROJECT_SOURCE_DIR}/tests/fixtures/benchmark_stream_server.py"
+    --upstream-executable "${Python3_EXECUTABLE}"
+    --upstream-config "${PROJECT_SOURCE_DIR}/tests/fixtures/benchmark_stream_server.py"
+    --build-type "Release" --allocator "system" --compiler "protocol-test"
+    --scenario tcp_backpressure --port 25285 --warmup 0.01 --duration 0.03 --iterations 1
+    --initial-pause 0.01 --read-delay 0.001 --read-size 1024
+    --require-log-marker "SKYUV_BACKPRESSURE_WARNING"
+    --output-directory "${PROJECT_BINARY_DIR}/benchmarks/tcp-backpressure-comparison-test"
+)
+set_tests_properties(
+  benchmark.tcp_backpressure_comparison_protocol
+  PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+)
+add_test(
   NAME benchmark.tcp_short_connection
   COMMAND
     "${Python3_EXECUTABLE}"

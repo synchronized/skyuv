@@ -62,6 +62,8 @@ python benchmarks/tcp_backpressure.py `
 
 结果记录每轮读取次数、接收字节数和接收吞吐。服务端日志中的
 `SKYUV_BACKPRESSURE_WARNING` 表明 Skynet 写队列已跨过 warning 阈值；正式运行需同时保存服务端日志。
+使用 `compare_tcp.py --scenario tcp_backpressure` 可依次运行双方服务端；传入
+`--require-log-marker SKYUV_BACKPRESSURE_WARNING` 后，任一实现未触发 warning 都会使本轮失败。
 
 ## UDP request/reply
 

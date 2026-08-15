@@ -2,7 +2,7 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 
 local host = "127.0.0.1"
-local port = 25284
+local port = tonumber(os.getenv "SKYUV_BENCHMARK_PORT") or 25284
 local chunk = string.rep("b", 64 * 1024)
 
 local function stream_client(fd)

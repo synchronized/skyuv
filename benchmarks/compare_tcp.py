@@ -46,19 +46,31 @@ def main() -> int:
 	parser.add_argument("--allocator", required=True)
 	parser.add_argument("--compiler", required=True)
 	parser.add_argument(
-		"--scenario", choices=("tcp_echo", "tcp_short_connection"), default="tcp_echo",
+		"--scenario", choices=("tcp_echo", "tcp_short_connection", "tcp_backpressure"),
+		default="tcp_echo",
 		help="要运行的 TCP 客户端场景",
 	)
 	parser.add_argument("--host", default="127.0.0.1")
 	parser.add_argument("--port", type=int, default=25281)
 	parser.add_argument("--message-size", type=int, default=64)
+	parser.add_argument("--initial-pause", type=float, default=0.2)
+	parser.add_argument("--read-delay", type=float, default=0.005)
+	parser.add_argument("--read-size", type=int, default=4096)
+	parser.add_argument("--require-log-marker", help="双方服务端日志都必须包含的标记")
 	parser.add_argument("--warmup", type=float, default=2.0)
 	parser.add_argument("--duration", type=float, default=10.0)
 	parser.add_argument("--iterations", type=int, default=5)
 	parser.add_argument("--startup-timeout", type=float, default=10.0)
 	parser.add_argument("--output-directory", type=Path, required=True)
 	args = parser.parse_args()
-	if not 1 <= args.port <= 65535 or args.message_size <= 0 or args.startup_timeout <= 0:
+	if (
+		not 1 <= args.port <= 65535
+		or args.message_size <= 0
+		or args.initial_pause < 0
+		or args.read_delay < 0
+		or args.read_size <= 0
+		or args.startup_timeout <= 0
+	):
 		parser.error("端口、消息尺寸和启动超时必须有效")
 
 	args.output_directory.mkdir(parents=True, exist_ok=True)
@@ -91,12 +103,19 @@ def main() -> int:
 						"--compiler", args.compiler,
 						"--host", args.host,
 						"--port", str(args.port),
-						"--message-size", str(args.message_size),
 						"--warmup", str(args.warmup),
 						"--duration", str(args.duration),
 						"--iterations", str(args.iterations),
 						"--output", str(output.resolve()),
 					]
+					if args.scenario == "tcp_backpressure":
+						command.extend([
+							"--initial-pause", str(args.initial_pause),
+							"--read-delay", str(args.read_delay),
+							"--read-size", str(args.read_size),
+						])
+					else:
+						command.extend(["--message-size", str(args.message_size)])
 					completed = subprocess.run(command, check=False)
 					if completed.returncode != 0:
 						return completed.returncode
@@ -105,7 +124,17 @@ def main() -> int:
 		except (OSError, RuntimeError, TimeoutError, subprocess.TimeoutExpired) as error:
 			print(f"{implementation} {args.scenario} 配对运行失败：{error}", file=sys.stderr)
 			return 3
-		results.append({"implementation": implementation, "result": output.name, "server_log": log_path.name})
+		log_text = log_path.read_text(encoding="utf-8", errors="replace")
+		marker_found = args.require_log_marker is None or args.require_log_marker in log_text
+		if not marker_found:
+			print(f"{implementation} 服务端日志缺少标记：{args.require_log_marker}", file=sys.stderr)
+			return 3
+		results.append({
+			"implementation": implementation,
+			"result": output.name,
+			"server_log": log_path.name,
+			"required_log_marker_found": marker_found,
+		})
 
 	manifest = {
 		"benchmark": args.scenario,
@@ -123,6 +152,13 @@ def main() -> int:
 		},
 		"results": results,
 	}
+	if args.scenario == "tcp_backpressure":
+		manifest["parameters"].update({
+			"initial_pause_seconds": args.initial_pause,
+			"read_delay_seconds": args.read_delay,
+			"read_size_bytes": args.read_size,
+			"required_log_marker": args.require_log_marker,
+		})
 	(args.output_directory / f"{result_prefix}-comparison.json").write_text(
 		json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
 	)

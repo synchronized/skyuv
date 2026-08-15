@@ -196,6 +196,7 @@ jobs:
           cmake -E copy tests/fixtures/skyuv_benchmark_actor_ping_pong.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_actor_ping_pong.lua"
           cmake -E copy tests/fixtures/skyuv_benchmark_actor_peer.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_actor_peer.lua"
           cmake -E copy tests/fixtures/skyuv_benchmark_tcp_echo.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_tcp_echo.lua"
+          cmake -E copy tests/fixtures/skyuv_benchmark_tcp_backpressure.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_tcp_backpressure.lua"
           cmake -E copy examples/upstream-echo.conf "$RUNNER_TEMP/skynet/examples/skyuv-echo.conf"
           cmake -E copy examples/upstream-tcp-events.conf "$RUNNER_TEMP/skynet/examples/tcp-events.conf"
           cmake -E copy examples/upstream-socket-controls.conf "$RUNNER_TEMP/skynet/examples/socket-controls.conf"
@@ -203,6 +204,7 @@ jobs:
           cmake -E copy examples/upstream-client-socket.conf "$RUNNER_TEMP/skynet/examples/client-socket.conf"
           cmake -E copy examples/upstream-actor-ping-pong.conf "$RUNNER_TEMP/skynet/actor-ping-pong.conf"
           cmake -E copy examples/upstream-benchmark-tcp-echo.conf "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
+          cmake -E copy examples/upstream-benchmark-tcp-backpressure.conf "$RUNNER_TEMP/skynet/benchmark-tcp-backpressure.conf"
 
       - name: 运行 Actor 配对对照协议
         run: >-
@@ -237,6 +239,20 @@ jobs:
           --compiler "${{ matrix.compiler }}" --scenario tcp_short_connection
           --warmup 0.01 --duration 0.03 --iterations 1
           --output-directory "$RUNNER_TEMP/tcp-short-comparison"
+
+      - name: 运行 TCP 背压配对对照协议
+        run: >-
+          python3 benchmarks/compare_tcp.py
+          --skyuv-executable "build/${{ matrix.preset }}/src/skyuv_skynet_portable"
+          --skyuv-config "build/${{ matrix.preset }}/3rd/skyuv-benchmark-tcp-backpressure.conf"
+          --upstream-executable "$RUNNER_TEMP/skynet/skynet"
+          --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-backpressure.conf"
+          --build-type "${{ matrix.build_type }}" --allocator "${{ matrix.allocator }}"
+          --compiler "${{ matrix.compiler }}" --scenario tcp_backpressure --port 25284
+          --warmup 0.01 --duration 0.05 --iterations 1
+          --initial-pause 0.2 --read-delay 0.001 --read-size 4096
+          --require-log-marker "SKYUV_BACKPRESSURE_WARNING"
+          --output-directory "$RUNNER_TEMP/tcp-backpressure-comparison"
 
       - name: 运行原版 client.socket 行为基线
         shell: bash
