@@ -15,6 +15,15 @@ add_test(
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tcp_echo_benchmark_test.py"
 )
 set_tests_properties(benchmark.tcp_echo PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20)
+add_test(
+  NAME benchmark.tcp_short_connection
+  COMMAND
+    "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tcp_short_connection_benchmark_test.py"
+)
+set_tests_properties(
+  benchmark.tcp_short_connection PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+)
 
 add_executable(skyuv_test_allocator test_allocator.c)
 target_link_libraries(skyuv_test_allocator PRIVATE skyuv::allocator cmocka::cmocka)
