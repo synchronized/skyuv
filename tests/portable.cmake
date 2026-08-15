@@ -518,6 +518,7 @@ if(WIN32 AND BUILD_TESTING)
   set_tests_properties(
     skynet.portable.console_break
     PROPERTIES
+      LABELS stability
       TIMEOUT 15
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
@@ -530,7 +531,11 @@ if(WIN32 AND BUILD_TESTING)
   )
   set_tests_properties(
     skynet.portable.write_shutdown
-    PROPERTIES RUN_SERIAL TRUE TIMEOUT 20 WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    PROPERTIES
+      LABELS stability
+      RUN_SERIAL TRUE
+      TIMEOUT 20
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
   set_tests_properties(
     skynet.portable.control
@@ -622,6 +627,38 @@ if(WIN32 AND BUILD_TESTING)
     skynet.portable.echo
     PROPERTIES
       TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+endif()
+
+if(UNIX AND BUILD_TESTING AND TARGET skyuv_skynet_portable)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(
+    NAME skynet.portable.process_shutdown
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/process_shutdown.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "3rd/skyuv-portable-process-shutdown.conf"
+  )
+  set_tests_properties(
+    skynet.portable.process_shutdown
+    PROPERTIES
+      LABELS stability
+      TIMEOUT 15
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+  )
+  add_test(
+    NAME skynet.portable.write_shutdown
+    COMMAND
+      "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/write_shutdown.py"
+      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-write-shutdown.conf"
+  )
+  set_tests_properties(
+    skynet.portable.write_shutdown
+    PROPERTIES
+      LABELS stability
+      RUN_SERIAL TRUE
+      TIMEOUT 20
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
   )
 endif()

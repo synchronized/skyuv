@@ -72,7 +72,8 @@ add_test(
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tcp_short_connection_benchmark_test.py"
 )
 set_tests_properties(
-  benchmark.tcp_short_connection PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+  benchmark.tcp_short_connection
+  PROPERTIES LABELS stability WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
 add_test(
   NAME benchmark.tcp_backpressure
@@ -80,7 +81,8 @@ add_test(
     "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tcp_backpressure_benchmark_test.py"
 )
 set_tests_properties(
-  benchmark.tcp_backpressure PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+  benchmark.tcp_backpressure
+  PROPERTIES LABELS stability WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
 add_test(
   NAME benchmark.udp_request_reply
@@ -89,7 +91,8 @@ add_test(
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/udp_request_reply_benchmark_test.py"
 )
 set_tests_properties(
-  benchmark.udp_request_reply PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+  benchmark.udp_request_reply
+  PROPERTIES LABELS stability WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
 add_test(
   NAME benchmark.udp_comparison_protocol
@@ -151,6 +154,7 @@ if(TARGET skyuv_skynet_portable)
   )
   set_tests_properties(
     benchmark.actor_multi_producer PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+    LABELS stability
   )
   add_test(
     NAME benchmark.actor_ring
@@ -166,6 +170,7 @@ if(TARGET skyuv_skynet_portable)
   )
   set_tests_properties(
     benchmark.actor_ring PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+    LABELS stability
   )
   add_test(
     NAME benchmark.timer_burst
@@ -182,6 +187,7 @@ if(TARGET skyuv_skynet_portable)
   )
   set_tests_properties(
     benchmark.timer_burst PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
+    LABELS stability
   )
 endif()
 
@@ -268,7 +274,7 @@ target_link_libraries(
 )
 skyuv_target_compile_warnings(skyuv_test_socket_stress)
 add_test(NAME socket.stress COMMAND skyuv_test_socket_stress)
-set_tests_properties(socket.stress PROPERTIES TIMEOUT 20)
+set_tests_properties(socket.stress PROPERTIES LABELS stability TIMEOUT 20)
 
 if(TARGET skyuv_lua)
   add_executable(skyuv_test_lua test_lua.c)

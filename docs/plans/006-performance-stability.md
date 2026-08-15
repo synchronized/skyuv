@@ -140,6 +140,9 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   响应超时和测量轮次驱动双方；至此 Actor、TCP 长短连接、背压和 UDP 五类原版对照均已覆盖。
 - 步骤 5 已完成：增加 Linux Clang ASan/UBSan Debug Preset，固定使用 system allocator；CI 对
   分配器、线程、时间、原子和 socket runtime 核心测试启用越界、释放后使用、泄漏及未定义行为检测。
+- 步骤 6 已完成：短连接、背压、UDP、Actor 多生产者、Actor 环、集中定时器、socket runtime
+  压力以及带未完成写请求退出均以缩短参数注册到三平台 CTest；Unix 的 SIGTERM 生命周期验证
+  已从工作流散落命令收口为 CTest，并统一使用 `stability` 标签标识稳定性子集。
 
 ## 测试与验收
 
