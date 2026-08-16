@@ -37,6 +37,8 @@
   权威性规则、采集内容和首轮结果状态。
 - [`records/stability-soak-stage-5.md`](records/stability-soak-stage-5.md)：阶段 5 三平台正式一小时
   Soak 的方法、结果和基础设施修复记录。
+- [`records/delivery-runtime-closure-audit.md`](records/delivery-runtime-closure-audit.md)：阶段 6 的
+  最小启动闭包、发行运行时边界和平台依赖审计。
 
 ## 尚待建立的分类
 
