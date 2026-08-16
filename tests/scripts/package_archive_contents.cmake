@@ -56,6 +56,8 @@ set(required_entries
   "/lualib/loader.lua"
   "/service/bootstrap.lua"
   "/examples/skyuv.conf"
+  "/examples/skyuv-echo.conf"
+  "/examples/skyuv_runtime_echo.lua"
   "/examples/skyuv_runtime_smoke.lua"
   "/licenses/skyuv-LICENSE"
 )
@@ -76,4 +78,4 @@ foreach(entry IN LISTS archive_entries)
   endif()
 endforeach()
 
-message(STATUS "发行归档内容验证通过：${archive}")
+message(STATUS "PACKAGE_ARCHIVE_CONTENTS_OK: ${archive}")

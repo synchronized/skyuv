@@ -126,9 +126,16 @@ configure_file(
   "${PROJECT_BINARY_DIR}/generated/examples/skyuv.conf"
   @ONLY
 )
+configure_file(
+  "${PROJECT_SOURCE_DIR}/examples/skyuv-runtime-echo.conf.in"
+  "${PROJECT_BINARY_DIR}/generated/examples/skyuv-echo.conf"
+  @ONLY
+)
 install(
   FILES
     "${PROJECT_BINARY_DIR}/generated/examples/skyuv.conf"
+    "${PROJECT_BINARY_DIR}/generated/examples/skyuv-echo.conf"
+    "${PROJECT_SOURCE_DIR}/examples/skyuv_runtime_echo.lua"
     "${PROJECT_SOURCE_DIR}/examples/skyuv_runtime_smoke.lua"
   DESTINATION "${SKYUV_INSTALL_EXAMPLESDIR}"
   COMPONENT Runtime

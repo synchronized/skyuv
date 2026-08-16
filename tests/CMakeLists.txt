@@ -35,6 +35,18 @@ set_tests_properties(
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
+  NAME package.extracted_runtime
+  COMMAND
+    "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_extracted_runtime.py"
+    --archive-directory "${PROJECT_BINARY_DIR}/package-test-output"
+    --archive-extension "${SKYUV_PACKAGE_EXTENSION}"
+    --executable-name "$<TARGET_FILE_NAME:skyuv_skynet_portable>"
+)
+set_tests_properties(
+  package.extracted_runtime
+  PROPERTIES DEPENDS package.archive_contents LABELS delivery TIMEOUT 45
+)
+add_test(
   NAME benchmark.protocol
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/benchmark_protocol_test.py"
 )
