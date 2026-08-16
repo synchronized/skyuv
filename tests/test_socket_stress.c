@@ -7,7 +7,12 @@
 #include <cmocka.h>
 #include <uv.h>
 
+#include <skyuv/memory.h>
+
 #include "socket_internal.h"
+
+#define free skyuv_free
+#define malloc skyuv_malloc
 
 #define STRESS_PRODUCER_COUNT 4
 #define STRESS_SENDS_PER_PRODUCER 500

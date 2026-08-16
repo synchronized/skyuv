@@ -93,6 +93,7 @@ void *skyuv_calloc(size_t count, size_t size);
 void *skyuv_realloc(void *ptr, size_t size);
 void skyuv_free(void *ptr);
 void *skyuv_aligned_alloc(size_t alignment, size_t size);
+int skyuv_posix_memalign(void **result, size_t alignment, size_t size);
 ```
 
 底层后端保持平台可选：Windows 使用 process heap，Linux 默认使用主程序中的 jemalloc 并保留
@@ -131,3 +132,18 @@ system 回退，macOS 使用系统 allocator。统一的是 API、失败语义�
 
 在这些条件完成前，保留 `/MD` 并声明 Visual C++ Redistributable 前置条件，比直接切换 `/MT`
 更安全。
+
+## 统一接口接入进度
+
+截至 2026-08-17，推荐改造的第 1 至 5 项已完成第一轮接入：
+
+- 补丁副本中的 `skynet_malloc.h` 已将普通、重分配和对齐分配入口映射到 `skyuv`；
+- `skynet_lalloc` 已改由 `skyuv_realloc` 实现，Lua 状态不再回退到当前模块的 CRT；
+- Skynet 核心、C 服务和依赖 Skynet 内存接口的 Lua C 模块均引用主程序导出的唯一实现；
+- socket 适配层的收发缓冲区、事件与命令对象已使用同一接口，消除了网络边界上 CRT 与
+  process heap 混合释放的问题；
+- Windows 的 echo、gate、C gate、harbor、cluster、关闭流程及 socket 压力测试已覆盖这些
+  跨边界路径。
+
+本轮接入没有启用 `/MT`。后续仍需完成专用跨模块双向所有权测试、Release 重复加载测试和 PE
+导入审计，达到验收门槛后再切换所有 Windows 发行目标的 CRT 模式。

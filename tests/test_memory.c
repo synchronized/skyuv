@@ -71,12 +71,25 @@ static void test_aligned_allocation(void **state) {
 	assert_null(skyuv_aligned_alloc(sizeof(void *) / 2, 64));
 }
 
+static void test_posix_memalign_compatibility(void **state) {
+	void *pointer = NULL;
+
+	(void)state;
+	assert_int_equal(skyuv_posix_memalign(&pointer, 64, 127), 0);
+	assert_non_null(pointer);
+	assert_int_equal((uintptr_t)pointer % 64, 0);
+	skyuv_free(pointer);
+	assert_int_not_equal(skyuv_posix_memalign(&pointer, 3, 127), 0);
+	assert_int_not_equal(skyuv_posix_memalign(NULL, 64, 127), 0);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_zero_size_and_null),
 		cmocka_unit_test(test_calloc_and_overflow),
 		cmocka_unit_test(test_reallocation_preserves_content),
 		cmocka_unit_test(test_aligned_allocation),
+		cmocka_unit_test(test_posix_memalign_compatibility),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

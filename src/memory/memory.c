@@ -1,5 +1,6 @@
 #include <skyuv/memory.h>
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,6 +95,20 @@ void *skyuv_aligned_alloc(size_t alignment, size_t size) {
 	return skyuv_heap_allocate(alignment, size, 0);
 }
 
+int skyuv_posix_memalign(void **result, size_t alignment, size_t size) {
+	void *pointer;
+
+	if (result == NULL || !skyuv_is_power_of_two(alignment) || alignment < sizeof(void *)) {
+		return EINVAL;
+	}
+	pointer = skyuv_aligned_alloc(alignment, size);
+	if (pointer == NULL) {
+		return ENOMEM;
+	}
+	*result = pointer;
+	return 0;
+}
+
 #else
 
 #if defined(SKYUV_USE_JEMALLOC)
@@ -147,6 +162,14 @@ void *skyuv_aligned_alloc(size_t alignment, size_t size) {
 		return NULL;
 	}
 	return pointer;
+}
+
+int skyuv_posix_memalign(void **result, size_t alignment, size_t size) {
+	if (result == NULL || alignment < sizeof(void *) ||
+		(alignment & (alignment - 1)) != 0) {
+		return EINVAL;
+	}
+	return skyuv_backend_posix_memalign(result, alignment, size == 0 ? 1 : size);
 }
 
 #endif

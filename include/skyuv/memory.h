@@ -12,5 +12,6 @@ void *skyuv_calloc(size_t count, size_t size);
 void *skyuv_realloc(void *pointer, size_t size);
 void skyuv_free(void *pointer);
 void *skyuv_aligned_alloc(size_t alignment, size_t size);
+int skyuv_posix_memalign(void **result, size_t alignment, size_t size);
 
 #endif

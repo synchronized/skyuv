@@ -1,0 +1,35 @@
+diff --git a/skynet-src/skynet_malloc.h b/skynet-src/skynet_malloc.h
+--- a/skynet-src/skynet_malloc.h
++++ b/skynet-src/skynet_malloc.h
+@@ -1,22 +1,18 @@
+ #ifndef skynet_malloc_h
+ #define skynet_malloc_h
+ 
+ #include <stddef.h>
++#include <skyuv/memory.h>
+ 
+-#define skynet_malloc malloc
+-#define skynet_calloc calloc
+-#define skynet_realloc realloc
+-#define skynet_free free
+-#define skynet_memalign memalign
+-#define skynet_aligned_alloc aligned_alloc
+-#define skynet_posix_memalign posix_memalign
++#define skynet_malloc skyuv_malloc
++#define skynet_calloc skyuv_calloc
++#define skynet_realloc skyuv_realloc
++#define skynet_free skyuv_free
++#define skynet_memalign skyuv_aligned_alloc
++#define skynet_aligned_alloc skyuv_aligned_alloc
++#define skynet_posix_memalign skyuv_posix_memalign
+ 
+-void * skynet_malloc(size_t sz);
+-void * skynet_calloc(size_t nmemb,size_t size);
+-void * skynet_realloc(void *ptr, size_t size);
+-void skynet_free(void *ptr);
+ void * skynet_lalloc(void *ptr, size_t osize, size_t nsize);	// use for lua
+-void * skynet_memalign(size_t alignment, size_t size);
+-void * skynet_aligned_alloc(size_t alignment, size_t size);
+-int skynet_posix_memalign(void **memptr, size_t alignment, size_t size);
+ 
+ #endif

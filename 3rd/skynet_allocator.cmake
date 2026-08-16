@@ -75,4 +75,6 @@ add_dependencies(skyuv_jemalloc skyuv_jemalloc_external)
 
 # jemalloc 的性能分析实现会调用 log、exp 和 round，静态链接时需显式传递 libm。
 target_link_libraries(skyuv_allocator INTERFACE skyuv_jemalloc m)
+# CMake 可能因传递依赖去重而把 libm 排到静态 jemalloc 之前，必须防止 GNU ld 提前丢弃它。
+target_link_options(skyuv_allocator INTERFACE "LINKER:--no-as-needed")
 target_compile_definitions(skyuv_allocator INTERFACE SKYUV_USE_JEMALLOC=1)

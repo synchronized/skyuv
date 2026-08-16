@@ -17,7 +17,9 @@ skyuv_target_compile_warnings(skyuv_memory)
 
 add_library(skyuv_socket_core STATIC socket/socket_internal.c)
 add_library(skyuv::socket_core ALIAS skyuv_socket_core)
-target_include_directories(skyuv_socket_core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/socket")
+target_include_directories(
+  skyuv_socket_core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/socket" "${PROJECT_SOURCE_DIR}/include"
+)
 skyuv_target_compile_warnings(skyuv_socket_core)
 
 if(UNIX)
@@ -46,7 +48,7 @@ target_include_directories(
 skyuv_target_compile_warnings(skyuv_skynet_control)
 target_include_directories(
   skyuv_socket_info
-  PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
+  PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src" "${PROJECT_SOURCE_DIR}/include"
 )
 skyuv_target_compile_warnings(skyuv_socket_info)
 
@@ -82,6 +84,7 @@ add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_RUNTIME_COMPAT_SOU
 target_include_directories(
   skyuv_skynet_runtime_compat
   PRIVATE
+    "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
     "${PROJECT_SOURCE_DIR}/3rd/skynet/3rd/lua"
 )
@@ -118,7 +121,7 @@ endif()
 skyuv_target_compile_warnings(skyuv_skynet_portable)
 
 set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
-  set(SKYUV_PORTABLE_SKYNET_SOURCE_DIR "${SKYUV_PORTABLE_SKYNET_ROOT}/skynet-src")
+  set(SKYUV_PORTABLE_SKYNET_SOURCE_DIR "${PROJECT_BINARY_DIR}/3rd/skynet-patched/skynet-src")
   set(SKYUV_PORTABLE_SERVICE_DIR "${PROJECT_BINARY_DIR}/3rd/skynet-patched/service-src")
   set(SKYUV_PORTABLE_LUALIB_SOURCE_DIR "${PROJECT_BINARY_DIR}/3rd/skynet-patched/lualib-src")
 
@@ -151,6 +154,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       PRIVATE
         "${SKYUV_PORTABLE_SKYNET_SOURCE_DIR}"
         "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua"
+        "${PROJECT_SOURCE_DIR}/include"
     )
     if(SKYUV_USES_MSVC_FRONTEND)
       skyuv_target_force_include("skyuv_portable_service_${service_name}" stdlib.h)
@@ -160,7 +164,6 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       PRIVATE
         skyuv_skynet_portable
         skyuv_skynet_runtime_compat
-        skyuv::allocator
         skyuv::lua
     )
   endfunction()

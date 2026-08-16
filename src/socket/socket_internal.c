@@ -1,5 +1,7 @@
 #include "socket_internal.h"
 
+#include <skyuv/memory.h>
+
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +12,10 @@
 #endif
 
 #include <uv.h>
+
+#define calloc skyuv_calloc
+#define free skyuv_free
+#define malloc skyuv_malloc
 
 #include <skyuv/atomic.h>
 

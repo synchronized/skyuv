@@ -108,6 +108,17 @@ execute_process(
 if(NOT SKYUV_SKYNET_GATE_BUFFER_PATCH_RESULT EQUAL 0)
   message(FATAL_ERROR "应用 Skynet gate 可变缓冲区补丁失败：${SKYUV_SKYNET_GATE_BUFFER_PATCH_ERROR}")
 endif()
+execute_process(
+  COMMAND
+    "${GIT_EXECUTABLE}" apply --recount "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
+    "${PROJECT_SOURCE_DIR}/patches/skynet/0010-Route-Skynet-allocation-through-skyuv.patch"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  RESULT_VARIABLE SKYUV_SKYNET_MEMORY_PATCH_RESULT
+  ERROR_VARIABLE SKYUV_SKYNET_MEMORY_PATCH_ERROR
+)
+if(NOT SKYUV_SKYNET_MEMORY_PATCH_RESULT EQUAL 0)
+  message(FATAL_ERROR "应用 Skynet 统一内存接口补丁失败：${SKYUV_SKYNET_MEMORY_PATCH_ERROR}")
+endif()
 file(READ "${SKYUV_SKYNET_SOURCE_DIR}/skynet_module.c" SKYUV_SKYNET_MODULE_SOURCE)
 if(NOT SKYUV_SKYNET_MODULE_SOURCE MATCHES "skynet_malloc\\(sz\\)")
   message(FATAL_ERROR "Skynet 可变缓冲区所有权补丁未生效")
@@ -139,6 +150,7 @@ target_include_directories(
     "${SKYUV_SKYNET_COMPAT_DIR}/dynamic"
     "${SKYUV_SKYNET_COMPAT_DIR}"
     "${SKYUV_SKYNET_SOURCE_DIR}"
+    "${PROJECT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/skynet/3rd/lua"
 )
 set_source_files_properties(

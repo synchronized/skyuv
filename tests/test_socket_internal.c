@@ -15,7 +15,13 @@
 #include <cmocka.h>
 #include <uv.h>
 
+#include <skyuv/memory.h>
+
 #include "socket_internal.h"
+
+#define calloc skyuv_calloc
+#define free skyuv_free
+#define malloc skyuv_malloc
 
 #define PRODUCER_COUNT 4
 #define COMMANDS_PER_PRODUCER 1000

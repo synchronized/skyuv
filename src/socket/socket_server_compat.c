@@ -1,6 +1,8 @@
 #include "socket_internal.h"
 #include "../compat/skynet/skyuv_control.h"
 
+#include <skyuv/memory.h>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -14,14 +16,14 @@ struct socket_server {
 };
 
 struct socket_server *socket_server_create(uint64_t time) {
-	struct socket_server *server = calloc(1, sizeof(*server));
+	struct socket_server *server = skyuv_calloc(1, sizeof(*server));
 
 	(void)time;
 	if (server == NULL) {
 		return NULL;
 	}
 	if (skyuv_socket_runtime_create(&server->runtime) != SKYUV_OK) {
-		free(server);
+		skyuv_free(server);
 		return NULL;
 	}
 	return server;
@@ -32,7 +34,7 @@ void socket_server_release(struct socket_server *server) {
 		return;
 	}
 	skyuv_socket_runtime_release(&server->runtime);
-	free(server);
+	skyuv_free(server);
 }
 
 void socket_server_updatetime(struct socket_server *server, uint64_t time) {
@@ -104,7 +106,7 @@ void socket_server_pause(struct socket_server *server, uintptr_t opaque, int id)
 
 static void release_sendbuffer(struct socket_server *server, struct socket_sendbuffer *buffer) {
 	if (buffer->type == SOCKET_BUFFER_MEMORY) {
-		free((void *)buffer->buffer);
+		skyuv_free((void *)buffer->buffer);
 	} else if (buffer->type == SOCKET_BUFFER_OBJECT && server->object_interface.free != NULL) {
 		server->object_interface.free((void *)buffer->buffer);
 	}
@@ -127,7 +129,7 @@ static int send_buffer(struct socket_server *server, struct socket_sendbuffer *b
 		}
 		data = server->object_interface.buffer(buffer->buffer);
 		size = server->object_interface.size(buffer->buffer);
-		copy = malloc(size);
+		copy = skyuv_malloc(size);
 		if (copy == NULL) {
 			release_sendbuffer(server, buffer);
 			return -1;
@@ -140,7 +142,7 @@ static int send_buffer(struct socket_server *server, struct socket_sendbuffer *b
 					 : skyuv_socket_runtime_send(server->runtime, buffer->id, copy, size,
 											 SKYUV_SOCKET_BUFFER_OWNED, NULL);
 		if (result != SKYUV_OK) {
-			free(copy);
+			skyuv_free(copy);
 		}
 		return result == SKYUV_OK ? 0 : -1;
 	}
@@ -273,7 +275,7 @@ int socket_server_udp_send(struct socket_server *server, const struct socket_udp
 		}
 		data = server->object_interface.buffer(buffer->buffer);
 		size = server->object_interface.size(buffer->buffer);
-		copy = malloc(size);
+		copy = skyuv_malloc(size);
 		if (copy == NULL) {
 			release_sendbuffer(server, buffer);
 			return -1;
@@ -283,7 +285,7 @@ int socket_server_udp_send(struct socket_server *server, const struct socket_udp
 		result = skyuv_socket_runtime_udp_send(server->runtime, buffer->id, encoded, address_size,
 											 copy, size, SKYUV_SOCKET_BUFFER_OWNED, NULL);
 		if (result != SKYUV_OK) {
-			free(copy);
+			skyuv_free(copy);
 		}
 		return result == SKYUV_OK ? 0 : -1;
 	}

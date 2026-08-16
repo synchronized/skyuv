@@ -304,7 +304,8 @@ target_include_directories(
   PRIVATE "${PROJECT_SOURCE_DIR}/src/socket" "${PROJECT_SOURCE_DIR}/include"
 )
 target_link_libraries(
-  skyuv_test_socket_internal PRIVATE skyuv::socket_core skyuv::libuv cmocka::cmocka
+  skyuv_test_socket_internal
+  PRIVATE skyuv::socket_core skyuv::memory skyuv::libuv cmocka::cmocka
 )
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	target_compile_definitions(skyuv_test_socket_internal PRIVATE _POSIX_C_SOURCE=200112L)
@@ -343,7 +344,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 target_link_libraries(
   skyuv_test_socket_stress
-  PRIVATE skyuv_socket_stress_core skyuv::platform skyuv::libuv cmocka::cmocka
+  PRIVATE skyuv_socket_stress_core skyuv::memory skyuv::platform skyuv::libuv cmocka::cmocka
 )
 skyuv_target_compile_warnings(skyuv_test_socket_stress)
 add_test(NAME socket.stress COMMAND skyuv_test_socket_stress)
