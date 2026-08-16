@@ -39,7 +39,7 @@ jobs:
         run: >-
           cmake --build --preset "${{ matrix.preset }}" --target
           uv_a cmocka skyuv_lua skyuv_skynet_portable_core skyuv_socket_core
-          skyuv_test_lua skyuv_test_allocator skyuv_test_thread
+          skyuv_test_lua skyuv_test_allocator skyuv_test_memory skyuv_test_thread
           skyuv_test_time skyuv_test_dynamic skyuv_test_atomic
           skyuv_test_socket_internal skyuv_test_socket_stress
           skyuv_skynet_portable skyuv_portable_service_logger
