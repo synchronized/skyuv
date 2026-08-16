@@ -16,7 +16,7 @@
 | Skynet | 核心上游 | Actor、消息队列、调度、Lua 服务体系 | 始终需要 |
 | libuv | 核心运行时 | 网络、事件循环、线程和平台能力 | 始终需要 |
 | Lua | 核心运行时 | 使用 Skynet 自带版本 | 始终需要 |
-| jemalloc | 运行时分配器 | 内存分配、统计及 Skynet malloc hook | 默认使用，允许 system 回退 |
+| jemalloc | 运行时分配器 | 内存分配、统计及 Skynet malloc hook | Linux 默认使用，允许 system 回退 |
 | CMocka | 测试依赖 | 平台接口、状态机和错误路径单元测试 | `SKYUV_BUILD_TESTS=ON` |
 
 ## 3. 明确不引入的兼容层
@@ -37,26 +37,50 @@
 
 不依赖 Cygwin 等环境。skyuv 的目标是原生支持 Windows，而不是在 Windows 上模拟 Unix 运行环境。
 
-## 4. 内存分配器：继续使用 jemalloc
+## 4. 内存分配器：统一接口，平台选择后端
 
-Skynet 已经引入 jemalloc，并且 `malloc_hook.c` 和部分内存统计能力使用了 jemalloc 专属接口。jemalloc 本身支持多个平台，因此没有理由在当前阶段再引入另一种高性能分配器。
+Skynet 已经引入 jemalloc，并且 `malloc_hook.c` 和部分内存统计能力使用了 jemalloc 专属接口。
+但上游的成熟接入主要面向 Linux：上游 Makefile 在 macOS 明确使用 `NOUSE_JEMALLOC`，其 bundled
+jemalloc 构建流程也不提供 skyuv 所需的 Windows/MSVC 与动态模块边界保证。
 
-计划提供：
+当前配置为：
 
 ```text
-SKYUV_ALLOCATOR=jemalloc  # 默认
-SKYUV_ALLOCATOR=system    # 调试和兼容回退
+Linux   -> jemalloc（默认），可选择 system
+macOS   -> system
+Windows -> system，通过动态 CRT 共享进程堆
 ```
 
-需要验证：
+这不是要求三个平台永久使用不同 allocator。当前优先统一调用接口、所有权规则和失败语义，后端
+由平台及性能证据决定。计划建立内部 `skyuv_malloc`、`skyuv_calloc`、`skyuv_realloc`、
+`skyuv_free` 和对齐分配接口，所有可能跨主程序与动态模块边界的内存都通过进程唯一实现管理：
 
-- jemalloc 在 Linux、macOS 和 Windows/MSVC 下的 CMake 接入；
-- 静态/动态 CRT 与分配器边界；
-- DLL 之间分配和释放的归属；
-- `malloc_hook.c` 统计接口在各平台上的一致性；
+```text
+C 服务与 Lua C 模块
+        -> skyuv 内存接口
+        -> 进程唯一实现
+        -> Linux jemalloc/system、macOS system、Windows process heap
+```
+
+Windows 选择 process heap 是为了让所有模块在静态 CRT 下仍能安全共享内存，不表示将 Windows
+API 泄漏到上层。Linux 保留 jemalloc 默认值，以兼容 Skynet 的服务级统计和既有部署行为；macOS
+继续使用系统 allocator，除非固定环境性能数据证明有必要引入其他后端。
+
+统一接口需要明确：
+
+- 零尺寸分配、`realloc(ptr, 0)` 和 `free(NULL)` 的语义；
+- `calloc` 乘法溢出和对齐参数校验；
+- 普通内存与对齐内存的释放接口；
+- 分配失败返回 `NULL`，Skynet 兼容层是否保持上游 OOM 终止语义；
+- 主程序与动态模块之间分配和释放的归属；
+- `malloc_hook.c` 统计接口在不同后端上的能力差异；
 - system 回退模式下不支持的统计命令是否能给出明确错误。
 
-mimalloc 当前不引入。只有 jemalloc 在目标平台上存在无法解决的问题，并且性能数据证明系统分配器不能满足需求时，才重新评估。
+统一接口属于内部稳定边界，首版不作为公共 SDK 安装。不得让每个动态模块静态嵌入独立 allocator
+实例，也不得用全局 `malloc/free` 宏替换污染 libuv、Lua 或其他第三方代码。
+
+mimalloc 当前不引入。只有现有后端存在无法解决的问题，并且性能数据证明系统分配器不能满足
+需求时，才重新评估新的第三方 allocator。
 
 ## 5. TLS：后续选择 OpenSSL
 

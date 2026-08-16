@@ -73,20 +73,42 @@ Lua userdata 由 `lua_State` 保存的 allocator 回调管理。调用代码可�
 仍通过该状态的 allocator 回调执行。该机制不是本次发现的首要阻塞项，但切换 CRT 后必须纳入
 动态加载、GC 和服务关闭测试。
 
+## 跨平台统一接口决策
+
+进程级分配接口应在 Windows、Linux 和 macOS 使用相同签名与所有权语义，不设计 Windows 专用
+公共接口。建议的内部接口包括：
+
+```c
+void *skyuv_malloc(size_t size);
+void *skyuv_calloc(size_t count, size_t size);
+void *skyuv_realloc(void *ptr, size_t size);
+void skyuv_free(void *ptr);
+void *skyuv_aligned_alloc(size_t alignment, size_t size);
+```
+
+底层后端保持平台可选：Windows 使用 process heap，Linux 默认使用主程序中的 jemalloc 并保留
+system 回退，macOS 使用系统 allocator。统一的是 API、失败语义和跨模块所有权，不强制使用同一
+第三方分配器。
+
+接口先作为构建期内部边界维护，不随首版运行时包安装。Skynet 兼容层可以在底层返回 `NULL` 时
+保留上游 OOM 终止策略，而底层 skyuv API 不直接决定调用方错误处理。
+
 ## 推荐改造
 
 建议先建立真正的进程级 skyuv 分配接口，再启用 `/MT`：
 
-1. 在 Windows 主程序中实现并导出 `skyuv_malloc`、`skyuv_calloc`、`skyuv_realloc` 和
-   `skyuv_free`；底层优先使用 Windows process heap，避免接口语义依赖某个 DLL 的 CRT。
-2. 在 skyuv 维护的 Skynet 兼容头中，将 `skynet_*alloc` 映射到这些真实函数；不得修改
+1. 定义跨平台内部 `skyuv_malloc`、`skyuv_calloc`、`skyuv_realloc`、`skyuv_free` 和对齐
+   分配语义，并为三个平台提供进程唯一实现。
+2. Windows 底层使用 process heap，避免接口语义依赖某个 DLL 的 CRT；Linux 和 macOS 由当前
+   allocator 配置选择后端。
+3. 在 skyuv 维护的 Skynet 兼容头中，将 `skynet_*alloc` 映射到这些真实函数；不得修改
    `3rd/`，应通过补丁副本或兼容层完成。
-3. 让 C 服务和 Lua C 模块通过主程序导入库调用唯一实现，不在各模块静态复制实现。
-4. 将所有跨模块所有权转移统一到该接口；模块私有临时对象可以继续使用本地 CRT，但应优先
+4. 让 C 服务和 Lua C 模块调用进程唯一实现，不在各模块静态复制 allocator 实现。
+5. 将所有跨模块所有权转移统一到该接口；模块私有临时对象可以继续使用本地 CRT，但应优先
    减少两套分配规则。
-5. 增加“模块分配、核心释放”和“核心分配、模块释放”的专用测试，并覆盖失败路径。
-6. 所有 Windows 发行目标统一设置 `MSVC_RUNTIME_LIBRARY` 为静态多线程 CRT，不能只修改 EXE。
-7. 通过 PE 导入检查确认不再依赖动态 VCRUNTIME，并在 Windows Sandbox 中运行完整交付测试。
+6. 增加“模块分配、核心释放”和“核心分配、模块释放”的专用测试，并覆盖失败路径。
+7. 所有 Windows 发行目标统一设置 `MSVC_RUNTIME_LIBRARY` 为静态多线程 CRT，不能只修改 EXE。
+8. 通过 PE 导入检查确认不再依赖动态 VCRUNTIME，并在 Windows Sandbox 中运行完整交付测试。
 
 ## 验收门槛
 
