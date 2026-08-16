@@ -79,7 +79,8 @@ skyuv/
   [`../records/delivery-runtime-closure-audit.md`](../records/delivery-runtime-closure-audit.md)；
 - 首版确定只交付运行时组件，公共头文件等待 ABI 评审后再作为开发组件加入；
 - 动态模块已能在三平台构建，并已由安装树冒烟测试验证相对搜索路径；
-- 发行构建推荐三平台统一静态链接 libuv，最终决定以安装后动态依赖检查为准；
+- 发行构建采用 Windows 静态链接 libuv、Linux 和 macOS 随包携带共享 libuv；Unix 主程序与
+  动态模块不能各自静态嵌入独立的 libuv 全局状态；
 - CI 已覆盖三平台构建和运行，可复用为安装后冒烟测试基础。
 
 ## 实施顺序

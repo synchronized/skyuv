@@ -56,7 +56,7 @@ jobs:
           -C Release
 
       - name: 上传 Windows 发行包
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: skyuv-windows
           path: build/windows-vs2022-release/packages/*
@@ -76,10 +76,10 @@ jobs:
       - name: 安装构建工具
         run: sudo apt-get update && sudo apt-get install --yes autoconf automake libtool ninja-build
 
-      - name: 配置静态 libuv 发行构建
+      - name: 配置共享 libuv 发行构建
         run: >-
           cmake --preset linux-gcc-release
-          -DSKYUV_USE_SHARED_LIBUV=OFF
+          -DSKYUV_USE_SHARED_LIBUV=ON
 
       - name: 构建运行时目标
         run: >-
@@ -99,7 +99,7 @@ jobs:
         run: cpack --config build/linux-gcc-release/CPackConfig.cmake -C Release
 
       - name: 上传 Linux 发行包
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: skyuv-linux
           path: build/linux-gcc-release/packages/*
@@ -116,10 +116,10 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: 配置静态 libuv 发行构建
+      - name: 配置共享 libuv 发行构建
         run: >-
           cmake --preset macos-clang-release
-          -DSKYUV_USE_SHARED_LIBUV=OFF
+          -DSKYUV_USE_SHARED_LIBUV=ON
 
       - name: 构建运行时目标
         run: >-
@@ -139,7 +139,7 @@ jobs:
         run: cpack --config build/macos-clang-release/CPackConfig.cmake -C Release
 
       - name: 上传 macOS 发行包
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: skyuv-macos
           path: build/macos-clang-release/packages/*
@@ -169,7 +169,7 @@ jobs:
           fi
 
       - name: 下载三平台发行包
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: skyuv-*
           path: release-assets
