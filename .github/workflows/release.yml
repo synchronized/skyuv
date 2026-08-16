@@ -1,0 +1,191 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 校验通过后创建 GitHub Release
+        required: true
+        type: boolean
+        default: false
+      tag:
+        description: 正式发布标签，必须为 CMake 版本加 v 前缀，例如 v0.1.0
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    name: Windows x64 Release
+    runs-on: windows-2022
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: 配置静态 libuv 发行构建
+        run: >-
+          cmake --preset windows-vs2022-release
+          -DSKYUV_USE_SHARED_LIBUV=OFF
+
+      - name: 构建运行时目标
+        run: >-
+          cmake --build --preset windows-vs2022-release --target
+          skyuv_skynet_portable
+          skyuv_portable_service_snlua skyuv_portable_service_logger
+          skyuv_portable_service_harbor skyuv_portable_service_gate
+          skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
+          skyuv_portable_lua_module_bson skyuv_portable_lua_module_sproto
+          skyuv_portable_lua_module_lpeg skyuv_portable_lua_module_md5
+          skyuv_portable_lua_module_control
+
+      - name: 验证安装与归档
+        run: ctest --preset windows-vs2022-release -L delivery
+
+      - name: 生成发行包
+        run: >-
+          cpack --config build/windows-vs2022-release/CPackConfig.cmake
+          -C Release
+
+      - name: 上传 Windows 发行包
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyuv-windows
+          path: build/windows-vs2022-release/packages/*
+          if-no-files-found: error
+          retention-days: 14
+
+  linux:
+    name: Linux x64 Release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: 安装构建工具
+        run: sudo apt-get update && sudo apt-get install --yes autoconf automake libtool ninja-build
+
+      - name: 配置静态 libuv 发行构建
+        run: >-
+          cmake --preset linux-gcc-release
+          -DSKYUV_USE_SHARED_LIBUV=OFF
+
+      - name: 构建运行时目标
+        run: >-
+          cmake --build --preset linux-gcc-release --target
+          skyuv_skynet_portable
+          skyuv_portable_service_snlua skyuv_portable_service_logger
+          skyuv_portable_service_harbor skyuv_portable_service_gate
+          skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
+          skyuv_portable_lua_module_bson skyuv_portable_lua_module_sproto
+          skyuv_portable_lua_module_lpeg skyuv_portable_lua_module_md5
+          skyuv_portable_lua_module_control
+
+      - name: 验证安装与归档
+        run: ctest --preset linux-gcc-release -L delivery
+
+      - name: 生成发行包
+        run: cpack --config build/linux-gcc-release/CPackConfig.cmake -C Release
+
+      - name: 上传 Linux 发行包
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyuv-linux
+          path: build/linux-gcc-release/packages/*
+          if-no-files-found: error
+          retention-days: 14
+
+  macos:
+    name: macOS Release
+    runs-on: macos-14
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: 配置静态 libuv 发行构建
+        run: >-
+          cmake --preset macos-clang-release
+          -DSKYUV_USE_SHARED_LIBUV=OFF
+
+      - name: 构建运行时目标
+        run: >-
+          cmake --build --preset macos-clang-release --target
+          skyuv_skynet_portable
+          skyuv_portable_service_snlua skyuv_portable_service_logger
+          skyuv_portable_service_harbor skyuv_portable_service_gate
+          skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
+          skyuv_portable_lua_module_bson skyuv_portable_lua_module_sproto
+          skyuv_portable_lua_module_lpeg skyuv_portable_lua_module_md5
+          skyuv_portable_lua_module_control
+
+      - name: 验证安装与归档
+        run: ctest --preset macos-clang-release -L delivery
+
+      - name: 生成发行包
+        run: cpack --config build/macos-clang-release/CPackConfig.cmake -C Release
+
+      - name: 上传 macOS 发行包
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyuv-macos
+          path: build/macos-clang-release/packages/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: 创建 GitHub Release
+    if: inputs.publish_release
+    needs: [windows, linux, macos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: 检出版本定义
+        uses: actions/checkout@v5
+
+      - name: 校验发布标签
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          version=$(sed -n 's/^project(skyuv VERSION \([^ ]*\).*/\1/p' CMakeLists.txt)
+          expected="v${version}"
+          if [[ -z "${RELEASE_TAG}" || "${RELEASE_TAG}" != "${expected}" ]]; then
+            echo "发布标签必须为 ${expected}，实际为 ${RELEASE_TAG:-<空>}" >&2
+            exit 1
+          fi
+
+      - name: 下载三平台发行包
+        uses: actions/download-artifact@v5
+        with:
+          pattern: skyuv-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: 复核全部 SHA-256
+        working-directory: release-assets
+        run: for checksum in *.sha256; do sha256sum --check "$checksum"; done
+
+      - name: 创建 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: >-
+          gh release create "${RELEASE_TAG}"
+          --target "${GITHUB_SHA}"
+          --title "skyuv ${RELEASE_TAG}"
+          --generate-notes
+          release-assets/*
