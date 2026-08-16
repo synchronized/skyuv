@@ -52,8 +52,9 @@ Windows -> system，通过动态 CRT 共享进程堆
 ```
 
 这不是要求三个平台永久使用不同 allocator。当前优先统一调用接口、所有权规则和失败语义，后端
-由平台及性能证据决定。计划建立内部 `skyuv_malloc`、`skyuv_calloc`、`skyuv_realloc`、
-`skyuv_free` 和对齐分配接口，所有可能跨主程序与动态模块边界的内存都通过进程唯一实现管理：
+由平台及性能证据决定。内部 `skyuv_malloc`、`skyuv_calloc`、`skyuv_realloc`、`skyuv_free` 和
+对齐分配接口的基础实现及语义测试已建立；Skynet 跨模块调用尚待迁移。完成迁移后，所有可能跨
+主程序与动态模块边界的内存都通过进程唯一实现管理：
 
 ```text
 C 服务与 Lua C 模块

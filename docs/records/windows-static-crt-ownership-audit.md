@@ -11,6 +11,15 @@ Windows 使用 system allocator 时，上游 `skynet_malloc.h` 将 `skynet_mallo
 
 在引入进程级统一分配接口并迁移跨模块所有权路径前，Windows 发行版应继续使用 `/MD`。
 
+## 实施进度
+
+跨平台基础接口和首批语义测试已经实现：Windows 后端使用 process heap，Linux 根据构建配置
+使用 jemalloc 或 system allocator，macOS 使用 system allocator。测试覆盖零尺寸、`calloc`
+溢出、`realloc` 内容保持、对齐参数与统一 `skyuv_free()`。
+
+当前尚未把 `skynet_*alloc` 和跨模块消息迁移到该接口，也没有切换 `/MT`。因此本记录的风险
+结论仍然成立。
+
 ## 审计范围
 
 本记录描述 2026-08-17 对以下 Windows 运行时目标的静态审计：

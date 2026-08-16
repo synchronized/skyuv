@@ -6,6 +6,15 @@ add_library(skyuv_platform STATIC
 )
 add_library(skyuv::platform ALIAS skyuv_platform)
 
+add_library(skyuv_memory OBJECT memory/memory.c)
+add_library(skyuv::memory ALIAS skyuv_memory)
+target_include_directories(skyuv_memory PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(skyuv_memory PRIVATE skyuv::allocator)
+if(UNIX)
+  target_compile_definitions(skyuv_memory PRIVATE _POSIX_C_SOURCE=200112L)
+endif()
+skyuv_target_compile_warnings(skyuv_memory)
+
 add_library(skyuv_socket_core STATIC socket/socket_internal.c)
 add_library(skyuv::socket_core ALIAS skyuv_socket_core)
 target_include_directories(skyuv_socket_core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/socket")
@@ -97,6 +106,7 @@ target_link_libraries(
   skyuv_skynet_portable
   PRIVATE
     skyuv::allocator
+    skyuv::memory
     skyuv::lua
     skyuv::platform
     skyuv::socket_server
