@@ -17,6 +17,7 @@
 - [`plans/README.md`](plans/README.md)：计划索引与状态定义。
 - [`plans/005-lua-runtime.md`](plans/005-lua-runtime.md)：已完成的 Lua 模块与运行环境计划及验收摘要。
 - [`plans/006-performance-stability.md`](plans/006-performance-stability.md)：性能基准、压力测试和长时稳定性计划。
+- [`plans/007-cross-platform-delivery.md`](plans/007-cross-platform-delivery.md)：安装、打包和发布的跨平台交付计划草案。
 - [`plans/variable-buffer-audit.md`](plans/variable-buffer-audit.md)：Skynet 可变缓冲区专项审计。
 
 ## 参考资料
@@ -34,6 +35,8 @@
   跨平台验证过程和已知差异。
 - [`records/performance-baseline.md`](records/performance-baseline.md)：固定 Linux 环境的性能基线
   权威性规则、采集内容和首轮结果状态。
+- [`records/stability-soak-stage-5.md`](records/stability-soak-stage-5.md)：阶段 5 三平台正式一小时
+  Soak 的方法、结果和基础设施修复记录。
 
 ## 尚待建立的分类
 

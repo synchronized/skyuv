@@ -26,7 +26,7 @@
 | 004 | [Socket 语义兼容](004-socket-semantics.md) | 已完成 | 003 |
 | 005 | [Lua 模块与运行环境](005-lua-runtime.md) | 已完成 | 004 |
 | 006 | [性能和稳定性](006-performance-stability.md) | 进行中 | 005 |
-| 007 | 跨平台交付 | 待编写 | 006 |
+| 007 | [跨平台交付](007-cross-platform-delivery.md) | 草案 | 006 |
 
 后续计划在其前置阶段接近完成时编写，避免过早固化尚未验证的实现细节。
 
