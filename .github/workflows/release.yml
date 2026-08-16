@@ -59,7 +59,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: skyuv-windows
-          path: build/windows-vs2022-release/packages/*
+          path: |
+            build/windows-vs2022-release/packages/skyuv-*.zip
+            build/windows-vs2022-release/packages/skyuv-*.zip.sha256
           if-no-files-found: error
           retention-days: 14
 
@@ -102,7 +104,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: skyuv-linux
-          path: build/linux-gcc-release/packages/*
+          path: |
+            build/linux-gcc-release/packages/skyuv-*.tar.gz
+            build/linux-gcc-release/packages/skyuv-*.tar.gz.sha256
           if-no-files-found: error
           retention-days: 14
 
@@ -142,7 +146,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: skyuv-macos
-          path: build/macos-clang-release/packages/*
+          path: |
+            build/macos-clang-release/packages/skyuv-*.tar.gz
+            build/macos-clang-release/packages/skyuv-*.tar.gz.sha256
           if-no-files-found: error
           retention-days: 14
 
