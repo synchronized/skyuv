@@ -1,0 +1,12 @@
+-- 必须从 skyuv 安装根目录启动本配置。
+thread = 2
+logger = nil
+harbor = 0
+bootstrap = "snlua bootstrap"
+start = "skyuv_runtime_smoke"
+
+cpath = "./@SKYUV_INSTALL_CSERVICEDIR@/?@CMAKE_SHARED_MODULE_SUFFIX@"
+lua_path = "./@SKYUV_INSTALL_LUALIBDIR@/?.lua;./@SKYUV_INSTALL_LUALIBDIR@/?/init.lua"
+lua_cpath = "./@SKYUV_INSTALL_LUACLIBDIR@/?@CMAKE_SHARED_MODULE_SUFFIX@"
+luaservice = "./@SKYUV_INSTALL_SERVICEDIR@/?.lua;./@SKYUV_INSTALL_EXAMPLESDIR@/?.lua"
+lualoader = "./@SKYUV_INSTALL_LUALIBDIR@/loader.lua"

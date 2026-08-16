@@ -114,6 +114,20 @@ install(
   RENAME libuv-LICENSE-docs
   COMPONENT Runtime
 )
+
+file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/generated/examples")
+configure_file(
+  "${PROJECT_SOURCE_DIR}/examples/skyuv-runtime.conf.in"
+  "${PROJECT_BINARY_DIR}/generated/examples/skyuv.conf"
+  @ONLY
+)
+install(
+  FILES
+    "${PROJECT_BINARY_DIR}/generated/examples/skyuv.conf"
+    "${PROJECT_SOURCE_DIR}/examples/skyuv_runtime_smoke.lua"
+  DESTINATION "${SKYUV_INSTALL_EXAMPLESDIR}"
+  COMPONENT Runtime
+)
 if(PROJECT_IS_TOP_LEVEL AND SKYUV_BUILD_TESTS)
   include(CTest)
 endif()
