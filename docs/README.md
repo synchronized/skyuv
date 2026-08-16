@@ -27,6 +27,8 @@
 
 ## 操作指南
 
+- [`guides/runtime-distribution.md`](guides/runtime-distribution.md)：校验、解压和启动三平台运行时
+  发行包，并迁移已有 Skynet 服务。
 - [`guides/performance-runner.md`](guides/performance-runner.md)：部署并预检固定 Linux 性能 Runner。
 
 ## 实施记录
