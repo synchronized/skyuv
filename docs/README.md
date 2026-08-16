@@ -17,7 +17,7 @@
 - [`plans/README.md`](plans/README.md)：计划索引与状态定义。
 - [`plans/005-lua-runtime.md`](plans/005-lua-runtime.md)：已完成的 Lua 模块与运行环境计划及验收摘要。
 - [`plans/006-performance-stability.md`](plans/006-performance-stability.md)：性能基准、压力测试和长时稳定性计划。
-- [`plans/007-cross-platform-delivery.md`](plans/007-cross-platform-delivery.md)：安装、打包和发布的跨平台交付计划草案。
+- [`plans/007-cross-platform-delivery.md`](plans/007-cross-platform-delivery.md)：安装、打包和发布的跨平台交付计划。
 - [`plans/variable-buffer-audit.md`](plans/variable-buffer-audit.md)：Skynet 可变缓冲区专项审计。
 
 ## 参考资料
@@ -41,6 +41,8 @@
   Soak 的方法、结果和基础设施修复记录。
 - [`records/delivery-runtime-closure-audit.md`](records/delivery-runtime-closure-audit.md)：阶段 6 的
   最小启动闭包、发行运行时边界和平台依赖审计。
+- [`records/delivery-candidate-validation.md`](records/delivery-candidate-validation.md)：阶段 6 的
+  三平台候选发行包验收结果和正式收口条件。
 
 ## 尚待建立的分类
 
