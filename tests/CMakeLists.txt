@@ -4,6 +4,18 @@ endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/portable.cmake")
 
+add_test(
+  NAME install.runtime_smoke
+  COMMAND
+    "${CMAKE_COMMAND}"
+    "-DSKYUV_TEST_BUILD_DIR=${PROJECT_BINARY_DIR}"
+    "-DSKYUV_TEST_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
+    "-DSKYUV_TEST_CONFIG=$<CONFIG>"
+    "-DSKYUV_TEST_EXECUTABLE_NAME=$<TARGET_FILE_NAME:skyuv_skynet_portable>"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/install_runtime_smoke.cmake"
+)
+set_tests_properties(install.runtime_smoke PROPERTIES LABELS delivery TIMEOUT 30)
+
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
   NAME benchmark.protocol

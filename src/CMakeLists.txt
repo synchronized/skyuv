@@ -88,6 +88,11 @@ set_target_properties(
     ENABLE_EXPORTS TRUE
     WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
+if(APPLE)
+  set_property(TARGET skyuv_skynet_portable PROPERTY INSTALL_RPATH "@loader_path")
+elseif(UNIX)
+  set_property(TARGET skyuv_skynet_portable PROPERTY INSTALL_RPATH "\$ORIGIN")
+endif()
 target_link_libraries(
   skyuv_skynet_portable
   PRIVATE
@@ -476,6 +481,15 @@ install(
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   COMPONENT Runtime
 )
+
+if(SKYUV_USE_SHARED_LIBUV)
+  install(
+    TARGETS uv
+    LIBRARY DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Runtime
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    COMPONENT Runtime
+  )
+endif()
 
 install(
   TARGETS
