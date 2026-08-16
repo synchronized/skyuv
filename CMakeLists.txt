@@ -31,13 +31,89 @@ set(
   CACHE PATH
   "Lua C 模块的安装目录（相对于安装前缀）"
 )
+set(
+  SKYUV_INSTALL_LUALIBDIR
+  "lualib"
+  CACHE PATH
+  "Lua 库的安装目录（相对于安装前缀）"
+)
+set(
+  SKYUV_INSTALL_SERVICEDIR
+  "service"
+  CACHE PATH
+  "Lua 服务的安装目录（相对于安装前缀）"
+)
+set(
+  SKYUV_INSTALL_EXAMPLESDIR
+  "examples"
+  CACHE PATH
+  "发行示例的安装目录（相对于安装前缀）"
+)
+set(
+  SKYUV_INSTALL_LICENSESDIR
+  "licenses"
+  CACHE PATH
+  "许可证的安装目录（相对于安装前缀）"
+)
 
-foreach(directory IN ITEMS SKYUV_INSTALL_CSERVICEDIR SKYUV_INSTALL_LUACLIBDIR)
+foreach(
+  directory
+  IN ITEMS
+    SKYUV_INSTALL_CSERVICEDIR
+    SKYUV_INSTALL_LUACLIBDIR
+    SKYUV_INSTALL_LUALIBDIR
+    SKYUV_INSTALL_SERVICEDIR
+    SKYUV_INSTALL_EXAMPLESDIR
+    SKYUV_INSTALL_LICENSESDIR
+)
   if(IS_ABSOLUTE "${${directory}}")
     message(FATAL_ERROR "${directory} 必须是相对于安装前缀的路径")
   endif()
 endforeach()
 
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/3rd/skynet/lualib/"
+  DESTINATION "${SKYUV_INSTALL_LUALIBDIR}"
+  COMPONENT Runtime
+  FILES_MATCHING PATTERN "*.lua"
+)
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/3rd/skynet/service/"
+  DESTINATION "${SKYUV_INSTALL_SERVICEDIR}"
+  COMPONENT Runtime
+  FILES_MATCHING PATTERN "*.lua"
+)
+
+install(
+  FILES "${PROJECT_SOURCE_DIR}/LICENSE"
+  DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+  RENAME skyuv-LICENSE
+  COMPONENT Runtime
+)
+install(
+  FILES "${PROJECT_SOURCE_DIR}/3rd/skynet/LICENSE"
+  DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+  RENAME skynet-LICENSE
+  COMPONENT Runtime
+)
+install(
+  FILES "${PROJECT_SOURCE_DIR}/3rd/libuv/LICENSE"
+  DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+  RENAME libuv-LICENSE
+  COMPONENT Runtime
+)
+install(
+  FILES "${PROJECT_SOURCE_DIR}/3rd/libuv/LICENSE-extra"
+  DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+  RENAME libuv-LICENSE-extra
+  COMPONENT Runtime
+)
+install(
+  FILES "${PROJECT_SOURCE_DIR}/3rd/libuv/LICENSE-docs"
+  DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+  RENAME libuv-LICENSE-docs
+  COMPONENT Runtime
+)
 if(PROJECT_IS_TOP_LEVEL AND SKYUV_BUILD_TESTS)
   include(CTest)
 endif()
@@ -50,3 +126,13 @@ foreach(directory IN ITEMS src tests)
     add_subdirectory("${directory}")
   endif()
 endforeach()
+
+# 分配器选项由第三方接入层定义，必须在 add_subdirectory(3rd) 之后判断。
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND SKYUV_ALLOCATOR STREQUAL "jemalloc")
+  install(
+    FILES "${PROJECT_SOURCE_DIR}/3rd/skynet/3rd/jemalloc/COPYING"
+    DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+    RENAME jemalloc-COPYING
+    COMPONENT Runtime
+  )
+endif()
