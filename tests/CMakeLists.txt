@@ -16,6 +16,23 @@ add_test(
 )
 set_tests_properties(install.runtime_smoke PROPERTIES LABELS delivery TIMEOUT 30)
 
+add_test(
+  NAME package.archive_contents
+  COMMAND
+    "${CMAKE_COMMAND}"
+    "-DSKYUV_TEST_BUILD_DIR=${PROJECT_BINARY_DIR}"
+    "-DSKYUV_TEST_CPACK_COMMAND=${CMAKE_CPACK_COMMAND}"
+    "-DSKYUV_TEST_CONFIG=$<CONFIG>"
+    "-DSKYUV_TEST_EXECUTABLE_NAME=$<TARGET_FILE_NAME:skyuv_skynet_portable>"
+    "-DSKYUV_TEST_MODULE_SUFFIX=$<TARGET_FILE_SUFFIX:skyuv_portable_service_snlua>"
+    "-DSKYUV_TEST_PACKAGE_EXTENSION=${SKYUV_PACKAGE_EXTENSION}"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_archive_contents.cmake"
+)
+set_tests_properties(
+  package.archive_contents
+  PROPERTIES DEPENDS install.runtime_smoke LABELS delivery TIMEOUT 60
+)
+
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
   NAME benchmark.protocol
