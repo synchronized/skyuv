@@ -121,5 +121,7 @@ skyuv/
 ## 未决问题
 
 - Windows 是否需要随包携带特定 MSVC 运行库，或只声明系统前置条件；
+- Windows 静态 CRT 需先完成进程级统一分配接口，详见
+  [`../records/windows-static-crt-ownership-audit.md`](../records/windows-static-crt-ownership-audit.md)；
 - 是否为 Lua 服务提供可写的独立配置/日志目录约定；
 - 阶段 5 固定 Linux Runner 部署及双时段权威基线采集时间。

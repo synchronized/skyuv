@@ -53,7 +53,8 @@ Windows 全新环境中的 MSVC/UCRT 前置条件也待独立确认，因此阶�
 
 - 在带 `skyuv-benchmark` 标签的固定 Linux Runner 上，于两个独立时段采集阶段 5 权威基线；
 - 记录噪声、性能差异和首批回归阈值，完成阶段 5 验收；
-- 在全新 Windows 环境验证 MSVC/UCRT 加载条件，并决定声明前置条件还是随包分发运行库；
+- 完成进程级统一分配接口后评估静态 CRT；在此之前验证 MSVC/UCRT 加载条件，并决定声明
+  Visual C++ Redistributable 前置条件还是随包分发运行库；
 - 以拟发布提交再次运行 `Release` 工作流，使用 `publish_release=true` 和标签 `v0.1.0`。
 
 前三项满足前不得把候选 artifact 描述为正式发布版本。

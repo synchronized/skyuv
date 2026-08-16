@@ -43,6 +43,8 @@
   最小启动闭包、发行运行时边界和平台依赖审计。
 - [`records/delivery-candidate-validation.md`](records/delivery-candidate-validation.md)：阶段 6 的
   三平台候选发行包验收结果和正式收口条件。
+- [`records/windows-static-crt-ownership-audit.md`](records/windows-static-crt-ownership-audit.md)：
+  Windows 静态 CRT 的跨模块所有权风险和启用门槛。
 
 ## 尚待建立的分类
 
