@@ -470,3 +470,58 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_compile_definitions(skyuv_socket_server PRIVATE _POSIX_C_SOURCE=200112L)
 endif()
 skyuv_target_compile_warnings(skyuv_platform)
+
+install(
+  TARGETS skyuv_skynet_portable
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  COMPONENT Runtime
+)
+
+install(
+  TARGETS
+    skyuv_portable_service_snlua
+    skyuv_portable_service_logger
+    skyuv_portable_service_harbor
+    skyuv_portable_service_gate
+  LIBRARY DESTINATION "${SKYUV_INSTALL_CSERVICEDIR}" COMPONENT Runtime
+  RUNTIME DESTINATION "${SKYUV_INSTALL_CSERVICEDIR}"
+  COMPONENT Runtime
+)
+
+install(
+  TARGETS
+    skyuv_portable_lua_module_bson
+    skyuv_portable_lua_module_lpeg
+    skyuv_portable_lua_module_skynet
+  LIBRARY DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}" COMPONENT Runtime
+  RUNTIME DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}"
+  COMPONENT Runtime
+)
+
+install(
+  TARGETS skyuv_portable_lua_module_client
+  LIBRARY DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/client" COMPONENT Runtime
+  RUNTIME DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/client"
+  COMPONENT Runtime
+)
+
+install(
+  TARGETS skyuv_portable_lua_module_md5
+  LIBRARY DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/md5" COMPONENT Runtime
+  RUNTIME DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/md5"
+  COMPONENT Runtime
+)
+
+install(
+  TARGETS skyuv_portable_lua_module_control
+  LIBRARY DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/skyuv" COMPONENT Runtime
+  RUNTIME DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/skyuv"
+  COMPONENT Runtime
+)
+
+install(
+  TARGETS skyuv_portable_lua_module_sproto
+  LIBRARY DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/sproto" COMPONENT Runtime
+  RUNTIME DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/sproto"
+  COMPONENT Runtime
+)

@@ -16,7 +16,27 @@ endif()
 option(SKYUV_USE_SHARED_LIBUV "链接动态版本的 libuv" ${SKYUV_SHARED_LIBUV_DEFAULT})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(GNUInstallDirs)
 include(skyuv_warnings)
+
+set(
+  SKYUV_INSTALL_CSERVICEDIR
+  "cservice"
+  CACHE PATH
+  "Skynet C 服务的安装目录（相对于安装前缀）"
+)
+set(
+  SKYUV_INSTALL_LUACLIBDIR
+  "luaclib"
+  CACHE PATH
+  "Lua C 模块的安装目录（相对于安装前缀）"
+)
+
+foreach(directory IN ITEMS SKYUV_INSTALL_CSERVICEDIR SKYUV_INSTALL_LUACLIBDIR)
+  if(IS_ABSOLUTE "${${directory}}")
+    message(FATAL_ERROR "${directory} 必须是相对于安装前缀的路径")
+  endif()
+endforeach()
 
 if(PROJECT_IS_TOP_LEVEL AND SKYUV_BUILD_TESTS)
   include(CTest)
