@@ -1,0 +1,10 @@
+skyuv=@PROJECT_VERSION@
+skynet=@SKYUV_SKYNET_DESCRIBE@
+skynet_commit=@SKYUV_SKYNET_COMMIT@
+libuv=@SKYUV_LIBUV_DESCRIBE@
+libuv_commit=@SKYUV_LIBUV_COMMIT@
+lua=5.5.1-modified
+lpeg=1.1.0-vendored
+lua-md5=1.1.2
+allocator=@SKYUV_ALLOCATOR@
+jemalloc=5.3.1

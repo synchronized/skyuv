@@ -102,10 +102,14 @@ Skynet 的路径解释依赖进程工作目录，而不是配置文件所在目�
 - `LICENSE`：skyuv；
 - `3rd/skynet/LICENSE`：Skynet；
 - `3rd/libuv/LICENSE`、`LICENSE-extra` 和 `LICENSE-docs`：libuv；
+- `licenses/Lua-LICENSE`：Skynet 内嵌修改版 Lua；
+- `licenses/LPeg-LICENSE`：LPeg；
+- `licenses/lua-md5-LICENSE`：lua-md5；
 - `3rd/skynet/3rd/jemalloc/COPYING`：Linux 默认分配器。
 
 CMocka 只用于测试，不进入运行时包，因此其许可证不属于运行时许可证闭包。后续安装规则应由
-明确清单复制许可证，并以测试检查清单和实际启用依赖一致。
+明确清单复制许可证，并以测试检查清单和实际启用依赖一致。Lua、LPeg 和 lua-md5 的上游目录
+没有独立许可证文件，仓库从其权威源码或上游授权说明中单独维护完整许可文本。
 
 ## 对后续实施的约束
 

@@ -60,6 +60,10 @@ set(required_entries
   "/examples/skyuv_runtime_echo.lua"
   "/examples/skyuv_runtime_smoke.lua"
   "/licenses/skyuv-LICENSE"
+  "/licenses/Lua-LICENSE"
+  "/licenses/LPeg-LICENSE"
+  "/licenses/lua-md5-LICENSE"
+  "/licenses/versions.txt"
 )
 foreach(entry IN LISTS required_entries)
   string(FIND "${archive_contents}" "${entry}" entry_position)

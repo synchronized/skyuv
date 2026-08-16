@@ -119,6 +119,14 @@ install(
   RENAME libuv-LICENSE-docs
   COMPONENT Runtime
 )
+install(
+  FILES
+    "${PROJECT_SOURCE_DIR}/licenses/Lua-LICENSE"
+    "${PROJECT_SOURCE_DIR}/licenses/LPeg-LICENSE"
+    "${PROJECT_SOURCE_DIR}/licenses/lua-md5-LICENSE"
+  DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+  COMPONENT Runtime
+)
 
 file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/generated/examples")
 configure_file(
@@ -152,6 +160,37 @@ foreach(directory IN ITEMS src tests)
     add_subdirectory("${directory}")
   endif()
 endforeach()
+
+foreach(dependency IN ITEMS skynet libuv)
+  execute_process(
+    COMMAND "${GIT_EXECUTABLE}" -C "${PROJECT_SOURCE_DIR}/3rd/${dependency}" rev-parse HEAD
+    RESULT_VARIABLE commit_result
+    OUTPUT_VARIABLE commit
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  execute_process(
+    COMMAND "${GIT_EXECUTABLE}" -C "${PROJECT_SOURCE_DIR}/3rd/${dependency}" describe --tags --always
+    RESULT_VARIABLE describe_result
+    OUTPUT_VARIABLE describe
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if(NOT commit_result EQUAL 0 OR NOT describe_result EQUAL 0)
+    message(FATAL_ERROR "无法读取第三方版本：${dependency}")
+  endif()
+  string(TOUPPER "${dependency}" dependency_upper)
+  set("SKYUV_${dependency_upper}_COMMIT" "${commit}")
+  set("SKYUV_${dependency_upper}_DESCRIBE" "${describe}")
+endforeach()
+configure_file(
+  "${PROJECT_SOURCE_DIR}/cmake/skyuv-versions.txt.in"
+  "${PROJECT_BINARY_DIR}/generated/versions.txt"
+  @ONLY
+)
+install(
+  FILES "${PROJECT_BINARY_DIR}/generated/versions.txt"
+  DESTINATION "${SKYUV_INSTALL_LICENSESDIR}"
+  COMPONENT Runtime
+)
 
 # 分配器选项由第三方接入层定义，必须在 add_subdirectory(3rd) 之后判断。
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND SKYUV_ALLOCATOR STREQUAL "jemalloc")

@@ -40,7 +40,9 @@ add_test(
     "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_extracted_runtime.py"
     --archive-directory "${PROJECT_BINARY_DIR}/package-test-output"
     --archive-extension "${SKYUV_PACKAGE_EXTENSION}"
+    --allocator "${SKYUV_ALLOCATOR}"
     --executable-name "$<TARGET_FILE_NAME:skyuv_skynet_portable>"
+    --project-version "${PROJECT_VERSION}"
 )
 set_tests_properties(
   package.extracted_runtime
