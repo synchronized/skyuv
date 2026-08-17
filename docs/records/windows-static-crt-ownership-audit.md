@@ -2,14 +2,17 @@
 
 ## 结论
 
-当前不能把 Windows 发行目标直接从动态 CRT（`/MD`）切换为静态 CRT（`/MT`）。
+Windows 发行目标现已统一使用静态 CRT（Release 为 `/MT`，Debug 为 `/MTd`）。切换的前提是
+跨模块内存所有权已经迁移到主程序导出的进程级 `skyuv` 分配接口；动态模块不得用自身 CRT
+释放来自其他模块的内存。
 
 Windows 使用 system allocator 时，上游 `skynet_malloc.h` 将 `skynet_malloc`、`skynet_realloc` 和
 `skynet_free` 定义为 `malloc`、`realloc` 和 `free` 宏。使用 `/MT` 后，主程序与每个动态模块会
 分别调用自己的 CRT 堆；现有代码包含动态模块分配消息、Skynet 主程序接管并释放的路径，会形成
 跨 CRT 堆释放。
 
-在引入进程级统一分配接口并迁移跨模块所有权路径前，Windows 发行版应继续使用 `/MD`。
+该结论不表示任意 Windows C 模块都可以安全交换 CRT 对象。跨模块缓冲区仍必须使用统一接口，
+`FILE *`、locale 等 CRT 私有状态仍应在创建它们的模块内销毁。
 
 ## 实施进度
 
@@ -17,8 +20,9 @@ Windows 使用 system allocator 时，上游 `skynet_malloc.h` 将 `skynet_mallo
 使用 jemalloc 或 system allocator，macOS 使用 system allocator。测试覆盖零尺寸、`calloc`
 溢出、`realloc` 内容保持、对齐参数与统一 `skyuv_free()`。
 
-当前尚未把 `skynet_*alloc` 和跨模块消息迁移到该接口，也没有切换 `/MT`。因此本记录的风险
-结论仍然成立。
+`skynet_*alloc`、Lua allocator、socket 适配层及已确认的跨模块消息路径均已迁移。Windows
+构建通过 `CMAKE_MSVC_RUNTIME_LIBRARY` 对项目目标与静态链接依赖统一使用静态 CRT，发行包测试
+会逐个审计 EXE/DLL 的 PE 导入表，禁止重新引入动态 CRT。
 
 ## 审计范围
 
@@ -145,10 +149,13 @@ system 回退，macOS 使用系统 allocator。统一的是 API、失败语义�
 - Windows 的 echo、gate、C gate、harbor、cluster、关闭流程及 socket 压力测试已覆盖这些
   跨边界路径。
 
-本轮接入没有启用 `/MT`。后续仍需完成专用跨模块双向所有权测试、Release 重复加载测试和 PE
-导入审计，达到验收门槛后再切换所有 Windows 发行目标的 CRT 模式。
-
 专用跨模块测试已于 2026-08-17 补充到 `platform.dynamic`：测试模块从主程序导入唯一的
 `skyuv` 分配符号，并连续执行 64 轮加载与卸载。每轮同时验证模块分配后由已卸载模块之外的
-核心释放，以及核心分配后由模块重分配和释放。该测试覆盖 Debug 构建；Windows Release 重复
-加载和 PE 导入审计仍是切换 `/MT` 前的未完成门槛。
+核心释放，以及核心分配后由模块重分配和释放。Debug 与 Release 均已覆盖该测试，Release 另行
+连续重复执行 20 次通过。
+
+Windows 静态 CRT 已在 2026-08-17 启用。本地 MSVC Debug 与 Release 全量构建通过；Release
+完整 62 项测试通过，Debug 的一次完整运行仅出现控制服务输出等待的偶发超时，随后单项连续
+10 次通过。发行包 PE 审计已固化为 `package.static_crt` 测试，本地审计 14 个发行 EXE/DLL，
+未发现 `VCRUNTIME`、`MSVCP`、`UCRTBASE` 或 `api-ms-win-crt-*` 动态依赖。全新 Windows
+Sandbox 的候选 ZIP 启动验证仍需在正式发布前人工完成。

@@ -33,6 +33,23 @@ set_tests_properties(
   PROPERTIES DEPENDS install.runtime_smoke LABELS delivery TIMEOUT 60
 )
 
+if(MSVC)
+  find_program(SKYUV_DUMPBIN_EXECUTABLE dumpbin REQUIRED)
+  add_test(
+    NAME package.static_crt
+    COMMAND
+      "${CMAKE_COMMAND}"
+      "-DSKYUV_TEST_ARCHIVE_DIR=${PROJECT_BINARY_DIR}/package-test-output"
+      "-DSKYUV_TEST_DUMPBIN=${SKYUV_DUMPBIN_EXECUTABLE}"
+      "-DSKYUV_TEST_PACKAGE_EXTENSION=${SKYUV_PACKAGE_EXTENSION}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_static_crt.cmake"
+  )
+  set_tests_properties(
+    package.static_crt
+    PROPERTIES DEPENDS package.archive_contents LABELS delivery TIMEOUT 30
+  )
+endif()
+
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
   NAME package.extracted_runtime
@@ -295,6 +312,7 @@ if(APPLE)
   target_link_options(skyuv_test_dynamic_module PRIVATE "LINKER:-undefined,dynamic_lookup")
 endif()
 skyuv_target_compile_warnings(skyuv_test_dynamic)
+add_custom_target(skyuv_test_dynamic_bundle ALL DEPENDS skyuv_test_dynamic_module)
 add_test(NAME platform.dynamic COMMAND skyuv_test_dynamic "$<TARGET_FILE:skyuv_test_dynamic_module>")
 
 add_executable(skyuv_test_atomic test_atomic.c)
