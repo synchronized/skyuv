@@ -290,6 +290,10 @@ set_target_properties(
 )
 target_link_libraries(skyuv_test_dynamic PRIVATE skyuv::memory skyuv::platform cmocka::cmocka)
 target_link_libraries(skyuv_test_dynamic_module PRIVATE skyuv_test_dynamic)
+if(APPLE)
+  # Mach-O 模块在装载时从主程序解析统一内存符号，链接阶段保留这些未定义引用。
+  target_link_options(skyuv_test_dynamic_module PRIVATE "LINKER:-undefined,dynamic_lookup")
+endif()
 skyuv_target_compile_warnings(skyuv_test_dynamic)
 add_test(NAME platform.dynamic COMMAND skyuv_test_dynamic "$<TARGET_FILE:skyuv_test_dynamic_module>")
 
