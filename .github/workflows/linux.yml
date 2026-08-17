@@ -78,7 +78,7 @@ jobs:
           skyuv_test_socket_stress
           skyuv_test_lua skyuv_test_allocator skyuv_test_memory
           skyuv_test_thread skyuv_test_time
-          skyuv_test_dynamic skyuv_test_atomic
+          skyuv_test_dynamic skyuv_test_dynamic_module skyuv_test_atomic
 
       - name: 运行 skyuv 测试
         run: ctest --preset "${{ matrix.preset }}"
