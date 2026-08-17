@@ -34,13 +34,12 @@ set_tests_properties(
 )
 
 if(MSVC)
-  find_program(SKYUV_DUMPBIN_EXECUTABLE dumpbin REQUIRED)
   add_test(
     NAME package.static_crt
     COMMAND
       "${CMAKE_COMMAND}"
       "-DSKYUV_TEST_ARCHIVE_DIR=${PROJECT_BINARY_DIR}/package-test-output"
-      "-DSKYUV_TEST_DUMPBIN=${SKYUV_DUMPBIN_EXECUTABLE}"
+      "-DSKYUV_TEST_LINKER=${CMAKE_LINKER}"
       "-DSKYUV_TEST_PACKAGE_EXTENSION=${SKYUV_PACKAGE_EXTENSION}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_static_crt.cmake"
   )

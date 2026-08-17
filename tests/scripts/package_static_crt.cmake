@@ -4,7 +4,7 @@ foreach(
   variable
   IN ITEMS
     SKYUV_TEST_ARCHIVE_DIR
-    SKYUV_TEST_DUMPBIN
+    SKYUV_TEST_LINKER
     SKYUV_TEST_PACKAGE_EXTENSION
 )
   if(NOT DEFINED ${variable} OR "${${variable}}" STREQUAL "")
@@ -40,7 +40,7 @@ endif()
 
 foreach(pe_file IN LISTS pe_files)
   execute_process(
-    COMMAND "${SKYUV_TEST_DUMPBIN}" /DEPENDENTS "${pe_file}"
+    COMMAND "${SKYUV_TEST_LINKER}" /DUMP /DEPENDENTS "${pe_file}"
     RESULT_VARIABLE dumpbin_result
     OUTPUT_VARIABLE dependencies
     ERROR_VARIABLE dumpbin_error
