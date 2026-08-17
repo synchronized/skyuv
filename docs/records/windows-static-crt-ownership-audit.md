@@ -158,4 +158,8 @@ Windows 静态 CRT 已在 2026-08-17 启用。本地 MSVC Debug 与 Release 全�
 完整 62 项测试通过，Debug 的一次完整运行仅出现控制服务输出等待的偶发超时，随后单项连续
 10 次通过。发行包 PE 审计已固化为 `package.static_crt` 测试，本地审计 14 个发行 EXE/DLL，
 未发现 `VCRUNTIME`、`MSVCP`、`UCRTBASE` 或 `api-ms-win-crt-*` 动态依赖。全新 Windows
-Sandbox 的候选 ZIP 启动验证仍需在正式发布前人工完成。
+Sandbox 的候选 ZIP 启动验证已于 2026-08-17 完成：在禁用网络、剪贴板和打印机的 Windows
+Sandbox 10.0.19041 中，校验并解压 `skyuv-0.1.0-windows-amd64.zip`，随后运行
+`skyuv_skynet_portable.exe examples/skyuv.conf`，进程以状态码 0 退出并输出
+`SKYUV_RUNTIME_SMOKE_OK`。候选 ZIP 的 SHA-256 为
+`786bcb0dfebb045d71009a4f3b96ce40238cedef5a3d6a68f14be53294ba5ba7`。
