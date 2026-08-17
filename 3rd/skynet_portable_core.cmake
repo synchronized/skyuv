@@ -159,6 +159,9 @@ set_source_files_properties(
   PROPERTIES
     INCLUDE_DIRECTORIES "${SKYUV_SKYNET_COMPAT_DIR}/start"
 )
+set_source_files_properties(
+  "${SKYUV_SKYNET_SOURCE_DIR}/skynet_main.c" PROPERTIES COMPILE_DEFINITIONS "main=skyuv_skynet_main"
+)
 skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/atomic.h")
 skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/spinlock.h")
 skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/skyuv_time.h")

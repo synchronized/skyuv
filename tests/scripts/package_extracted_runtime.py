@@ -87,10 +87,10 @@ def verify_manifest(package_root: Path, project_version: str, allocator: str) ->
 		raise RuntimeError(f"分配器清单不一致：{manifest['allocator']} != {allocator}")
 
 
-def run_smoke(package_root: Path, executable: Path) -> None:
+def run_smoke(executable: Path, outside_root: Path) -> None:
 	completed = subprocess.run(
 		[executable, "examples/skyuv.conf"],
-		cwd=package_root,
+		cwd=outside_root,
 		capture_output=True,
 		check=False,
 		timeout=15,
@@ -126,11 +126,11 @@ def receive_exact(client: socket.socket, size: int) -> bytes:
 	return bytes(result)
 
 
-def run_echo(package_root: Path, executable: Path, log_path: Path) -> None:
+def run_echo(executable: Path, log_path: Path, outside_root: Path) -> None:
 	with log_path.open("wb") as log:
 		process = subprocess.Popen(
 			[executable, "examples/skyuv-echo.conf"],
-			cwd=package_root,
+			cwd=outside_root,
 			stdout=log,
 			stderr=subprocess.STDOUT,
 		)
@@ -172,8 +172,8 @@ def main() -> int:
 		executable = package_root / "bin" / arguments.executable_name
 		if not executable.is_file():
 			raise RuntimeError(f"发行归档缺少主程序：{executable}")
-		run_smoke(package_root, executable)
-		run_echo(package_root, executable, extract_root / "echo.log")
+		run_smoke(executable, extract_root)
+		run_echo(executable, extract_root / "echo.log", extract_root)
 	print("PACKAGE_EXTRACTED_RUNTIME_OK")
 	return 0
 

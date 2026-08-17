@@ -92,6 +92,7 @@ skyuv_target_compile_warnings(skyuv_skynet_runtime_compat)
 
 add_executable(
   skyuv_skynet_portable
+  runtime/launcher.c
   $<TARGET_OBJECTS:skyuv_skynet_portable_core>
 )
 set_target_properties(
@@ -111,6 +112,7 @@ target_link_libraries(
     skyuv::allocator
     skyuv::memory
     skyuv::lua
+    skyuv::libuv
     skyuv::platform
     skyuv::socket_server
     skyuv_skynet_runtime_compat

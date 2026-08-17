@@ -72,7 +72,7 @@ endforeach()
 
 execute_process(
 	COMMAND "${executable}" "examples/skyuv.conf"
-	WORKING_DIRECTORY "${install_root}"
+	WORKING_DIRECTORY "${temp_root}"
 	TIMEOUT 15
 	RESULT_VARIABLE run_result
 	OUTPUT_VARIABLE run_output
@@ -80,7 +80,7 @@ execute_process(
 )
 set(run_log "${run_output}\n${run_error}")
 if(NOT run_result EQUAL 0)
-	message(FATAL_ERROR "安装树示例运行失败（${run_result}）：\n${run_log}")
+	message(FATAL_ERROR "从安装树外启动示例失败（${run_result}）：\n${run_log}")
 endif()
 if(NOT run_log MATCHES "SKYUV_RUNTIME_SMOKE_OK")
 	message(FATAL_ERROR "安装树示例缺少成功标记：\n${run_log}")

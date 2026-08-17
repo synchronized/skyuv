@@ -7,6 +7,7 @@
 [`../records/delivery-candidate-validation.md`](../records/delivery-candidate-validation.md)。
 
 固定 Runner 基线按高优先级未完成项跟踪；等待期间继续处理不依赖权威性能数据的交付改进。
+发行包已支持从任意工作目录启动；安装树和解压包测试均从包外目录验证该行为。
 
 ## 背景与目标
 
