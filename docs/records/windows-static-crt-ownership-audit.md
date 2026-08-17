@@ -134,8 +134,8 @@ system 回退，macOS 使用系统 allocator。统一的是 API、失败语义�
 - Windows 候选 ZIP 在未安装 Visual C++ Redistributable 的全新环境中启动成功；
 - PE 导入表和发行包内容证明没有遗漏的动态 CRT 依赖。
 
-在这些条件完成前，保留 `/MD` 并声明 Visual C++ Redistributable 前置条件，比直接切换 `/MT`
-更安全。
+上述门槛现已全部满足；Windows 构建已经切换到 `/MT`/`/MTd`，并由自动化测试持续防止动态
+CRT 依赖回归。
 
 ## 统一接口接入进度
 

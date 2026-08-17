@@ -55,9 +55,10 @@
 
 ### Windows
 
-当前 Windows Release 主程序静态包含 libuv。对 PE 导入表的审计确认它还依赖 Windows 系统
-库、`VCRUNTIME140.dll` 和 UCRT API Set。首版先记录 MSVC 运行库前置条件；是否使用 CMake 的
-运行库依赖安装能力，需在干净 Windows 环境验证后决定。
+当前 Windows Release 主程序静态包含 libuv，并统一使用 `/MT` 静态 CRT。发行测试逐个审计
+EXE/DLL 的 PE 导入表，未发现 `VCRUNTIME`、`MSVCP`、`UCRTBASE` 或 `api-ms-win-crt-*` 动态
+依赖；候选 ZIP 也已在全新 Windows Sandbox 中成功启动，因此不声明 Visual C++
+Redistributable 前置条件。
 
 Lua C 模块目录中生成的 `.lib` 和 `.exp` 是链接辅助文件，不属于运行时包。PDB 若发布，应放入
 独立符号 artifact。
@@ -120,6 +121,7 @@ CMocka 只用于测试，不进入运行时包，因此其许可证不属于运�
 5. 安装后测试必须在含空格的临时目录、以安装根为工作目录运行。
 6. Windows、Linux 和 macOS 分别检查最终二进制动态依赖，不能仅凭 CMake 配置推断。
 
-## 尚待实测
+## 持续验证
 
-- Windows 干净环境是否已具备所需 MSVC/UCRT 运行库。
+当前运行时闭包没有尚待实测的必需平台依赖。新增动态模块或更改链接策略时，仍必须重新执行
+安装树测试、PE 导入审计和干净环境验证。

@@ -2,8 +2,8 @@
 
 ## 状态
 
-进行中。工程实现和三平台候选 artifact 验收已完成；权威性能基线仍等待固定 Linux Runner，
-Windows 全新环境的运行库条件仍待确认，正式发布验收依赖这两项收口。候选结果见
+进行中。工程实现、三平台候选 artifact、Windows 静态 CRT 和全新 Windows Sandbox 验收均已
+完成；正式发布仅等待固定 Linux Runner 的权威性能基线收口。候选结果见
 [`../records/delivery-candidate-validation.md`](../records/delivery-candidate-validation.md)。
 
 ## 背景与目标
@@ -96,8 +96,8 @@ skyuv/
 8. 已完成：增加版本一致性、SHA-256 实值和第三方许可证完整性检查；
 9. 已完成：建立手动 Release 工作流，上传三平台产物与校验和，并提供受版本约束的可选发布；
 10. 已完成：编写安装、启动、迁移和平台限制指南；
-11. 部分完成：候选 artifact 已通过三平台全量验收；完成阶段 5 权威性能基线和 Windows 全新
-    环境运行库验证后，创建正式 Release 并收口本阶段。
+11. 部分完成：候选 artifact 已通过三平台全量验收，Windows 全新环境验证也已完成；完成阶段 5
+    权威性能基线后，创建正式 Release 并收口本阶段。
 
 ## 测试与验收
 
@@ -120,8 +120,8 @@ skyuv/
 
 ## 未决问题
 
-- Windows 是否需要随包携带特定 MSVC 运行库，或只声明系统前置条件；
-- Windows 静态 CRT 需先完成进程级统一分配接口，详见
-  [`../records/windows-static-crt-ownership-audit.md`](../records/windows-static-crt-ownership-audit.md)；
 - 是否为 Lua 服务提供可写的独立配置/日志目录约定；
 - 阶段 5 固定 Linux Runner 部署及双时段权威基线采集时间。
+
+Windows 已选择静态 CRT，并通过跨模块内存所有权测试、PE 导入审计和全新 Sandbox 启动验证，
+详见 [`../records/windows-static-crt-ownership-audit.md`](../records/windows-static-crt-ownership-audit.md)。

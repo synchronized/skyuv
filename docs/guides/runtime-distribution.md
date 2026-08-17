@@ -12,8 +12,8 @@ Skynet 服务迁移到该目录结构。本文只描述已经由三平台候选�
 - 获取与目标系统和 CPU 架构匹配的 `skyuv-<版本>-<系统>-<架构>` 压缩包；
 - 同时获取同名的 `.sha256` 文件并在解压前校验；
 - 选择普通用户可读写的目录解压，不需要安装到系统目录；
-- Windows 当前使用 MSVC 构建，系统需要能够加载 `VCRUNTIME140.dll` 和 UCRT。该前置条件
-  尚待全新 Windows 环境独立验收，发行包目前不主动安装 MSVC 运行库。
+- Windows 发行目标使用静态 CRT，不要求预先安装 Microsoft Visual C++ Redistributable；候选
+  ZIP 已在全新 Windows Sandbox 中完成无网络启动验证。
 
 Linux 和 macOS 发行包已经携带所需的共享 libuv，不依赖系统预装 libuv。Linux 默认静态包含
 jemalloc；macOS 和 Windows 使用系统分配器。
@@ -150,8 +150,10 @@ Linux/macOS 必须让主程序和动态模块共享同一份 libuv 进程状态�
 
 ### Windows 报告缺少运行库 DLL
 
-先安装与当前 MSVC 构建兼容的 Microsoft Visual C++ Redistributable。此问题仍需在全新 Windows
-环境完成正式验收，遇到时请记录系统版本、缺失 DLL 名称和发行包版本。
+官方候选包不依赖动态 `VCRUNTIME`、`MSVCP` 或 UCRT DLL。若仍报告缺少这些运行库，先确认使用
+的是官方完整 ZIP，且没有混入自行编译的 Lua C 模块；随后记录系统版本、缺失 DLL、发行包版本
+和文件校验和。安装 Visual C++ Redistributable 可以兼容第三方模块，但不是 skyuv 主发行包的
+前置条件。
 
 ### TCP echo 无法监听
 

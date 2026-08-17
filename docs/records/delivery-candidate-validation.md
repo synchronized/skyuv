@@ -6,7 +6,8 @@
 安装、归档及解压后运行验证。阶段 6 的工程实现和候选 artifact 验收已经完成。
 
 当前不创建正式 GitHub Release。阶段 5 的固定 Linux Runner 双时段权威性能基线尚未采集，
-Windows 全新环境中的 MSVC/UCRT 前置条件也待独立确认，因此阶段 6 保持“进行中”。
+因此阶段 6 保持“进行中”。Windows 静态 CRT、PE 导入审计和全新 Sandbox 验证已在后续候选
+中完成。
 
 ## 验收对象
 
@@ -19,6 +20,12 @@ Windows 全新环境中的 MSVC/UCRT 前置条件也待独立确认，因此阶�
 - macOS：`macos-14` arm64，随包共享 libuv、系统分配器。
 
 后续提交 `2e0e759` 只增加运行时发行包使用与迁移指南，不改变候选二进制内容。
+
+2026-08-17 的后续候选工作流
+[`31986996073`](https://github.com/synchronized/skyuv/actions/runs/31986996073) 在提交 `e5e9ace`
+上再次通过 Windows、Linux 和 macOS Release；Windows 产物已使用静态 CRT 并通过自动 PE 导入
+审计。全新 Windows Sandbox 的独立启动证据记录在
+[`windows-static-crt-ownership-audit.md`](windows-static-crt-ownership-audit.md)。
 
 ## 验收内容
 
@@ -53,8 +60,6 @@ Windows 全新环境中的 MSVC/UCRT 前置条件也待独立确认，因此阶�
 
 - 在带 `skyuv-benchmark` 标签的固定 Linux Runner 上，于两个独立时段采集阶段 5 权威基线；
 - 记录噪声、性能差异和首批回归阈值，完成阶段 5 验收；
-- 完成进程级统一分配接口后评估静态 CRT；在此之前验证 MSVC/UCRT 加载条件，并决定声明
-  Visual C++ Redistributable 前置条件还是随包分发运行库；
 - 以拟发布提交再次运行 `Release` 工作流，使用 `publish_release=true` 和标签 `v0.1.0`。
 
-前三项满足前不得把候选 artifact 描述为正式发布版本。
+以上条件满足前不得把候选 artifact 描述为正式发布版本。
