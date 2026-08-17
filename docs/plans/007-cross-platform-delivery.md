@@ -6,6 +6,8 @@
 完成；正式发布仅等待固定 Linux Runner 的权威性能基线收口。候选结果见
 [`../records/delivery-candidate-validation.md`](../records/delivery-candidate-validation.md)。
 
+固定 Runner 基线按高优先级未完成项跟踪；等待期间继续处理不依赖权威性能数据的交付改进。
+
 ## 背景与目标
 
 skyuv 已能在 Windows、Linux 和 macOS 构建、启动并通过功能与长时稳定性验证。当前运行依赖
