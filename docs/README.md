@@ -18,6 +18,7 @@
 - [`plans/005-lua-runtime.md`](plans/005-lua-runtime.md)：已完成的 Lua 模块与运行环境计划及验收摘要。
 - [`plans/006-performance-stability.md`](plans/006-performance-stability.md)：性能基准、压力测试和长时稳定性计划。
 - [`plans/007-cross-platform-delivery.md`](plans/007-cross-platform-delivery.md)：安装、打包和发布的跨平台交付计划。
+- [`plans/008-runtime-paths.md`](plans/008-runtime-paths.md)：配置、日志和 PID 的目录职责与路径约定计划。
 - [`plans/variable-buffer-audit.md`](plans/variable-buffer-audit.md)：Skynet 可变缓冲区专项审计。
 
 ## 参考资料
