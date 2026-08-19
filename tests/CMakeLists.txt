@@ -58,7 +58,7 @@ add_test(
     --archive-extension "${SKYUV_PACKAGE_EXTENSION}"
     --allocator "${SKYUV_ALLOCATOR}"
     --executable-name "$<TARGET_FILE_NAME:skyuv_skynet_portable>"
-    --project-version "${PROJECT_VERSION}"
+    --project-version "${SKYUV_RELEASE_VERSION}"
 )
 set_tests_properties(
   package.extracted_runtime

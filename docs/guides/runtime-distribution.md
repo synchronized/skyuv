@@ -23,24 +23,24 @@ jemalloc；macOS 和 Windows 使用系统分配器。
 Linux：
 
 ```shell
-sha256sum --check skyuv-0.1.0-linux-x86-64.tar.gz.sha256
-tar -xzf skyuv-0.1.0-linux-x86-64.tar.gz
+sha256sum --check skyuv-0.1.0-beta.1-linux-x86-64.tar.gz.sha256
+tar -xzf skyuv-0.1.0-beta.1-linux-x86-64.tar.gz
 ```
 
 macOS：
 
 ```shell
-shasum -a 256 skyuv-0.1.0-darwin-arm64.tar.gz
-cat skyuv-0.1.0-darwin-arm64.tar.gz.sha256
-tar -xzf skyuv-0.1.0-darwin-arm64.tar.gz
+shasum -a 256 skyuv-0.1.0-beta.1-darwin-arm64.tar.gz
+cat skyuv-0.1.0-beta.1-darwin-arm64.tar.gz.sha256
+tar -xzf skyuv-0.1.0-beta.1-darwin-arm64.tar.gz
 ```
 
 PowerShell：
 
 ```powershell
-Get-FileHash .\skyuv-0.1.0-windows-amd64.zip -Algorithm SHA256
-Get-Content .\skyuv-0.1.0-windows-amd64.zip.sha256
-Expand-Archive .\skyuv-0.1.0-windows-amd64.zip
+Get-FileHash .\skyuv-0.1.0-beta.1-windows-amd64.zip -Algorithm SHA256
+Get-Content .\skyuv-0.1.0-beta.1-windows-amd64.zip.sha256
+Expand-Archive .\skyuv-0.1.0-beta.1-windows-amd64.zip
 ```
 
 macOS 和 PowerShell 示例需要人工比较输出的哈希值与 `.sha256` 文件首列是否一致。实际文件名
@@ -66,14 +66,14 @@ licenses/    许可证和依赖版本清单
 Linux 和 macOS：
 
 ```shell
-cd skyuv-0.1.0-<系统>-<架构>
+cd skyuv-0.1.0-beta.1-<系统>-<架构>
 ./bin/skyuv_skynet_portable examples/skyuv.conf
 ```
 
 Windows PowerShell：
 
 ```powershell
-Set-Location .\skyuv-0.1.0-windows-amd64
+Set-Location .\skyuv-0.1.0-beta.1-windows-amd64
 .\bin\skyuv_skynet_portable.exe examples\skyuv.conf
 ```
 

@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
       tag:
-        description: 正式发布标签，必须为 CMake 版本加 v 前缀，例如 v0.1.0
+        description: 发布标签，必须为发行版本加 v 前缀，例如 v0.1.0-beta.1
         required: false
         type: string
 
@@ -168,6 +168,10 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           version=$(sed -n 's/^project(skyuv VERSION \([^ ]*\).*/\1/p' CMakeLists.txt)
+          prerelease=$(sed -n 's/^set(SKYUV_VERSION_PRERELEASE "\([^"]*\)").*/\1/p' CMakeLists.txt)
+          if [[ -n "${prerelease}" ]]; then
+            version="${version}-${prerelease}"
+          fi
           expected="v${version}"
           if [[ -z "${RELEASE_TAG}" || "${RELEASE_TAG}" != "${expected}" ]]; then
             echo "发布标签必须为 ${expected}，实际为 ${RELEASE_TAG:-<空>}" >&2
@@ -189,9 +193,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
-        run: >-
-          gh release create "${RELEASE_TAG}"
-          --target "${GITHUB_SHA}"
-          --title "skyuv ${RELEASE_TAG}"
-          --generate-notes
-          release-assets/*
+        run: |
+          args=(
+            "${RELEASE_TAG}"
+            --target "${GITHUB_SHA}"
+            --title "skyuv ${RELEASE_TAG}"
+            --generate-notes
+          )
+          if [[ "${RELEASE_TAG}" == *-* ]]; then
+            args+=(
+              --prerelease
+              --notes "这是供跨平台迁移和兼容性验证使用的 Beta 版本。固定 Linux 权威性能基线以及配置、日志、PID 路径约定尚未收口，不建议直接用于未经验证的生产环境。"
+            )
+          fi
+          gh release create "${args[@]}" release-assets/*

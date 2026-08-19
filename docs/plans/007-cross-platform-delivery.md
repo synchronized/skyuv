@@ -3,7 +3,7 @@
 ## 状态
 
 进行中。工程实现、三平台候选 artifact、Windows 静态 CRT 和全新 Windows Sandbox 验收均已
-完成；正式发布仅等待固定 Linux Runner 的权威性能基线收口。候选结果见
+完成；允许先发布用于迁移验证的 Beta，正式发布仍等待固定 Linux Runner 的权威性能基线收口。候选结果见
 [`../records/delivery-candidate-validation.md`](../records/delivery-candidate-validation.md)。
 
 固定 Runner 基线按高优先级未完成项跟踪；等待期间继续处理不依赖权威性能数据的交付改进。
@@ -67,7 +67,8 @@ skyuv/
 
 ### 发布与验证
 
-- 版本以根 CMake `project(... VERSION ...)` 为唯一来源；
+- 数字核心版本以根 CMake `project(... VERSION ...)` 为唯一来源；预发布标识由紧邻定义的
+  `SKYUV_VERSION_PRERELEASE` 维护，二者组合为发行版本；
 - 发布工作流只允许手动触发或由明确版本标签触发；
 - 每个平台上传压缩包及 SHA-256 校验和；
 - 发布前在干净临时目录解压并运行启动、TCP echo 和正常退出测试；
@@ -75,7 +76,7 @@ skyuv/
 
 ## 当前审计
 
-- 根项目版本为 `0.1.0`；
+- 核心版本为 `0.1.0`，当前预发布标识为 `beta.1`，发行版本为 `0.1.0-beta.1`；
 - 已定义 `Runtime` 组件的首批 CMake `install()` 规则，覆盖主程序、4 个 C 服务和 7 个
   Lua C 模块；
 - 已接入完整 Skynet Lua 库、Lua 服务和按实际平台依赖选择的许可证安装；
