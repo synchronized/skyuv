@@ -59,6 +59,12 @@
 当前候选能力允许先发布 `v0.1.0-beta.1` GitHub Pre-release，供跨平台迁移和兼容性验证。
 Beta 不宣称权威性能指标或生产稳定性，不改变以下正式版收口条件。
 
+`v0.1.0-beta.1` 已于 2026-08-19 发布：Release 工作流
+[`32241078227`](https://github.com/synchronized/skyuv/actions/runs/32241078227) 在提交 `44b39c8`
+上通过三平台构建、交付测试、归档和校验和复核，并创建标记为 Pre-release 的
+[`skyuv v0.1.0-beta.1`](https://github.com/synchronized/skyuv/releases/tag/v0.1.0-beta.1)。附件包括
+Windows x64 ZIP、Linux x64 TGZ、macOS arm64 TGZ 及各自的 SHA-256 文件。
+
 正式创建 `v0.1.0` Release 前还需：
 
 - 在带 `skyuv-benchmark` 标签的固定 Linux Runner 上，于两个独立时段采集阶段 5 权威基线；
