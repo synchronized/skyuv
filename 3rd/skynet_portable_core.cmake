@@ -2,8 +2,8 @@ find_package(Git REQUIRED)
 
 set(SKYUV_SKYNET_PATCH_ROOT "${CMAKE_CURRENT_BINARY_DIR}/skynet-patched")
 set(SKYUV_SKYNET_SOURCE_DIR "${SKYUV_SKYNET_PATCH_ROOT}/skynet-src")
-set(SKYUV_SKYNET_COMPAT_DIR "${PROJECT_SOURCE_DIR}/src/compat/skynet")
-file(RELATIVE_PATH SKYUV_SKYNET_PATCH_RELATIVE "${PROJECT_SOURCE_DIR}" "${SKYUV_SKYNET_PATCH_ROOT}")
+set(SKYUV_SKYNET_COMPAT_DIR "${SKYUV_SOURCE_DIR}/src/compat/skynet")
+file(RELATIVE_PATH SKYUV_SKYNET_PATCH_RELATIVE "${SKYUV_SOURCE_DIR}" "${SKYUV_SKYNET_PATCH_ROOT}")
 file(REMOVE_RECURSE "${SKYUV_SKYNET_PATCH_ROOT}")
 file(MAKE_DIRECTORY "${SKYUV_SKYNET_PATCH_ROOT}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/skynet/skynet-src" DESTINATION "${SKYUV_SKYNET_PATCH_ROOT}")
@@ -12,8 +12,8 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/skynet/lualib-src" DESTINATION "${SKYUV_S
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0001-Fix-ownership-of-variable-temporary-buffers.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0001-Fix-ownership-of-variable-temporary-buffers.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_PATCH_ERROR
 )
@@ -23,8 +23,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0002-Replace-start-VLAs-with-heap-buffers.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0002-Replace-start-VLAs-with-heap-buffers.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_START_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_START_PATCH_ERROR
 )
@@ -34,8 +34,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0003-Replace-harbor-VLAs-with-heap-buffers.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0003-Replace-harbor-VLAs-with-heap-buffers.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_HARBOR_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_HARBOR_PATCH_ERROR
 )
@@ -45,8 +45,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0004-Use-Winsock-headers-in-lua-socket.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0004-Use-Winsock-headers-in-lua-socket.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_LUA_SOCKET_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_LUA_SOCKET_PATCH_ERROR
 )
@@ -56,8 +56,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply --recount "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0005-Port-client-socket-headers-to-Windows.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0005-Port-client-socket-headers-to-Windows.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_CLIENT_SOCKET_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_CLIENT_SOCKET_PATCH_ERROR
 )
@@ -67,8 +67,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply --recount --unidiff-zero "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0006-Preserve-client-socket-native-handle-width.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0006-Preserve-client-socket-native-handle-width.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_CLIENT_HANDLE_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_CLIENT_HANDLE_PATCH_ERROR
 )
@@ -78,8 +78,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply --recount --unidiff-zero "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0007-Make-client-stdin-queue-diagnostic-and-reclaimable.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0007-Make-client-stdin-queue-diagnostic-and-reclaimable.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_CLIENT_STDIN_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_CLIENT_STDIN_PATCH_ERROR
 )
@@ -89,8 +89,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply --recount "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0008-Make-netpack-pointer-arithmetic-standard-C.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0008-Make-netpack-pointer-arithmetic-standard-C.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_NETPACK_POINTER_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_NETPACK_POINTER_PATCH_ERROR
 )
@@ -100,8 +100,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply --recount "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0009-Make-gate-variable-buffers-portable.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0009-Make-gate-variable-buffers-portable.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_GATE_BUFFER_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_GATE_BUFFER_PATCH_ERROR
 )
@@ -111,8 +111,8 @@ endif()
 execute_process(
   COMMAND
     "${GIT_EXECUTABLE}" apply --recount "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
-    "${PROJECT_SOURCE_DIR}/patches/skynet/0010-Route-Skynet-allocation-through-skyuv.patch"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0010-Route-Skynet-allocation-through-skyuv.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
   RESULT_VARIABLE SKYUV_SKYNET_MEMORY_PATCH_RESULT
   ERROR_VARIABLE SKYUV_SKYNET_MEMORY_PATCH_ERROR
 )
@@ -150,7 +150,7 @@ target_include_directories(
     "${SKYUV_SKYNET_COMPAT_DIR}/dynamic"
     "${SKYUV_SKYNET_COMPAT_DIR}"
     "${SKYUV_SKYNET_SOURCE_DIR}"
-    "${PROJECT_SOURCE_DIR}/include"
+    "${SKYUV_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/skynet/3rd/lua"
 )
 set_source_files_properties(

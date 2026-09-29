@@ -29,17 +29,17 @@ add_executable(skyuv_skynet ${SKYUV_SKYNET_CORE_SOURCES})
 set_source_files_properties(
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_timer.c"
   PROPERTIES
-    COMPILE_OPTIONS "-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+    COMPILE_OPTIONS "-include${SKYUV_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
 )
 set_source_files_properties(
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_server.c"
   PROPERTIES
-    COMPILE_OPTIONS "-I${PROJECT_SOURCE_DIR}/src/compat/skynet/tls"
+    COMPILE_OPTIONS "-I${SKYUV_SOURCE_DIR}/src/compat/skynet/tls"
 )
 set_source_files_properties(
   "${SKYUV_SKYNET_SOURCE_DIR}/skynet_start.c"
   PROPERTIES
-    COMPILE_OPTIONS "-I${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
+    COMPILE_OPTIONS "-I${SKYUV_SOURCE_DIR}/src/compat/skynet/start"
 )
 set_target_properties(
   skyuv_skynet
@@ -48,7 +48,7 @@ set_target_properties(
     ENABLE_EXPORTS TRUE
     OUTPUT_NAME skynet
 )
-set(SKYUV_SKYNET_COMPAT_DIR "${PROJECT_SOURCE_DIR}/src/compat/skynet")
+set(SKYUV_SKYNET_COMPAT_DIR "${SKYUV_SOURCE_DIR}/src/compat/skynet")
 target_include_directories(
   skyuv_skynet
   PRIVATE
@@ -102,7 +102,7 @@ skyuv_add_skynet_service(harbor)
 set_source_files_properties(
   "${SKYUV_SKYNET_SERVICE_DIR}/service_snlua.c"
   PROPERTIES
-    COMPILE_OPTIONS "-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+    COMPILE_OPTIONS "-include${SKYUV_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
 )
 target_link_libraries(skyuv_service_snlua PRIVATE skyuv::platform)
 
@@ -130,7 +130,7 @@ add_library(skyuv_lua_module_skynet MODULE ${SKYUV_SKYNET_LUA_MODULE_SOURCES})
 set_source_files_properties(
   "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-skynet.c"
   PROPERTIES
-    COMPILE_OPTIONS "-include${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
+    COMPILE_OPTIONS "-include${SKYUV_SOURCE_DIR}/src/compat/skynet/skyuv_time.h"
 )
 set_target_properties(
   skyuv_lua_module_skynet
@@ -160,7 +160,7 @@ add_library(
 set_source_files_properties(
   "${SKYUV_SKYNET_LUALIB_SOURCE_DIR}/lua-clientsocket.c"
   PROPERTIES
-    COMPILE_OPTIONS "-I${PROJECT_SOURCE_DIR}/src/compat/skynet/start"
+    COMPILE_OPTIONS "-I${SKYUV_SOURCE_DIR}/src/compat/skynet/start"
 )
 set_target_properties(
   skyuv_lua_module_client
@@ -179,28 +179,28 @@ target_include_directories(
 target_link_libraries(skyuv_lua_module_client PRIVATE skyuv::platform)
 
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/skynet" SKYUV_SKYNET_RUNTIME_SOURCE_DIR)
-file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/tests/fixtures" SKYUV_EXAMPLE_SOURCE_DIR)
+file(TO_CMAKE_PATH "${SKYUV_SOURCE_DIR}/tests/fixtures" SKYUV_EXAMPLE_SOURCE_DIR)
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_BINARY_DIR}" SKYUV_SKYNET_RUNTIME_BINARY_DIR)
 set(SKYUV_SKYNET_START_SERVICE skyuv_smoke)
 configure_file(
-  "${CMAKE_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
+  "${SKYUV_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
   "${CMAKE_CURRENT_BINARY_DIR}/skyuv-smoke.conf"
   @ONLY
 )
 set(SKYUV_SKYNET_START_SERVICE skyuv_echo)
 configure_file(
-  "${CMAKE_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
+  "${SKYUV_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
   "${CMAKE_CURRENT_BINARY_DIR}/skyuv-echo.conf"
   @ONLY
 )
 set(SKYUV_SKYNET_START_SERVICE skyuv_baseline)
 configure_file(
-  "${CMAKE_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
+  "${SKYUV_SOURCE_DIR}/examples/skyuv-smoke.conf.in"
   "${CMAKE_CURRENT_BINARY_DIR}/skyuv-baseline.conf"
   @ONLY
 )
 configure_file(
-  "${CMAKE_SOURCE_DIR}/examples/tcp-events.conf.in"
+  "${SKYUV_SOURCE_DIR}/examples/tcp-events.conf.in"
   "${CMAKE_CURRENT_BINARY_DIR}/tcp-events.conf"
   @ONLY
 )
