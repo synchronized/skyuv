@@ -10,6 +10,10 @@ cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/skyuv-install
 cmake --build build
 ```
 
+示例还会构建 `skyuv_consumer_smoke`，创建 Lua 状态并通过
+`luaL_requiref` 注册模块，检查模块导出的 `version` 函数；启用 CTest
+时可运行 `ctest --test-dir build` 验证。
+
 Windows 的外部工程必须选择与 skyuv 一致的 MSVC CRT。模块输出为无前缀的
 `skyuv_consumer` 动态库；将其放入 Lua 的模块搜索路径后，可通过
 `require("skyuv_consumer")` 加载。
