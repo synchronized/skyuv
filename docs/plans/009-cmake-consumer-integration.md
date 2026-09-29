@@ -118,7 +118,10 @@
 - 第二阶段已导出 `skyuv::platform`、`skyuv::lua` 和 `skyuv::libuv`，并安装公共 skyuv/Lua 头文件；
 - 已生成 `skyuvConfig.cmake`、版本文件和可重定位的 target export；
 - 第三阶段已加入最小 Lua C 模块示例，并验证源码嵌入和安装 package 两种方式均可构建；
-- 真实 Lua 解释器中的 `require` 加载和跨平台完整矩阵仍待补充自动验收。
+- 示例已增加 Lua 宿主 smoke test：通过 `luaL_requiref` 注册模块并调用导出的函数；
+- 源码嵌入和安装 package 两种方式的构建及 smoke test 均已在 Windows 本地通过；
+- Linux CI 和 macOS CI 已在 `ee82490` 上通过，包含嵌入式 CMake 测试和第三方源码状态检查；
+- 动态模块搜索路径下由独立 Lua 解释器执行的真实 `require`，以及完整跨平台矩阵仍待补充自动验收。
 
 ## 完成摘要
 
