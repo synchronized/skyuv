@@ -5,6 +5,7 @@
 
 ## 交付与运行时
 
+- [`2026-09-29-v0.1.0-release-acceptance.md`](2026-09-29-v0.1.0-release-acceptance.md)：`v0.1.0` 正式发布验收。
 - [`delivery-candidate-validation.md`](delivery-candidate-validation.md)：三平台候选发行包验收。
 - [`delivery-runtime-closure-audit.md`](delivery-runtime-closure-audit.md)：发行运行时闭包和平台依赖审计。
 - [`windows-static-crt-ownership-audit.md`](windows-static-crt-ownership-audit.md)：Windows 静态 CRT 所有权审计。
