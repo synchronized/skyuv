@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(skyuv VERSION 0.1.0 LANGUAGES C)
+project(skyuv VERSION 0.1.1 LANGUAGES C)
 
 # skyuv 可能作为子项目嵌入；宿主工程的 CMAKE_SOURCE_DIR/CMAKE_BINARY_DIR
 # 不能用于定位 skyuv 自己的源码和生成文件。

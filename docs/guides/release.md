@@ -10,7 +10,7 @@
 - 确认组合版本、CPack 文件名和预期标签一致；
 - 将面向使用者的变化写入根目录 `CHANGELOG.md`，将固定范围写入对应版本文档。
 
-当前正式版本候选的唯一身份由 [`v0.1.0.md`](../versions/v0.1.0.md) 维护；后续 `v0.2.0`
+当前正式版本候选的唯一身份由 [`v0.1.1.md`](../versions/v0.1.1.md) 维护；后续 `v0.2.0`
 的剩余任务和版本范围由 [`v0.2.0.md`](../versions/v0.2.0.md) 维护。
 
 ## 2. 逐项确认交付边界
@@ -46,7 +46,7 @@ cpack --config build/windows-vs2022-release/CPackConfig.cmake -C Release
 
 - `publish_release=false`：只构建、测试和上传临时 artifact；
 - `publish_release=true`：在三平台成功后创建 GitHub Release；
-- `tag` 必须与 CMake 计算出的版本一致；当前正式版本候选使用 `v0.1.0`。
+- `tag` 必须与 CMake 计算出的版本一致；当前正式版本候选使用 `v0.1.1`。
 
 发布工作流会复核三个归档及其 SHA-256。预发布标签会创建为 GitHub pre-release；不要手工移动
 已经公开的标签或替换已发布归档。

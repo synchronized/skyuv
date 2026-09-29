@@ -38,6 +38,20 @@
 
 - 固定 Linux 性能基线、配置/日志/PID 路径约定和独立 Lua 动态模块 `require` 验证移至 `v0.2.0`。
 
+## 0.1.1 - 2026-09-29
+
+固定范围和发布限制见
+[`docs/versions/v0.1.1.md`](docs/versions/v0.1.1.md)。
+
+### 变更
+
+- 将主便携运行时的 CMake target 和运行时产物从 `skyuv_skynet_portable` 统一为 `skyuv`。
+- 同步更新安装树、启动指南、测试、性能脚本以及三平台 Release workflow。
+
+### 兼容性
+
+- 本版本不改变运行时语义、Lua API 或公共 ABI 承诺；内部 `skyuv_skynet_portable_core` 目标保持不变。
+
 ## 0.1.0-beta.1 - 2026-08-19
 
 固定范围和未纳入内容见
