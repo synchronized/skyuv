@@ -5,6 +5,16 @@ endif()
 include("${CMAKE_CURRENT_SOURCE_DIR}/portable.cmake")
 
 add_test(
+  NAME cmake.embed
+  COMMAND
+    "${CMAKE_COMMAND}"
+    -S "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/cmake-consumer"
+    -B "${PROJECT_BINARY_DIR}/tests/cmake-consumer"
+    "-DSKYUV_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
+    -DSKYUV_BUILD_TESTS=OFF
+)
+
+add_test(
   NAME install.runtime_smoke
   COMMAND
     "${CMAKE_COMMAND}"

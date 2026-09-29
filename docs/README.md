@@ -10,6 +10,7 @@
 2. [`DEPENDENCIES.md`](DEPENDENCIES.md)：了解第三方依赖的选择、用途和引入条件。
 3. [`plans/README.md`](plans/README.md)：查看当前阶段的实施计划和验收项。
 4. [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：查看 Lua C 模块与运行环境的真实接入状态。
+5. [`plans/009-cmake-consumer-integration.md`](plans/009-cmake-consumer-integration.md)：了解 CMake 子项目、安装导出和外部 Lua C 模块接入计划。
 
 ## 路线图与计划
 

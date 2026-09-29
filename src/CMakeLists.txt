@@ -5,6 +5,7 @@ add_library(skyuv_platform STATIC
   platform/time.c
 )
 add_library(skyuv::platform ALIAS skyuv_platform)
+set_target_properties(skyuv_platform PROPERTIES EXPORT_NAME platform)
 
 add_library(skyuv_memory OBJECT memory/memory.c)
 add_library(skyuv::memory ALIAS skyuv_memory)
@@ -480,7 +481,8 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
 target_include_directories(
   skyuv_platform
   PUBLIC
-    "${PROJECT_SOURCE_DIR}/include"
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(skyuv_platform PRIVATE skyuv::libuv)
 target_link_libraries(skyuv_socket_core PRIVATE skyuv::platform skyuv::libuv)

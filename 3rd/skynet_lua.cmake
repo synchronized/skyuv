@@ -39,13 +39,16 @@ set(
 
 add_library(skyuv_lua STATIC ${SKYUV_LUA_SOURCES})
 add_library(skyuv::lua ALIAS skyuv_lua)
+set_target_properties(skyuv_lua PROPERTIES EXPORT_NAME lua)
 
 target_include_directories(
   skyuv_lua
   PRIVATE
     ${PROJECT_SOURCE_DIR}/src/compat/skynet
     ${CMAKE_CURRENT_SOURCE_DIR}/skynet/skynet-src
-  PUBLIC ${SKYUV_LUA_SOURCE_DIR}
+  PUBLIC
+    $<BUILD_INTERFACE:${SKYUV_LUA_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/skyuv/lua>
 )
 
 target_link_libraries(skyuv_lua PRIVATE skyuv::platform)

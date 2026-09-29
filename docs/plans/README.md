@@ -28,6 +28,7 @@
 | 006 | [性能和稳定性](006-performance-stability.md) | 进行中 | 005 |
 | 007 | [跨平台交付](007-cross-platform-delivery.md) | 进行中 | 006 |
 | 008 | [配置、日志与 PID 路径约定](008-runtime-paths.md) | 草案 | 007（不依赖固定性能基线） |
+| 009 | [CMake 第三方消费与 Lua C 模块接入](009-cmake-consumer-integration.md) | 进行中 | 005、007 |
 
 后续计划在其前置阶段接近完成时编写，避免过早固化尚未验证的实现细节。
 

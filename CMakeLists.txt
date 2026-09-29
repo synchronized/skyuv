@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.23)
 
 project(skyuv VERSION 0.1.0 LANGUAGES C)
 
+# skyuv 可能作为子项目嵌入；宿主工程的 CMAKE_SOURCE_DIR/CMAKE_BINARY_DIR
+# 不能用于定位 skyuv 自己的源码和生成文件。
+set(SKYUV_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(SKYUV_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
 # CMake 的 project(VERSION) 只接受数字版本；预发布标识单独维护，并用于产物和标签。
 set(SKYUV_VERSION_PRERELEASE "beta.1")
 if(SKYUV_VERSION_PRERELEASE)
@@ -36,6 +41,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 include(skyuv_warnings)
 
 set(
@@ -168,12 +174,43 @@ endif()
 
 add_subdirectory(3rd)
 
+if(SKYUV_USE_SHARED_LIBUV)
+  set(SKYUV_LIBUV_TARGET uv)
+else()
+  set(SKYUV_LIBUV_TARGET uv_a)
+endif()
+
 # 实现代码加入后，由各目录维护自己的构建目标。
 foreach(directory IN ITEMS src tests)
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${directory}/CMakeLists.txt")
     add_subdirectory("${directory}")
   endif()
 endforeach()
+
+# 只导出面向外部 CMake 消费者的运行库目标。Skynet 运行时和其内部模块
+# 仍属于发行包目标，不作为稳定的第三方链接接口。
+install(
+  TARGETS
+    skyuv_platform
+    skyuv_lua
+    "${SKYUV_LIBUV_TARGET}"
+  EXPORT skyuvTargets
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Development
+  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
+install(
+  DIRECTORY "${SKYUV_SOURCE_DIR}/include/"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  COMPONENT Development
+)
+install(
+  DIRECTORY "${SKYUV_SOURCE_DIR}/3rd/skynet/3rd/lua/"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/skyuv/lua"
+  COMPONENT Development
+  FILES_MATCHING PATTERN "*.h"
+)
 
 foreach(dependency IN ITEMS skynet libuv)
   execute_process(
@@ -238,3 +275,30 @@ set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
 set(CPACK_INSTALL_CMAKE_PROJECTS "${PROJECT_BINARY_DIR};${PROJECT_NAME};Runtime;/")
 set(CPACK_VERBATIM_VARIABLES YES)
 include(CPack)
+
+set(SKYUV_CMAKE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/skyuv")
+configure_package_config_file(
+  "${SKYUV_SOURCE_DIR}/cmake/skyuvConfig.cmake.in"
+  "${SKYUV_BINARY_DIR}/skyuvConfig.cmake"
+  INSTALL_DESTINATION "${SKYUV_CMAKE_INSTALL_DIR}"
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+write_basic_package_version_file(
+  "${SKYUV_BINARY_DIR}/skyuvConfigVersion.cmake"
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY SameMajorVersion
+)
+install(
+  EXPORT skyuvTargets
+  FILE skyuvTargets.cmake
+  NAMESPACE skyuv::
+  DESTINATION "${SKYUV_CMAKE_INSTALL_DIR}"
+  COMPONENT Development
+)
+install(
+  FILES
+    "${SKYUV_BINARY_DIR}/skyuvConfig.cmake"
+    "${SKYUV_BINARY_DIR}/skyuvConfigVersion.cmake"
+  DESTINATION "${SKYUV_CMAKE_INSTALL_DIR}"
+  COMPONENT Development
+)

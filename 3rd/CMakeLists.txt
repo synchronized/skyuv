@@ -7,12 +7,20 @@ set(ENABLE_CLANG_TIDY OFF CACHE BOOL "不对第三方 libuv 运行 clang-tidy" F
 add_subdirectory(libuv EXCLUDE_FROM_ALL)
 
 if(SKYUV_USE_SHARED_LIBUV)
+  set(SKYUV_LIBUV_TARGET uv)
   add_library(skyuv::libuv ALIAS uv)
 else()
   # skyuv 平台层会被 Skynet 动态模块链接，静态 libuv 必须生成位置无关代码。
   set_target_properties(uv_a PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set(SKYUV_LIBUV_TARGET uv_a)
   add_library(skyuv::libuv ALIAS uv_a)
 endif()
+
+set_target_properties(
+  "${SKYUV_LIBUV_TARGET}"
+  PROPERTIES
+    EXPORT_NAME libuv
+)
 
 include(skynet_lua.cmake)
 include(skynet_allocator.cmake)
