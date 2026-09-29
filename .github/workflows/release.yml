@@ -39,7 +39,7 @@ jobs:
       - name: 构建运行时目标
         run: >-
           cmake --build --preset windows-vs2022-release --target
-          skyuv_skynet_portable
+          skyuv
           skyuv_portable_service_snlua skyuv_portable_service_logger
           skyuv_portable_service_harbor skyuv_portable_service_gate
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
@@ -86,7 +86,7 @@ jobs:
       - name: 构建运行时目标
         run: >-
           cmake --build --preset linux-gcc-release --target
-          skyuv_skynet_portable
+          skyuv
           skyuv_portable_service_snlua skyuv_portable_service_logger
           skyuv_portable_service_harbor skyuv_portable_service_gate
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
@@ -128,7 +128,7 @@ jobs:
       - name: 构建运行时目标
         run: >-
           cmake --build --preset macos-clang-release --target
-          skyuv_skynet_portable
+          skyuv
           skyuv_portable_service_snlua skyuv_portable_service_logger
           skyuv_portable_service_harbor skyuv_portable_service_gate
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client

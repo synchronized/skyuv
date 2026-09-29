@@ -45,7 +45,7 @@ jobs:
       - name: 构建便携 Skynet
         run: >-
           cmake --build --preset linux-gcc-debug --target
-          skyuv_skynet_portable skyuv_portable_service_snlua
+          skyuv skyuv_portable_service_snlua
           skyuv_portable_service_logger skyuv_portable_service_harbor
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_bson
           skyuv_portable_lua_module_md5
@@ -53,7 +53,7 @@ jobs:
       - name: 运行 MongoDB 集成测试
         run: |
           timeout 30s \
-            build/linux-gcc-debug/src/skyuv_skynet_portable \
+            build/linux-gcc-debug/src/skyuv \
             build/linux-gcc-debug/3rd/skyuv-portable-mongo-integration.conf \
             2>&1 | tee skyuv-mongodb.log
           grep -F "skyuv MongoDB CRUD 与索引验证通过" skyuv-mongodb.log

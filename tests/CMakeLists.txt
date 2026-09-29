@@ -21,7 +21,7 @@ add_test(
     "-DSKYUV_TEST_BUILD_DIR=${PROJECT_BINARY_DIR}"
     "-DSKYUV_TEST_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
     "-DSKYUV_TEST_CONFIG=$<CONFIG>"
-    "-DSKYUV_TEST_EXECUTABLE_NAME=$<TARGET_FILE_NAME:skyuv_skynet_portable>"
+    "-DSKYUV_TEST_EXECUTABLE_NAME=$<TARGET_FILE_NAME:skyuv>"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/install_runtime_smoke.cmake"
 )
 set_tests_properties(install.runtime_smoke PROPERTIES LABELS delivery TIMEOUT 30)
@@ -33,7 +33,7 @@ add_test(
     "-DSKYUV_TEST_BUILD_DIR=${PROJECT_BINARY_DIR}"
     "-DSKYUV_TEST_CPACK_COMMAND=${CMAKE_CPACK_COMMAND}"
     "-DSKYUV_TEST_CONFIG=$<CONFIG>"
-    "-DSKYUV_TEST_EXECUTABLE_NAME=$<TARGET_FILE_NAME:skyuv_skynet_portable>"
+    "-DSKYUV_TEST_EXECUTABLE_NAME=$<TARGET_FILE_NAME:skyuv>"
     "-DSKYUV_TEST_MODULE_SUFFIX=$<TARGET_FILE_SUFFIX:skyuv_portable_service_snlua>"
     "-DSKYUV_TEST_PACKAGE_EXTENSION=${SKYUV_PACKAGE_EXTENSION}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_archive_contents.cmake"
@@ -67,7 +67,7 @@ add_test(
     --archive-directory "${PROJECT_BINARY_DIR}/package-test-output"
     --archive-extension "${SKYUV_PACKAGE_EXTENSION}"
     --allocator "${SKYUV_ALLOCATOR}"
-    --executable-name "$<TARGET_FILE_NAME:skyuv_skynet_portable>"
+    --executable-name "$<TARGET_FILE_NAME:skyuv>"
     --project-version "${SKYUV_RELEASE_VERSION}"
 )
 set_tests_properties(
@@ -203,7 +203,7 @@ add_test(
 set_tests_properties(
   benchmark.udp_comparison_protocol PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
-if(TARGET skyuv_skynet_portable)
+if(TARGET skyuv)
   add_test(
     NAME benchmark.actor_ping_pong
     COMMAND
@@ -211,7 +211,7 @@ if(TARGET skyuv_skynet_portable)
       --implementation skyuv --build-type "$<CONFIG>" --allocator "${SKYUV_ALLOCATOR}"
       --compiler "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}"
       --warmup 0.02 --duration 0.05 --iterations 2
-      --executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --executable "$<TARGET_FILE:skyuv>"
       --config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor.conf"
       --output "${PROJECT_BINARY_DIR}/benchmarks/actor-ping-pong-test.json"
   )
@@ -222,9 +222,9 @@ if(TARGET skyuv_skynet_portable)
     NAME benchmark.actor_comparison_protocol
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/benchmarks/compare_actor.py"
-      --skyuv-executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --skyuv-executable "$<TARGET_FILE:skyuv>"
       --skyuv-config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor.conf"
-      --upstream-executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --upstream-executable "$<TARGET_FILE:skyuv>"
       --upstream-config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor.conf"
       --build-type "$<CONFIG>" --allocator "${SKYUV_ALLOCATOR}"
       --compiler "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}"
@@ -242,7 +242,7 @@ if(TARGET skyuv_skynet_portable)
       --implementation skyuv --build-type "$<CONFIG>" --allocator "${SKYUV_ALLOCATOR}"
       --compiler "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}"
       --warmup 0.02 --duration 0.05 --iterations 2 --producers 4
-      --executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --executable "$<TARGET_FILE:skyuv>"
       --config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor-multi.conf"
       --output "${PROJECT_BINARY_DIR}/benchmarks/actor-multi-producer-test.json"
   )
@@ -258,7 +258,7 @@ if(TARGET skyuv_skynet_portable)
       --compiler "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}"
       --warmup 0.02 --duration 0.05 --iterations 2 --actors 8
       --benchmark-name actor_ring --scenario token_ring --sample-marker SKYUV_ACTOR_RING_SAMPLE
-      --executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --executable "$<TARGET_FILE:skyuv>"
       --config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor-ring.conf"
       --output "${PROJECT_BINARY_DIR}/benchmarks/actor-ring-test.json"
   )
@@ -275,7 +275,7 @@ if(TARGET skyuv_skynet_portable)
       --warmup 0.02 --duration 0.05 --iterations 2 --actors 1 --timer-count 1000
       --benchmark-name timer_burst --scenario concentrated_deadline
       --sample-marker SKYUV_TIMER_BURST_SAMPLE
-      --executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      --executable "$<TARGET_FILE:skyuv>"
       --config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-timer-burst.conf"
       --output "${PROJECT_BINARY_DIR}/benchmarks/timer-burst-test.json"
   )

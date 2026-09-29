@@ -98,7 +98,7 @@ jobs:
       - name: 采集 Actor ping-pong
         run: >-
           python3 benchmarks/compare_actor.py
-          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-actor.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
           --upstream-config "$RUNNER_TEMP/skynet/actor-ping-pong.conf"
@@ -110,7 +110,7 @@ jobs:
       - name: 采集 TCP 长连接
         run: >-
           python3 benchmarks/compare_tcp.py
-          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
           --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
@@ -123,7 +123,7 @@ jobs:
       - name: 采集 TCP 短连接
         run: >-
           python3 benchmarks/compare_tcp.py
-          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
           --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
@@ -136,7 +136,7 @@ jobs:
       - name: 采集 TCP 背压
         run: >-
           python3 benchmarks/compare_tcp.py
-          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-backpressure.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
           --upstream-config "$RUNNER_TEMP/skynet/benchmark-tcp-backpressure.conf"
@@ -150,7 +150,7 @@ jobs:
       - name: 采集 UDP request/reply
         run: >-
           python3 benchmarks/compare_udp.py
-          --skyuv-executable build/linux-clang-release/src/skyuv_skynet_portable
+          --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-udp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
           --upstream-config "$RUNNER_TEMP/skynet/benchmark-udp-echo.conf"

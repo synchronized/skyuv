@@ -289,7 +289,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.smoke
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-smoke.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-smoke.conf"
   )
   set_tests_properties(
     skynet.portable.smoke
@@ -301,14 +301,14 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.echo
     COMMAND
       pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-echo.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -Executable "$<TARGET_FILE:skyuv>"
       -Config "3rd/skyuv-portable-echo.conf"
   )
   add_test(
     NAME skynet.portable.client_module
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-module.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-client-module.conf"
   )
   set_tests_properties(
     skynet.portable.client_module
@@ -320,7 +320,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.client_socket
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_socket_harness.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-socket.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-client-socket.conf"
       --allow-abort-after-success
   )
   set_tests_properties(
@@ -334,7 +334,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.client_stdin
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_stdin_harness.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-stdin.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-client-stdin.conf"
       --allow-abort-after-success
   )
   set_tests_properties(
@@ -347,7 +347,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.bson
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-bson.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-bson.conf"
   )
   set_tests_properties(
     skynet.portable.bson
@@ -359,7 +359,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.sproto
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-sproto.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-sproto.conf"
   )
   set_tests_properties(
     skynet.portable.sproto
@@ -371,7 +371,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.md5
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-md5.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-md5.conf"
   )
   set_tests_properties(
     skynet.portable.md5
@@ -383,7 +383,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.crypt
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-crypt.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-crypt.conf"
   )
   set_tests_properties(
     skynet.portable.crypt
@@ -395,7 +395,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.stm
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-stm.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-stm.conf"
   )
   set_tests_properties(
     skynet.portable.stm
@@ -407,7 +407,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.sharetable
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-sharetable.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-sharetable.conf"
   )
   set_tests_properties(
     skynet.portable.sharetable
@@ -419,7 +419,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.sharedata
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-sharedata.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-sharedata.conf"
   )
   set_tests_properties(
     skynet.portable.sharedata
@@ -431,7 +431,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.datasheet
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-datasheet.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-datasheet.conf"
   )
   set_tests_properties(
     skynet.portable.datasheet
@@ -443,7 +443,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.netpack
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-netpack.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-netpack.conf"
   )
   set_tests_properties(
     skynet.portable.netpack
@@ -455,7 +455,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.gate
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_gate.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-gate.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-gate.conf"
       --kind gate
   )
   set_tests_properties(
@@ -468,7 +468,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.cgate
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_gate.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-cgate.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-cgate.conf"
       --kind cgate
   )
   set_tests_properties(
@@ -481,7 +481,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.memory
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-memory.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-memory.conf"
   )
   set_tests_properties(
     skynet.portable.memory
@@ -493,7 +493,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.multicast
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-multicast.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-multicast.conf"
   )
   set_tests_properties(
     skynet.portable.multicast
@@ -505,13 +505,13 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.control
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-control.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-control.conf"
   )
   add_test(
     NAME skynet.portable.console_break
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/process_shutdown.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "$<TARGET_FILE:skyuv>"
       "3rd/skyuv-portable-process-shutdown.conf"
       --windows-console-break
   )
@@ -526,7 +526,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.write_shutdown
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/write_shutdown.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-write-shutdown.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-write-shutdown.conf"
       --windows-console-break
   )
   set_tests_properties(
@@ -547,7 +547,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.paths
     COMMAND
       pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-paths.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -Executable "$<TARGET_FILE:skyuv>"
       -PortableDirectory "${PROJECT_BINARY_DIR}/3rd/portable"
       -SkynetSource "${PROJECT_SOURCE_DIR}/3rd/skynet"
       -FixtureSource "${PROJECT_SOURCE_DIR}/tests/fixtures"
@@ -562,7 +562,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.daemon_unsupported
     COMMAND
       pwsh -NoProfile -File "${PROJECT_SOURCE_DIR}/tests/scripts/portable-daemon.ps1"
-      -Executable "$<TARGET_FILE:skyuv_skynet_portable>"
+      -Executable "$<TARGET_FILE:skyuv>"
       -Config "3rd/skyuv-portable-daemon.conf"
   )
   set_tests_properties(
@@ -575,7 +575,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.cluster_core
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-cluster-core.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-cluster-core.conf"
   )
   set_tests_properties(
     skynet.portable.cluster_core
@@ -587,7 +587,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.debugchannel
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-debugchannel.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-debugchannel.conf"
   )
   set_tests_properties(
     skynet.portable.debugchannel
@@ -599,7 +599,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.mongo_driver
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-mongo-driver.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-mongo-driver.conf"
   )
   set_tests_properties(
     skynet.portable.mongo_driver
@@ -611,7 +611,7 @@ if(WIN32 AND BUILD_TESTING)
     NAME skynet.portable.harbor
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_harbor.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "$<TARGET_FILE:skyuv>"
       "3rd/skyuv-portable-harbor-node1.conf"
       "3rd/skyuv-portable-harbor-node2.conf"
       "3rd/skyuv-portable-harbor-node3.conf"
@@ -631,13 +631,13 @@ if(WIN32 AND BUILD_TESTING)
   )
 endif()
 
-if(UNIX AND BUILD_TESTING AND TARGET skyuv_skynet_portable)
+if(UNIX AND BUILD_TESTING AND TARGET skyuv)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   add_test(
     NAME skynet.portable.process_shutdown
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/process_shutdown.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "$<TARGET_FILE:skyuv>"
       "3rd/skyuv-portable-process-shutdown.conf"
   )
   set_tests_properties(
@@ -651,7 +651,7 @@ if(UNIX AND BUILD_TESTING AND TARGET skyuv_skynet_portable)
     NAME skynet.portable.write_shutdown
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/write_shutdown.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-write-shutdown.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-write-shutdown.conf"
   )
   set_tests_properties(
     skynet.portable.write_shutdown
@@ -669,7 +669,7 @@ if(BUILD_TESTING)
     NAME skynet.portable.cluster
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_cluster.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "$<TARGET_FILE:skyuv>"
       "3rd/skyuv-portable-cluster-provider.conf"
       "3rd/skyuv-portable-cluster-consumer.conf"
   )
@@ -684,7 +684,7 @@ if(BUILD_TESTING)
     NAME skynet.portable.logger_file
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_logger_file.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "$<TARGET_FILE:skyuv>"
       "3rd/skyuv-portable-logger-file.conf"
       "${SKYUV_LOGGER_FILE}"
   )
@@ -698,7 +698,7 @@ if(BUILD_TESTING)
     NAME skynet.portable.logger_error
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_logger_error.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "$<TARGET_FILE:skyuv>"
       "3rd/skyuv-portable-logger-error.conf"
       "${SKYUV_LOGGER_ERROR_FILE}"
   )
@@ -712,7 +712,7 @@ if(BUILD_TESTING)
     NAME skynet.portable.lpeg
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-lpeg.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-lpeg.conf"
   )
   set_tests_properties(
     skynet.portable.lpeg
@@ -728,7 +728,7 @@ if(NOT WIN32 AND BUILD_TESTING)
     NAME skynet.portable.client_stdin
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_stdin_harness.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-stdin.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-client-stdin.conf"
       --allow-abort-after-success
   )
   set_tests_properties(
@@ -741,7 +741,7 @@ if(NOT WIN32 AND BUILD_TESTING)
     NAME skynet.portable.client_socket
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/client_socket_harness.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-client-socket.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-client-socket.conf"
       --allow-abort-after-success
   )
   set_tests_properties(
@@ -757,7 +757,7 @@ if(NOT WIN32 AND BUILD_TESTING)
       NAME "skynet.portable.${module_name}"
       COMMAND
         "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-        "$<TARGET_FILE:skyuv_skynet_portable>"
+        "$<TARGET_FILE:skyuv>"
         "3rd/skyuv-portable-${config_name}.conf"
     )
     set_tests_properties(
@@ -772,7 +772,7 @@ if(NOT WIN32 AND BUILD_TESTING)
       NAME "skynet.portable.${gate_kind}"
       COMMAND
         "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_gate.py"
-        "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-${gate_kind}.conf"
+        "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-${gate_kind}.conf"
         --kind "${gate_kind}"
     )
     set_tests_properties(
@@ -786,7 +786,7 @@ if(NOT WIN32 AND BUILD_TESTING)
     NAME skynet.portable.bson
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>" "3rd/skyuv-portable-bson.conf"
+      "$<TARGET_FILE:skyuv>" "3rd/skyuv-portable-bson.conf"
   )
   set_tests_properties(
     skynet.portable.bson
@@ -799,7 +799,7 @@ if(NOT WIN32 AND BUILD_TESTING)
       NAME "skynet.portable.${module_name}"
       COMMAND
         "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-        "$<TARGET_FILE:skyuv_skynet_portable>"
+        "$<TARGET_FILE:skyuv>"
         "3rd/skyuv-portable-${module_name}.conf"
     )
     set_tests_properties(
@@ -814,7 +814,7 @@ if(NOT WIN32 AND BUILD_TESTING)
       NAME "skynet.portable.${module_name}"
       COMMAND
         "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_smoke.py"
-        "$<TARGET_FILE:skyuv_skynet_portable>"
+        "$<TARGET_FILE:skyuv>"
         "3rd/skyuv-portable-${module_name}.conf"
     )
     set_tests_properties(
@@ -828,7 +828,7 @@ if(NOT WIN32 AND BUILD_TESTING)
     NAME skynet.portable.harbor
     COMMAND
       "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/scripts/portable_harbor.py"
-      "$<TARGET_FILE:skyuv_skynet_portable>"
+      "$<TARGET_FILE:skyuv>"
       "3rd/skyuv-portable-harbor-node1.conf"
       "3rd/skyuv-portable-harbor-node2.conf"
       "3rd/skyuv-portable-harbor-node3.conf"

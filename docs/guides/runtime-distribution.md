@@ -67,14 +67,14 @@ Linux 和 macOS：
 
 ```shell
 cd skyuv-0.1.0-beta.1-<系统>-<架构>
-./bin/skyuv_skynet_portable examples/skyuv.conf
+./bin/skyuv examples/skyuv.conf
 ```
 
 Windows PowerShell：
 
 ```powershell
 Set-Location .\skyuv-0.1.0-beta.1-windows-amd64
-.\bin\skyuv_skynet_portable.exe examples\skyuv.conf
+.\bin\skyuv.exe examples\skyuv.conf
 ```
 
 进程应以状态码 `0` 退出，并输出 `SKYUV_RUNTIME_SMOKE_OK`。发行流程已在包含空格的解压路径中
@@ -85,13 +85,13 @@ Set-Location .\skyuv-0.1.0-beta.1-windows-amd64
 从安装根目录启动：
 
 ```shell
-./bin/skyuv_skynet_portable examples/skyuv-echo.conf
+./bin/skyuv examples/skyuv-echo.conf
 ```
 
 Windows 使用：
 
 ```powershell
-.\bin\skyuv_skynet_portable.exe examples\skyuv-echo.conf
+.\bin\skyuv.exe examples\skyuv-echo.conf
 ```
 
 服务监听回环地址 `127.0.0.1:25490`。连接后发送一行数据，服务会原样返回并正常退出。启动日志
@@ -105,7 +105,7 @@ Windows 使用：
 2. 复制 `examples/skyuv.conf` 作为业务配置起点，保留其中相对的 `cpath`、`lua_path`、
    `lua_cpath`、`luaservice` 和 `lualoader`。
 3. 将配置的 `start` 改为业务启动服务；按原 Skynet 配置补充线程数、节点和业务参数。
-4. 从安装根目录启动 `bin/skyuv_skynet_portable`，不要引用源码树或构建树路径。
+4. 从安装根目录启动 `bin/skyuv`，不要引用源码树或构建树路径。
 5. 逐项验证网络服务、定时器、消息顺序和关闭流程，再替换生产入口。
 
 若业务包含自编译 Lua C 模块，需要使用目标平台重新构建，并自行保证其 Lua ABI、依赖库和

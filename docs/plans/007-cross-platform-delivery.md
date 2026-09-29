@@ -51,7 +51,7 @@ skyuv 已能在 Windows、Linux 和 macOS 构建、启动并通过功能与长�
 
 ```text
 skyuv/
-├─ bin/                 # skyuv_skynet_portable 与平台运行库
+├─ bin/                 # skyuv 与平台运行库
 ├─ cservice/            # Skynet C 服务动态库
 ├─ luaclib/             # Lua C 模块，保留模块子目录
 ├─ lualib/              # Skynet 与 skyuv Lua 库

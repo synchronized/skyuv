@@ -117,7 +117,7 @@ python benchmarks/actor_ping_pong.py `
   --build-type Release `
   --allocator system `
   --compiler "MSVC 19.x" `
-  --executable build/windows-vs2022-release/src/Release/skyuv_skynet_portable.exe `
+  --executable build/windows-vs2022-release/src/Release/skyuv.exe `
   --config build/windows-vs2022-release/3rd/skyuv-benchmark-actor.conf `
   --output build/benchmarks/actor-ping-pong.json
 ```
@@ -139,7 +139,7 @@ python benchmarks/actor_multi_producer.py `
   --allocator system `
   --compiler "MSVC 19.x" `
   --producers 4 `
-  --executable build/windows-vs2022-release/src/Release/skyuv_skynet_portable.exe `
+  --executable build/windows-vs2022-release/src/Release/skyuv.exe `
   --config build/windows-vs2022-release/3rd/skyuv-benchmark-actor-multi.conf `
   --output build/benchmarks/actor-multi-producer.json
 ```

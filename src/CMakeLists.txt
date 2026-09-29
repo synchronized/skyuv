@@ -92,23 +92,23 @@ target_include_directories(
 skyuv_target_compile_warnings(skyuv_skynet_runtime_compat)
 
 add_executable(
-  skyuv_skynet_portable
+  skyuv
   runtime/launcher.c
   $<TARGET_OBJECTS:skyuv_skynet_portable_core>
 )
 set_target_properties(
-  skyuv_skynet_portable
+  skyuv
   PROPERTIES
     ENABLE_EXPORTS TRUE
     WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
 if(APPLE)
-  set_property(TARGET skyuv_skynet_portable PROPERTY INSTALL_RPATH "@loader_path")
+  set_property(TARGET skyuv PROPERTY INSTALL_RPATH "@loader_path")
 elseif(UNIX)
-  set_property(TARGET skyuv_skynet_portable PROPERTY INSTALL_RPATH "\$ORIGIN")
+  set_property(TARGET skyuv PROPERTY INSTALL_RPATH "\$ORIGIN")
 endif()
 target_link_libraries(
-  skyuv_skynet_portable
+  skyuv
   PRIVATE
     skyuv::allocator
     skyuv::memory
@@ -119,9 +119,9 @@ target_link_libraries(
     skyuv_skynet_runtime_compat
 )
 if(NOT WIN32)
-  target_link_libraries(skyuv_skynet_portable PRIVATE skyuv_skynet_daemon_upstream)
+  target_link_libraries(skyuv PRIVATE skyuv_skynet_daemon_upstream)
 endif()
-skyuv_target_compile_warnings(skyuv_skynet_portable)
+skyuv_target_compile_warnings(skyuv)
 
 set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   set(SKYUV_PORTABLE_SKYNET_SOURCE_DIR "${PROJECT_BINARY_DIR}/3rd/skynet-patched/skynet-src")
@@ -165,7 +165,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     target_link_libraries(
       "skyuv_portable_service_${service_name}"
       PRIVATE
-        skyuv_skynet_portable
+        skyuv
         skyuv_skynet_runtime_compat
         skyuv::lua
     )
@@ -262,7 +262,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   )
   target_link_libraries(
     skyuv_portable_lua_module_control
-    PRIVATE skyuv::lua skyuv_skynet_control skyuv_skynet_portable
+    PRIVATE skyuv::lua skyuv_skynet_control skyuv
   )
   skyuv_target_compile_warnings(skyuv_portable_lua_module_control)
 
@@ -468,7 +468,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   target_link_libraries(
     skyuv_portable_lua_module_skynet
     PRIVATE
-      skyuv_skynet_portable
+      skyuv
       skyuv_socket_info
       skyuv::allocator
       skyuv::lua
@@ -487,7 +487,7 @@ target_include_directories(
 target_link_libraries(skyuv_platform PRIVATE skyuv::libuv)
 target_link_libraries(skyuv_socket_core PRIVATE skyuv::platform skyuv::libuv)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  target_compile_definitions(skyuv_skynet_portable PRIVATE _POSIX_C_SOURCE=200112L)
+  target_compile_definitions(skyuv PRIVATE _POSIX_C_SOURCE=200112L)
   target_compile_definitions(skyuv_platform PRIVATE _POSIX_C_SOURCE=200112L)
   target_compile_definitions(skyuv_socket_core PRIVATE _POSIX_C_SOURCE=200112L)
   target_compile_definitions(skyuv_socket_server PRIVATE _POSIX_C_SOURCE=200112L)
@@ -495,7 +495,7 @@ endif()
 skyuv_target_compile_warnings(skyuv_platform)
 
 install(
-  TARGETS skyuv_skynet_portable
+  TARGETS skyuv
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   COMPONENT Runtime
 )
