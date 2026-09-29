@@ -10,7 +10,8 @@
 2. [`DEPENDENCIES.md`](DEPENDENCIES.md)：了解第三方依赖的选择、用途和引入条件。
 3. [`plans/README.md`](plans/README.md)：查看当前阶段的实施计划和验收项。
 4. [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：查看 Lua C 模块与运行环境的真实接入状态。
-5. [`plans/009-cmake-consumer-integration.md`](plans/009-cmake-consumer-integration.md)：了解 CMake 子项目、安装导出和外部 Lua C 模块接入计划。
+5. [`versions/README.md`](versions/README.md)：查看当前版本范围、发布状态和版本文档。
+6. [`plans/009-cmake-consumer-integration.md`](plans/009-cmake-consumer-integration.md)：了解 CMake 子项目、安装导出和外部 Lua C 模块接入计划。
 
 ## 路线图与计划
 
@@ -29,6 +30,7 @@
 
 ## 操作指南
 
+- [`guides/release.md`](guides/release.md)：执行版本准备、三平台发布验收和 GitHub Release。
 - [`guides/runtime-distribution.md`](guides/runtime-distribution.md)：校验、解压和启动三平台运行时
   发行包，并迁移已有 Skynet 服务。
 - [`guides/performance-runner.md`](guides/performance-runner.md)：部署并预检固定 Linux 性能 Runner。

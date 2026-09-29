@@ -39,6 +39,7 @@
 | Reference | 接口或行为是什么 | 参数、返回值、所有权、限制 | 未确认方案 |
 | Concept | 为什么这样设计 | 模型、边界、关系、权衡 | 逐次实施日志 |
 | Roadmap | 先做什么，进展如何 | 阶段、依赖、状态摘要 | 详细任务步骤 |
+| Version | 当前版本交付什么，如何发布 | 固定范围、发布状态、发布门槛 | 当前行为参考和实施日志 |
 | Plan | 某项能力如何实现 | 目标、非目标、步骤、验收 | 无限追加的完成日志 |
 | ADR | 为什么选择某一方案 | 背景、决策、影响、替代方案 | 使用教程 |
 | Record | 实际发生了什么 | 日期、环境、结果、差异 | 当前接口的权威定义 |
@@ -51,6 +52,7 @@ DOCUMENTATION_GUIDE.md       # 文档规范
 docs/
 ├─ README.md                 # 文档中心
 ├─ ROADMAP.md                # 项目路线图
+├─ versions/                 # 版本范围、发布状态和版本门槛
 ├─ tutorials/                # 完整学习教程
 ├─ guides/                   # 操作指南
 ├─ reference/                # API、格式与行为参考
@@ -71,6 +73,7 @@ docs/
 | 全局阶段与优先级 | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | 第三方依赖策略 | [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md) |
 | Lua 模块当前能力 | [`docs/LUA_RUNTIME_MATRIX.md`](docs/LUA_RUNTIME_MATRIX.md) |
+| 当前版本范围与发布状态 | [`docs/versions/README.md`](docs/versions/README.md) |
 | 当前实施计划 | [`docs/plans/README.md`](docs/plans/README.md) |
 | 工程协作约束 | [`AGENTS.md`](AGENTS.md) |
 
