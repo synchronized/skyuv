@@ -3,7 +3,8 @@
 ## 状态
 
 进行中。工程实现、三平台候选 artifact、Windows 静态 CRT 和全新 Windows Sandbox 验收均已
-完成；允许先发布用于迁移验证的 Beta，正式发布仍等待固定 Linux Runner 的权威性能基线收口。候选结果见
+完成；当前提交准备发布正式 `v0.1.0`，固定 Linux Runner 性能基线及路径专项作为 `v0.2.0`
+收口任务继续跟踪。候选结果见
 [`../records/delivery-candidate-validation.md`](../records/delivery-candidate-validation.md)。
 
 固定 Runner 基线按高优先级未完成项跟踪；等待期间继续处理不依赖权威性能数据的交付改进。

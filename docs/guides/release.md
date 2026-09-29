@@ -10,14 +10,14 @@
 - 确认组合版本、CPack 文件名和预期标签一致；
 - 将面向使用者的变化写入根目录 `CHANGELOG.md`，将固定范围写入对应版本文档。
 
-当前 Beta 版本的唯一身份由 [`v0.1.0-beta.1.md`](../versions/v0.1.0-beta.1.md) 维护；后续正式版
-必须建立新的版本文档和对应验收记录。
+当前正式版本候选的唯一身份由 [`v0.1.0.md`](../versions/v0.1.0.md) 维护；后续 `v0.2.0`
+的剩余任务和版本范围由 [`v0.2.0.md`](../versions/v0.2.0.md) 维护。
 
 ## 2. 逐项确认交付边界
 
 | 组件 | 当前状态 | 发布前证据 |
 |---|---|---|
-| Runtime | Beta | 三平台安装树启动、TCP echo、Lua 模块和正常退出测试 |
+| Runtime | 0.x 非稳定 | 三平台安装树启动、TCP echo、Lua 模块和正常退出测试 |
 | CMake Consumer | 实验性 | 安装 package、`add_subdirectory` 和外部 Lua C 模块 smoke test |
 | skyuv 公共 C 接口 | 未冻结 | 不得在发布说明中标记为稳定 ABI |
 | Skynet 内部头文件与模块 | 未包含 | 仅作为内部构建实现，不进入稳定 SDK 承诺 |
@@ -46,7 +46,7 @@ cpack --config build/windows-vs2022-release/CPackConfig.cmake -C Release
 
 - `publish_release=false`：只构建、测试和上传临时 artifact；
 - `publish_release=true`：在三平台成功后创建 GitHub Release；
-- `tag` 必须与 CMake 计算出的版本一致，例如当前版本使用 `v0.1.0-beta.1`。
+- `tag` 必须与 CMake 计算出的版本一致；当前正式版本候选使用 `v0.1.0`。
 
 发布工作流会复核三个归档及其 SHA-256。预发布标签会创建为 GitHub pre-release；不要手工移动
 已经公开的标签或替换已发布归档。
