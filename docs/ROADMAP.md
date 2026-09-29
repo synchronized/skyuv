@@ -226,8 +226,9 @@ skyuv 提供自己的接口，内部映射到 libuv：
 各阶段进入实施前会在 [`plans/`](plans/README.md) 中形成可执行计划。阶段 0 至阶段 4 已完成；
 阶段 5 已完成三平台正式长时稳定性验收；固定 Linux Runner 上的权威性能基线是高优先级未完成
 事项，但不阻塞与性能数据无关的开发。阶段 6 已完成
-工程实现、三平台候选发行包验收、Windows 静态 CRT 和全新环境启动验证。正式 Release 仅等待
-阶段 5 权威性能基线收口后创建。
+工程实现、三平台候选发行包验收、Windows 静态 CRT 和全新环境启动验证。Beta 后续收口还包括
+固定 Linux 性能基线、配置/日志/PID 路径约定、CMake consumer 的独立 Lua `require` 验证，
+以及正式 Release 验收；这些任务汇总于 [`versions/v0.1.0.md`](versions/v0.1.0.md)。
 
 ### 阶段 0：建立 Linux 兼容基线
 

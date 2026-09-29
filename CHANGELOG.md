@@ -8,9 +8,23 @@
 
 ## Unreleased
 
+以下内容计划归入下一版本 `v0.1.0`，尚未构成正式发布承诺。
+
+### 新增
+
 - 增加 CMake install/export 和外部 Lua C 模块消费示例，支持 `find_package(skyuv CONFIG REQUIRED)`。
+- 增加外部消费示例的 Lua runtime smoke test。
+
+### 修复
+
 - 修复 skyuv 作为 `add_subdirectory` 或 FetchContent 子项目时的源码路径假设。
-- 增加外部消费示例的 Lua runtime smoke test；动态模块搜索路径下的独立解释器 `require` 矩阵仍待补充。
+
+### 待完成
+
+- 固定 Linux Runner 性能基线和首批回归阈值；
+- 配置、日志与 PID 路径约定的实现和迁移验证；
+- 独立 Lua 解释器动态模块搜索路径下的真实 `require` 验证；
+- 三平台正式 `v0.1.0` Release 验收。
 
 ## 0.1.0-beta.1 - 2026-08-19
 

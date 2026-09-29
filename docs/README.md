@@ -11,7 +11,8 @@
 3. [`plans/README.md`](plans/README.md)：查看当前阶段的实施计划和验收项。
 4. [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：查看 Lua C 模块与运行环境的真实接入状态。
 5. [`versions/README.md`](versions/README.md)：查看当前版本范围、发布状态和版本文档。
-6. [`plans/009-cmake-consumer-integration.md`](plans/009-cmake-consumer-integration.md)：了解 CMake 子项目、安装导出和外部 Lua C 模块接入计划。
+6. [`versions/v0.1.0.md`](versions/v0.1.0.md)：查看 Beta 后续收口任务和正式发布门槛。
+7. [`plans/009-cmake-consumer-integration.md`](plans/009-cmake-consumer-integration.md)：了解 CMake 子项目、安装导出和外部 Lua C 模块接入计划。
 
 ## 路线图与计划
 
