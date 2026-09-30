@@ -119,6 +119,17 @@ execute_process(
 if(NOT SKYUV_SKYNET_MEMORY_PATCH_RESULT EQUAL 0)
   message(FATAL_ERROR "应用 Skynet 统一内存接口补丁失败：${SKYUV_SKYNET_MEMORY_PATCH_ERROR}")
 endif()
+execute_process(
+  COMMAND
+    "${GIT_EXECUTABLE}" apply --recount --unidiff-zero "--directory=${SKYUV_SKYNET_PATCH_RELATIVE}"
+    "${SKYUV_SOURCE_DIR}/patches/skynet/0011-Add-client-socket-select-poll.patch"
+  WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
+  RESULT_VARIABLE SKYUV_SKYNET_CLIENT_SELECT_PATCH_RESULT
+  ERROR_VARIABLE SKYUV_SKYNET_CLIENT_SELECT_PATCH_ERROR
+)
+if(NOT SKYUV_SKYNET_CLIENT_SELECT_PATCH_RESULT EQUAL 0)
+  message(FATAL_ERROR "应用 Skynet client socket select/poll 补丁失败：${SKYUV_SKYNET_CLIENT_SELECT_PATCH_ERROR}")
+endif()
 file(READ "${SKYUV_SKYNET_SOURCE_DIR}/skynet_module.c" SKYUV_SKYNET_MODULE_SOURCE)
 if(NOT SKYUV_SKYNET_MODULE_SOURCE MATCHES "skynet_malloc\\(sz\\)")
   message(FATAL_ERROR "Skynet 可变缓冲区所有权补丁未生效")
