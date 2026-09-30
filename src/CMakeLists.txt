@@ -169,6 +169,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
         skyuv_skynet_runtime_compat
         skyuv::lua
     )
+    skyuv_target_compile_utf8("skyuv_portable_service_${service_name}")
   endfunction()
 
   skyuv_add_portable_skynet_service(snlua)
@@ -233,6 +234,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   target_link_libraries(
     skyuv_portable_lua_module_client PRIVATE skyuv::lua skyuv::platform skyuv::libuv
   )
+  skyuv_target_compile_utf8(skyuv_portable_lua_module_client)
 
   add_library(
     skyuv_portable_lua_module_control MODULE compat/skynet/lua-control.c
@@ -301,6 +303,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   target_link_libraries(
     skyuv_portable_lua_module_bson PRIVATE skyuv::lua skyuv::platform skyuv::libuv
   )
+  skyuv_target_compile_utf8(skyuv_portable_lua_module_bson)
 
   add_library(
     skyuv_portable_lua_module_sproto
@@ -335,6 +338,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/sproto"
   )
   target_link_libraries(skyuv_portable_lua_module_sproto PRIVATE skyuv::lua)
+  skyuv_target_compile_utf8(skyuv_portable_lua_module_sproto)
 
   add_library(
     skyuv_portable_lua_module_lpeg
@@ -371,6 +375,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lpeg"
   )
   target_link_libraries(skyuv_portable_lua_module_lpeg PRIVATE skyuv::lua)
+  skyuv_target_compile_utf8(skyuv_portable_lua_module_lpeg)
 
   add_library(
     skyuv_portable_lua_module_md5
@@ -406,6 +411,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       "${SKYUV_PORTABLE_SKYNET_ROOT}/3rd/lua-md5"
   )
   target_link_libraries(skyuv_portable_lua_module_md5 PRIVATE skyuv::lua)
+  skyuv_target_compile_utf8(skyuv_portable_lua_module_md5)
 
   set(
     SKYUV_PORTABLE_LUA_MODULE_SOURCES
@@ -476,6 +482,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
       skyuv::platform
       skyuv_skynet_runtime_compat
   )
+  skyuv_target_compile_utf8(skyuv_portable_lua_module_skynet)
 
 
 target_include_directories(

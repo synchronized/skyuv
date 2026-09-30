@@ -177,6 +177,7 @@ skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR
 skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/spinlock.h")
 skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/skyuv_time.h")
 target_include_directories(skyuv_skynet_portable_core PRIVATE "${SKYUV_SKYNET_COMPAT_DIR}/tls")
+skyuv_target_compile_utf8(skyuv_skynet_portable_core)
 if(SKYUV_USES_MSVC_FRONTEND)
   skyuv_target_force_include(skyuv_skynet_portable_core
                              "${SKYUV_SKYNET_COMPAT_DIR}/skyuv_string.h")

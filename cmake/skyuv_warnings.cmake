@@ -17,10 +17,23 @@ function(skyuv_target_force_include target header)
   endif()
 endfunction()
 
+function(skyuv_target_compile_utf8 target)
+  if(NOT TARGET ${target})
+    message(FATAL_ERROR "目标不存在：${target}")
+  endif()
+
+  if(SKYUV_USES_MSVC_FRONTEND)
+    target_compile_options(${target} PRIVATE /utf-8)
+  endif()
+endfunction()
+
 function(skyuv_target_compile_warnings target)
   if(NOT TARGET ${target})
     message(FATAL_ERROR "目标不存在：${target}")
   endif()
+
+  # 编码选项只应用于 skyuv 自有目标，不扩散到第三方目标。
+  skyuv_target_compile_utf8(${target})
 
   if(NOT SKYUV_ENABLE_WARNINGS)
     return()
@@ -30,7 +43,7 @@ function(skyuv_target_compile_warnings target)
   # 不得向它传递 Clang GNU 前端的 -Wall；该选项在 clang-cl 中会启用
   # 大量不属于 /W4 的兼容性诊断，并把 Windows SDK 与第三方头文件一并报错。
   if(SKYUV_USES_MSVC_FRONTEND)
-    target_compile_options(${target} PRIVATE /utf-8 /W4)
+    target_compile_options(${target} PRIVATE /W4)
     set(SKYUV_TARGET_USES_MSVC_FRONTEND TRUE)
   else()
     target_compile_options(${target} PRIVATE -Wall -Wextra)
