@@ -12,11 +12,20 @@ skynet.start(function()
 		assert(writable[1] == fd, "client.socket poll 未报告可写")
 	end
 	socket.send(fd, payload)
+	local response
 	if socket.select ~= nil then
 		local readable = socket.select({ fd }, nil, 1)
 		assert(readable[1] == fd, "client.socket select 未报告可读")
+		response = socket.recv(fd)
+	else
+		for _ = 1, 5000 do
+			response = socket.recv(fd)
+			if response ~= nil then
+				break
+			end
+			socket.usleep(1000)
+		end
 	end
-	local response = socket.recv(fd)
 	assert(response == payload, "client.socket 回环内容不一致")
 	socket.shutdown(fd, "w")
 	local closed
