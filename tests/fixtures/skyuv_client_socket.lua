@@ -5,15 +5,14 @@ skynet.start(function()
 	local fd = assert(socket.connect("127.0.0.1", 25286))
 	local payload = "skyuv-client-socket"
 
+	local initially_readable = socket.select({ fd }, nil, 0)
+	assert(initially_readable == false, "client.socket select 错误报告可读")
+	local _, writable = socket.poll({}, { fd }, 1)
+	assert(writable[1] == fd, "client.socket poll 未报告可写")
 	socket.send(fd, payload)
-	local response
-	for _ = 1, 5000 do
-		response = socket.recv(fd)
-		if response ~= nil then
-			break
-		end
-		socket.usleep(1000)
-	end
+	local readable = socket.select({ fd }, nil, 1)
+	assert(readable[1] == fd, "client.socket select 未报告可读")
+	local response = socket.recv(fd)
 	assert(response == payload, "client.socket 回环内容不一致")
 	socket.shutdown(fd, "w")
 	local closed

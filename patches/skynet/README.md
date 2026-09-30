@@ -77,3 +77,6 @@ git -C 3rd/skynet status --short
 - `0008-Make-netpack-pointer-arithmetic-standard-C.patch`：将 `lua-netpack.c`
   中两处 GNU C `void *` 指针运算改为显式的字节指针运算，使 MSVC 可编译；
   不改变缓冲区偏移、所有权或 Unix 行为，适合提交上游。
+- `0011-Add-client-socket-select-poll.patch`：为 `client.socket` 增加与
+  `lsocket.select` 兼容的读写就绪轮询接口，并提供 `poll` 别名；句柄仍以 Lua
+  整数传递，不改变现有 connect/send/recv API。

@@ -29,7 +29,7 @@
 - 三平台 stdin 测试使用同一 Python 驱动覆盖普通行、空行、UTF-8、EOF、线程句柄回收和
   成功后的节点退出。
 - 三平台使用同一 Python 驱动覆盖 connect、send/recv、写 shutdown、对端关闭、拒绝连接和
-  无效模式；Linux 使用同一 Lua 夹具对照上游与便携版行为。
+  无效模式；新增 `select`/`poll` 读写就绪表验证；Linux 使用同一 Lua 夹具对照上游与便携版行为。
 - 三平台已经完成模块编译、加载、回环和 stdin 行为测试。
 
 ## 独立 Lua C 模块

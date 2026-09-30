@@ -1,0 +1,145 @@
+diff --git a/lualib-src/lua-clientsocket.c b/lualib-src/lua-clientsocket.c
+--- a/lualib-src/lua-clientsocket.c
++++ b/lualib-src/lua-clientsocket.c
+@@ -22,4 +22,5 @@ typedef SOCKET socket_fd;
+ #include <netinet/in.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
++#include <sys/select.h>
+ typedef int socket_fd;
+@@ -154,7 +154,128 @@ lrecv(lua_State *L) {
+ 	}
+ 	lua_pushlstring(L, buffer, r);
+ 	return 1;
+ }
+ 
++/*
++ * 等待 client.socket 的整数句柄就绪。
++ *
++ * Lua 接口与 lsocket.select 保持一致：
++ *   select(read_table, write_table, timeout_seconds)
++ * 返回对应的就绪句柄表；超时返回 false。为便于迁移，poll 是同一实现的别名。
++ */
++static int
++lselect_table(lua_State *L, int index, fd_set *set, int *maxfd) {
++	size_t count = lua_rawlen(L, index);
++	size_t i;
++#ifdef _WIN32
++	(void)maxfd;
++#endif
++	for (i = 1; i <= count; ++i) {
++		socket_fd fd;
++		lua_rawgeti(L, index, (lua_Integer)i);
++		fd = (socket_fd)(uintptr_t)luaL_checkinteger(L, -1);
++		lua_pop(L, 1);
++		if ((intptr_t)fd < 0)
++			continue;
++#ifdef _WIN32
++		if ((uintptr_t)fd >= FD_SETSIZE)
++			return luaL_error(L, "bad argument to 'select' (socket handle too large)");
++#else
++		if (fd >= FD_SETSIZE)
++			return luaL_error(L, "bad argument to 'select' (socket file descriptor too large)");
++#endif
++		FD_SET(fd, set);
++#ifndef _WIN32
++		if (fd > *maxfd)
++			*maxfd = fd;
++#endif
++	}
++	return 0;
++}
++
++static int
++lselect_ready_table(lua_State *L, int index, fd_set *set) {
++	size_t count = lua_rawlen(L, index);
++	size_t i;
++	size_t ready = 1;
++	lua_newtable(L);
++	for (i = 1; i <= count; ++i) {
++		socket_fd fd;
++		lua_rawgeti(L, index, (lua_Integer)i);
++		fd = (socket_fd)(uintptr_t)luaL_checkinteger(L, -1);
++		if ((intptr_t)fd >= 0 && FD_ISSET(fd, set))
++			lua_rawseti(L, -2, (lua_Integer)ready++);
++		else
++			lua_pop(L, 1);
++	}
++	return 1;
++}
++
++static int
++lselect(lua_State *L) {
++	fd_set readfds;
++	fd_set writefds;
++	int has_read = lua_istable(L, 1);
++	int has_write = lua_istable(L, 2);
++	int maxfd = -1;
++	int timeout_index = 1;
++	double timeout_seconds;
++	struct timeval timeout;
++	struct timeval *timeout_pointer = &timeout;
++	int result;
++
++	FD_ZERO(&readfds);
++	FD_ZERO(&writefds);
++	if (has_read) {
++		lselect_table(L, 1, &readfds, &maxfd);
++		timeout_index = 2;
++	}
++	if (has_write) {
++		lselect_table(L, 2, &writefds, &maxfd);
++		timeout_index = 3;
++	}
++	if (has_read && !has_write && lua_isnil(L, 2) && lua_isnumber(L, 3))
++		timeout_index = 3;
++	if (!has_read && !has_write && !lua_isnoneornil(L, 1) && !lua_isnumber(L, 1))
++		return luaL_error(L, "bad argument to 'select' (expected socket table or timeout)");
++	if (lua_gettop(L) > timeout_index)
++		return luaL_error(L, "bad argument to 'select' (invalid option)");
++	timeout_seconds = luaL_optnumber(L, timeout_index, -1);
++	if (maxfd < 0 && timeout_seconds < 0)
++		return luaL_error(L, "no open sockets to check and no timeout set");
++	if (timeout_seconds < 0) {
++		timeout_pointer = NULL;
++	} else {
++		timeout.tv_sec = (long)timeout_seconds;
++		timeout.tv_usec = (long)((timeout_seconds - timeout.tv_sec) * 1000000.0);
++	}
++#ifdef _WIN32
++	result = select(0, has_read ? &readfds : NULL, has_write ? &writefds : NULL, NULL,
++		 timeout_pointer);
++#else
++	result = select(maxfd + 1, has_read ? &readfds : NULL, has_write ? &writefds : NULL, NULL,
++		 timeout_pointer);
++#endif
++	if (result == 0) {
++		lua_pushboolean(L, 0);
++		return 1;
++	}
++	if (result < 0) {
++#ifdef _WIN32
++		return luaL_error(L, "select failed: %d", WSAGetLastError());
++#else
++		return luaL_error(L, "select failed: %s", strerror(errno));
++#endif
++	}
++	if (has_read)
++		lselect_ready_table(L, 1, &readfds);
++	if (has_write) {
++		if (!has_read)
++			lua_newtable(L);
++		lselect_ready_table(L, 2, &writefds);
++	}
++	return has_write ? 2 : 1;
++}
++
+ static int
+ lusleep(lua_State *L) {
+@@ -312,4 +429,6 @@ luaopen_client_socket(lua_State *L) {
+ 		{ "shutdown", lshutdown },
+ 		{ "close", lclose },
+ 		{ "usleep", lusleep },
++		{ "select", lselect },
++		{ "poll", lselect },
+ 		{ NULL, NULL },
