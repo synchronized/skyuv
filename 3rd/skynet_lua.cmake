@@ -43,6 +43,11 @@ if(SKYUV_BUILD_LUA_INTERPRETER)
   # 入口来自第三方 Lua，沿用 Lua 库的配置，不应用 skyuv 自有代码警告策略。
   add_executable(skyuv_lua_interpreter "${SKYUV_LUA_SOURCE_DIR}/lua.c")
   target_link_libraries(skyuv_lua_interpreter PRIVATE skyuv::lua)
+  if(APPLE)
+    # 上游 LUA_USE_MACOSX 为解释器启用 readline，macOS SDK 提供对应系统库。
+    find_library(SKYUV_LUA_READLINE_LIBRARY NAMES readline REQUIRED)
+    target_link_libraries(skyuv_lua_interpreter PRIVATE "${SKYUV_LUA_READLINE_LIBRARY}")
+  endif()
   set_target_properties(skyuv_lua_interpreter PROPERTIES OUTPUT_NAME lua)
 endif()
 set_target_properties(skyuv_lua PROPERTIES EXPORT_NAME lua)
