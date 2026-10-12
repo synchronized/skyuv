@@ -110,6 +110,8 @@ cmake --build --preset windows-vs2022-debug
 下游可移除自行构建 crypt 的目标，将 `package.cpath` 指向 `luaclib/?.dll`（Unix 为 `?.so`）。
 从旧布局升级时，应删除生成目录或安装目录内的 `client/socket.dll`（Unix 为 `socket.so`），
 避免 Lua 优先加载旧模块；源码目录不需要修改。
+便携 `client.socket` 使用 libuv 专属 I/O 线程，整数参数是连接 ID，不是原生句柄。
+超时、就绪等待、半关闭与 GC 行为见 [客户端指南](docs/guides/client-socket.md)。
 独立 Lua 解释器默认启用，CMake 目标为 `skyuv_lua_interpreter`，产物为构建目录
 `3rd/lua`（Windows 为 `3rd/lua.exe`，Visual Studio 生成器另含 `Debug` 或 `Release` 子目录）。
 例如执行 `cmake --build --preset windows-vs2022-debug --target skyuv_lua_interpreter`。

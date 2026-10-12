@@ -87,7 +87,8 @@ static void tcp_connections(void **unused) {
 	assert_int_equal(uv_ip4_addr("127.0.0.1", 0, &address), 0);
 	assert_int_equal(uv_tcp_bind(&listener, (const struct sockaddr *)&address, 0), 0);
 	assert_int_equal(uv_listen((uv_stream_t *)&listener, 128, accept_client), 0);
-	assert_int_equal(uv_tcp_getsockname(&listener, (struct sockaddr *)&address, &address_length), 0);
+	assert_int_equal(uv_tcp_getsockname(&listener, (struct sockaddr *)&address, &address_length),
+					 0);
 	int port = (int)ntohs(address.sin_port);
 	struct skyuv_client_runtime *runtime = NULL;
 	assert_int_equal(skyuv_client_runtime_create(&runtime), 0);
@@ -98,6 +99,14 @@ static void tcp_connections(void **unused) {
 	assert_int_equal(uv_thread_join(&worker), 0);
 	assert_int_equal(call.result, 0);
 	assert_true(call.id > 0);
+	int readable = 0;
+	int writable = 0;
+	assert_int_equal(skyuv_client_runtime_ready(runtime, call.id, &readable, &writable), 0);
+	assert_int_equal(writable, 1);
+	assert_int_equal(skyuv_client_runtime_shutdown(runtime, call.id, 1, 0), 0);
+	assert_int_equal(skyuv_client_runtime_shutdown(runtime, call.id, 1, 0), 0);
+	assert_int_equal(skyuv_client_runtime_ready(runtime, call.id, &readable, &writable), 0);
+	assert_int_equal(readable, 1);
 	(void)uv_run(&loop, UV_RUN_NOWAIT);
 	assert_int_equal(skyuv_client_runtime_close(runtime, call.id), 0);
 	int64_t previous = 0;
@@ -111,10 +120,13 @@ static void tcp_connections(void **unused) {
 		assert_int_equal(skyuv_client_runtime_close(runtime, id), 0);
 	}
 	int64_t id = 42;
+	assert_int_equal(skyuv_client_runtime_connect_timeout(runtime, "127.0.0.1", port, 0, &id),
+					 UV_ETIMEDOUT);
+	assert_int_equal(id, 0);
 	assert_int_equal(skyuv_client_runtime_connect(runtime, "invalid", port, &id), UV_EINVAL);
 	assert_int_equal(id, 0);
 	assert_int_equal(skyuv_client_runtime_connect(runtime, "127.0.0.1", -1, &id), UV_EINVAL);
-	assert_int_equal(skyuv_client_runtime_close(runtime, previous + 1), UV_EBADF);
+	assert_int_equal(skyuv_client_runtime_close(runtime, previous + 100000), UV_EBADF);
 	/* 绑定但不监听的端口在测试期间保留，避免固定端口被其他进程占用。 */
 	assert_int_equal(uv_tcp_init(&loop, &refused), 0);
 	assert_int_equal(uv_ip4_addr("127.0.0.1", 0, &address), 0);
@@ -122,8 +134,8 @@ static void tcp_connections(void **unused) {
 	address_length = (int)sizeof(address);
 	assert_int_equal(uv_tcp_getsockname(&refused, (struct sockaddr *)&address, &address_length), 0);
 	/* 未监听的绑定端口在 macOS 可返回超时，其他平台通常拒绝连接。 */
-	int failure = skyuv_client_runtime_connect(runtime, "127.0.0.1",
-		(int)ntohs(address.sin_port), &id);
+	int failure =
+		skyuv_client_runtime_connect(runtime, "127.0.0.1", (int)ntohs(address.sin_port), &id);
 	assert_true(failure == UV_ECONNREFUSED || failure == UV_ETIMEDOUT);
 	assert_int_equal(id, 0);
 	assert_int_equal(skyuv_client_runtime_connect(runtime, "127.0.0.1", port, &id), 0);
@@ -223,10 +235,12 @@ static void tcp_io(void **unused) {
 	struct skyuv_client_runtime *runtime = NULL;
 	assert_int_equal(skyuv_client_runtime_create(&runtime), 0);
 	int64_t id = 0;
-	assert_int_equal(skyuv_client_runtime_connect(runtime, "127.0.0.1", (int)ntohs(address.sin_port), &id), 0);
+	assert_int_equal(
+		skyuv_client_runtime_connect(runtime, "127.0.0.1", (int)ntohs(address.sin_port), &id), 0);
 	char buffer[1024];
 	size_t size = 1;
-	assert_int_equal(skyuv_client_runtime_recv(runtime, id, buffer, sizeof(buffer), &size), UV_EAGAIN);
+	assert_int_equal(skyuv_client_runtime_recv(runtime, id, buffer, sizeof(buffer), &size),
+					 UV_EAGAIN);
 	assert_int_equal(size, 0);
 	assert_int_equal(skyuv_client_runtime_send(runtime, id, NULL, 0), 0);
 	assert_int_equal(skyuv_client_runtime_send(runtime, id, NULL, 1), UV_EINVAL);
@@ -274,7 +288,8 @@ static void tcp_io(void **unused) {
 	assert_int_equal(total, 131072U);
 	assert_int_equal(skyuv_client_runtime_close(runtime, id), 0);
 	assert_int_equal(skyuv_client_runtime_send(runtime, id, data, 1), UV_EBADF);
-	assert_int_equal(skyuv_client_runtime_recv(runtime, id, buffer, sizeof(buffer), &size), UV_EBADF);
+	assert_int_equal(skyuv_client_runtime_recv(runtime, id, buffer, sizeof(buffer), &size),
+					 UV_EBADF);
 	free(data);
 	skyuv_client_runtime_destroy(&runtime);
 	uv_close((uv_handle_t *)&listener, NULL);
@@ -283,8 +298,7 @@ static void tcp_io(void **unused) {
 }
 
 int main(void) {
-	const struct CMUnitTest tests[] = {
-		cmocka_unit_test(lifecycle), cmocka_unit_test(tcp_connections), cmocka_unit_test(tcp_io)
-	};
+	const struct CMUnitTest tests[] = {cmocka_unit_test(lifecycle),
+									   cmocka_unit_test(tcp_connections), cmocka_unit_test(tcp_io)};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }

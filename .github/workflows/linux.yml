@@ -424,9 +424,10 @@ jobs:
           cmake --build --preset linux-clang-asan-ubsan --target
           skyuv_test_allocator skyuv_test_memory skyuv_test_thread skyuv_test_time
           skyuv_test_atomic skyuv_test_client_runtime
+          skyuv_lua_interpreter skyuv_portable_lua_module_client
           skyuv_test_socket_internal skyuv_test_socket_stress
 
       - name: 运行内存与未定义行为测试
         run: >-
           ctest --preset linux-clang-asan-ubsan
-          -R "^(allocator\\.basic|memory\\.basic|platform\\.(thread|time|atomic)|socket\\.(internal|stress)|client\\.runtime)$"
+          -R "^(allocator\\.basic|memory\\.basic|platform\\.(thread|time|atomic)|socket\\.(internal|stress)|client\\.runtime|lua\\.client_(modules|libuv))$"

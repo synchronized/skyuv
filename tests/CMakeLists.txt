@@ -417,6 +417,11 @@ if(TARGET skyuv_lua)
       add_test(NAME lua.client_modules COMMAND skyuv_lua_interpreter
         "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/client_modules.lua"
         "$<TARGET_FILE_DIR:skyuv_portable_lua_module_client>/?$<TARGET_FILE_SUFFIX:skyuv_portable_lua_module_client>")
+      add_test(NAME lua.client_libuv COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/scripts/client_libuv.py"
+        "$<TARGET_FILE:skyuv_lua_interpreter>" "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/client_libuv.lua"
+        "$<TARGET_FILE_DIR:skyuv_portable_lua_module_client>/?$<TARGET_FILE_SUFFIX:skyuv_portable_lua_module_client>")
+      set_tests_properties(lua.client_libuv PROPERTIES TIMEOUT 60 LABELS stability)
     endif()
   endif()
   add_executable(skyuv_test_lua test_lua.c)

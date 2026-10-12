@@ -53,6 +53,7 @@ set(required_entries
   "/bin/${SKYUV_TEST_EXECUTABLE_NAME}"
   "/cservice/snlua${SKYUV_TEST_MODULE_SUFFIX}"
   "/luaclib/skynet${SKYUV_TEST_MODULE_SUFFIX}"
+  "/luaclib/client${SKYUV_TEST_MODULE_SUFFIX}"
   "/lualib/loader.lua"
   "/service/bootstrap.lua"
   "/examples/skyuv.conf"

@@ -1,4 +1,5 @@
 #include "client_runtime.h"
+#include "../platform/client_shutdown.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,10 @@ struct client_request {
 	const void *source;
 	void *destination;
 	size_t size;
+	int64_t timeout_ms;
+	uv_shutdown_t shutdown;
+	int read;
+	int write_enabled;
 };
 
 struct client_connection {
@@ -32,6 +37,12 @@ struct client_connection {
 	size_t received_size;
 	int read_status;
 	int paused;
+	uv_timer_t timer;
+	int handles;
+	int timer_initialized;
+	int timed_out;
+	int write_closed;
+	int read_closed;
 };
 
 struct skyuv_client_runtime {
@@ -48,7 +59,41 @@ struct skyuv_client_runtime {
 	int stopping;
 	struct client_connection *connections;
 	int64_t next_id;
+	uint64_t revision;
 };
+
+static void notify(struct skyuv_client_runtime *runtime) {
+	uv_mutex_lock(&runtime->mutex);
+	++runtime->revision;
+	uv_cond_broadcast(&runtime->condition);
+	uv_mutex_unlock(&runtime->mutex);
+}
+
+uint64_t skyuv_client_runtime_revision(struct skyuv_client_runtime *runtime) {
+	if (runtime == NULL)
+		return 0;
+	uv_mutex_lock(&runtime->mutex);
+	uint64_t revision = runtime->revision;
+	uv_mutex_unlock(&runtime->mutex);
+	return revision;
+}
+
+void skyuv_client_runtime_wait(struct skyuv_client_runtime *runtime, uint64_t revision,
+							   int64_t timeout_ns) {
+	if (runtime == NULL) {
+		if (timeout_ns > 0)
+			uv_sleep((unsigned int)(((uint64_t)timeout_ns + 999999U) / 1000000U));
+		return;
+	}
+	uv_mutex_lock(&runtime->mutex);
+	if (runtime->revision == revision) {
+		if (timeout_ns < 0)
+			uv_cond_wait(&runtime->condition, &runtime->mutex);
+		else
+			(void)uv_cond_timedwait(&runtime->condition, &runtime->mutex, (uint64_t)timeout_ns);
+	}
+	uv_mutex_unlock(&runtime->mutex);
+}
 
 static void complete(struct client_request *request, int result) {
 	uv_mutex_lock(&request->mutex);
@@ -60,6 +105,8 @@ static void complete(struct client_request *request, int result) {
 
 static void connection_closed(uv_handle_t *handle) {
 	struct client_connection *connection = handle->data;
+	if (--connection->handles != 0)
+		return;
 	struct client_connection **entry = &connection->runtime->connections;
 	while (*entry != connection)
 		entry = &(*entry)->next;
@@ -70,11 +117,25 @@ static void connection_closed(uv_handle_t *handle) {
 		complete(request, request->result);
 }
 
+static void close_connection(struct client_connection *connection) {
+	if (!uv_is_closing((uv_handle_t *)&connection->tcp))
+		uv_close((uv_handle_t *)&connection->tcp, connection_closed);
+	if (connection->timer_initialized && !uv_is_closing((uv_handle_t *)&connection->timer))
+		uv_close((uv_handle_t *)&connection->timer, connection_closed);
+}
+
+static void connection_timeout(uv_timer_t *timer) {
+	struct client_connection *connection = timer->data;
+	connection->timed_out = 1;
+	connection->request->result = UV_ETIMEDOUT;
+	close_connection(connection);
+}
+
 static void allocate_read(uv_handle_t *handle, size_t suggested, uv_buf_t *buffer) {
 	(void)suggested;
 	struct client_connection *connection = handle->data;
 	*buffer = uv_buf_init(connection->received + connection->received_size,
-		(unsigned int)(CLIENT_RECEIVE_LIMIT - connection->received_size));
+						  (unsigned int)(CLIENT_RECEIVE_LIMIT - connection->received_size));
 }
 
 static void received(uv_stream_t *stream, ssize_t count, const uv_buf_t *buffer) {
@@ -90,19 +151,26 @@ static void received(uv_stream_t *stream, ssize_t count, const uv_buf_t *buffer)
 		connection->read_status = (int)count;
 		(void)uv_read_stop(stream);
 	}
+	if (count != 0)
+		notify(connection->runtime);
 }
 
 static void connected(uv_connect_t *connect, int result) {
 	struct client_connection *connection = connect->data;
 	struct client_request *request = connection->request;
+	if (connection->timed_out)
+		return;
+	if (connection->timer_initialized && !uv_is_closing((uv_handle_t *)&connection->timer))
+		uv_close((uv_handle_t *)&connection->timer, connection_closed);
 	if (result == 0)
 		result = uv_read_start((uv_stream_t *)&connection->tcp, allocate_read, received);
 	if (result != 0) {
 		request->result = result;
-		uv_close((uv_handle_t *)&connection->tcp, connection_closed);
+		close_connection(connection);
 		return;
 	}
 	request->id = connection->id;
+	connection->runtime->next_id = connection->id;
 	connection->request = NULL;
 	complete(request, 0);
 }
@@ -122,16 +190,37 @@ static int start_connect(uv_loop_t *loop, void *argument) {
 	}
 	connection->runtime = runtime;
 	connection->request = request;
-	connection->id = ++runtime->next_id;
+	connection->id = runtime->next_id + 1;
 	connection->tcp.data = connection;
 	connection->connect.data = connection;
+	connection->handles = 1;
 	connection->next = runtime->connections;
 	runtime->connections = connection;
+	if (request->timeout_ms == 0) {
+		request->result = UV_ETIMEDOUT;
+		close_connection(connection);
+		return 0;
+	}
+	if (request->timeout_ms >= 0) {
+		result = uv_timer_init(loop, &connection->timer);
+		if (result == 0) {
+			connection->timer_initialized = 1;
+			++connection->handles;
+			connection->timer.data = connection;
+			result = uv_timer_start(&connection->timer, connection_timeout,
+									(uint64_t)request->timeout_ms, 0);
+		}
+		if (result != 0) {
+			request->result = result;
+			close_connection(connection);
+			return 0;
+		}
+	}
 	result = uv_tcp_connect(&connection->connect, &connection->tcp,
-		(const struct sockaddr *)&request->address, connected);
+							(const struct sockaddr *)&request->address, connected);
 	if (result != 0) {
 		request->result = result;
-		uv_close((uv_handle_t *)&connection->tcp, connection_closed);
+		close_connection(connection);
 	}
 	/* 即时失败也经关闭回调确认资源释放，调用者等 complete。 */
 	return 0;
@@ -151,7 +240,7 @@ static int start_close(uv_loop_t *loop, void *argument) {
 		return UV_EBADF;
 	}
 	connection->request = request;
-	uv_close((uv_handle_t *)&connection->tcp, connection_closed);
+	close_connection(connection);
 	return 0;
 }
 
@@ -193,6 +282,8 @@ static int start_send(uv_loop_t *loop, void *argument) {
 	struct client_connection *connection = find_connection(request);
 	if (connection == NULL)
 		return UV_EBADF;
+	if (connection->write_closed)
+		return UV_EPIPE;
 	if (request->size == 0) {
 		complete(request, 0);
 		return 0;
@@ -226,8 +317,8 @@ static int receive_data(uv_loop_t *loop, void *argument) {
 	return 0;
 }
 
-int skyuv_client_runtime_send(struct skyuv_client_runtime *runtime, int64_t id,
-	const void *buffer, size_t size) {
+int skyuv_client_runtime_send(struct skyuv_client_runtime *runtime, int64_t id, const void *buffer,
+							  size_t size) {
 	if (runtime == NULL || (buffer == NULL && size != 0))
 		return UV_EINVAL;
 	/* 分段提交避免 uv_buf_init 的 unsigned int 长度截断，保持完整发送。 */
@@ -250,8 +341,8 @@ int skyuv_client_runtime_send(struct skyuv_client_runtime *runtime, int64_t id,
 	return 0;
 }
 
-int skyuv_client_runtime_recv(struct skyuv_client_runtime *runtime, int64_t id,
-	void *buffer, size_t capacity, size_t *size) {
+int skyuv_client_runtime_recv(struct skyuv_client_runtime *runtime, int64_t id, void *buffer,
+							  size_t capacity, size_t *size) {
 	if (size == NULL)
 		return UV_EINVAL;
 	*size = 0;
@@ -268,8 +359,8 @@ int skyuv_client_runtime_recv(struct skyuv_client_runtime *runtime, int64_t id,
 	return result;
 }
 
-int skyuv_client_runtime_connect(struct skyuv_client_runtime *runtime,
-	const char *address, int port, int64_t *id) {
+int skyuv_client_runtime_connect_timeout(struct skyuv_client_runtime *runtime, const char *address,
+										 int port, int64_t timeout_ms, int64_t *id) {
 	if (id == NULL)
 		return UV_EINVAL;
 	*id = 0;
@@ -277,11 +368,80 @@ int skyuv_client_runtime_connect(struct skyuv_client_runtime *runtime,
 		return UV_EINVAL;
 	struct client_request request = {0};
 	request.runtime = runtime;
+	request.timeout_ms = timeout_ms;
 	int result = uv_ip4_addr(address, port, &request.address);
 	if (result == 0)
 		result = submit_request(&request, start_connect);
 	if (result == 0)
 		*id = request.id;
+	return result;
+}
+
+int skyuv_client_runtime_connect(struct skyuv_client_runtime *runtime, const char *address,
+								 int port, int64_t *id) {
+	return skyuv_client_runtime_connect_timeout(runtime, address, port, -1, id);
+}
+
+static void shutdown_done(uv_shutdown_t *shutdown, int status) {
+	complete(shutdown->data, status);
+}
+
+static int start_shutdown(uv_loop_t *loop, void *argument) {
+	(void)loop;
+	struct client_request *request = argument;
+	struct client_connection *connection = find_connection(request);
+	if (connection == NULL)
+		return UV_EBADF;
+	if (request->read && !connection->read_closed) {
+		int result = skyuv_client_shutdown_read(&connection->tcp);
+		if (result != 0)
+			return result;
+		(void)uv_read_stop((uv_stream_t *)&connection->tcp);
+		connection->read_status = UV_EOF;
+		connection->read_closed = 1;
+	}
+	if (request->write_enabled && !connection->write_closed) {
+		connection->write_closed = 1;
+		request->shutdown.data = request;
+		return uv_shutdown(&request->shutdown, (uv_stream_t *)&connection->tcp, shutdown_done);
+	}
+	complete(request, 0);
+	return 0;
+}
+
+int skyuv_client_runtime_shutdown(struct skyuv_client_runtime *runtime, int64_t id, int read,
+								  int write) {
+	if (runtime == NULL || (!read && !write))
+		return UV_EINVAL;
+	struct client_request request = {0};
+	request.runtime = runtime;
+	request.id = id;
+	request.read = read;
+	request.write_enabled = write;
+	return submit_request(&request, start_shutdown);
+}
+
+static int check_ready(uv_loop_t *loop, void *argument) {
+	(void)loop;
+	struct client_request *request = argument;
+	struct client_connection *connection = find_connection(request);
+	if (connection == NULL)
+		return UV_EBADF;
+	request->read = connection->received_size != 0 || connection->read_status != 0;
+	request->write_enabled = !connection->write_closed;
+	return 0;
+}
+
+int skyuv_client_runtime_ready(struct skyuv_client_runtime *runtime, int64_t id, int *read,
+							   int *write) {
+	if (runtime == NULL || read == NULL || write == NULL)
+		return UV_EINVAL;
+	struct client_request request = {0};
+	request.runtime = runtime;
+	request.id = id;
+	int result = skyuv_client_runtime_call(runtime, check_ready, &request);
+	*read = request.read;
+	*write = request.write_enabled;
 	return result;
 }
 
@@ -305,9 +465,9 @@ static void execute(uv_async_t *wakeup) {
 	uv_mutex_lock(&runtime->mutex);
 	if (runtime->stopping) {
 		uv_mutex_unlock(&runtime->mutex);
-		for (struct client_connection *connection = runtime->connections;
-			connection != NULL; connection = connection->next)
-			uv_close((uv_handle_t *)&connection->tcp, connection_closed);
+		for (struct client_connection *connection = runtime->connections; connection != NULL;
+			 connection = connection->next)
+			close_connection(connection);
 		/* loop 归属线程发起关闭；保持运行直到关闭回调与取消请求完成。 */
 		uv_walk(&runtime->loop, close_handle, NULL);
 		return;
@@ -382,8 +542,8 @@ int skyuv_client_runtime_create(struct skyuv_client_runtime **output) {
 	return 0;
 }
 
-int skyuv_client_runtime_call(struct skyuv_client_runtime *runtime,
-	skyuv_client_command command, void *argument) {
+int skyuv_client_runtime_call(struct skyuv_client_runtime *runtime, skyuv_client_command command,
+							  void *argument) {
 	if (runtime == NULL || command == NULL)
 		return UV_EINVAL;
 	uv_mutex_lock(&runtime->mutex);

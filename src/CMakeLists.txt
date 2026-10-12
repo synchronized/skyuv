@@ -4,13 +4,18 @@ add_library(skyuv_platform STATIC
   platform/thread.c
   platform/time.c
 )
-add_library(skyuv_client_runtime STATIC client/client_runtime.c)
+add_library(skyuv_client_runtime STATIC client/client_runtime.c platform/client_shutdown.c)
+set_target_properties(skyuv_client_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(skyuv_client_runtime PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/client")
 target_link_libraries(skyuv_client_runtime PUBLIC skyuv::libuv)
 if(UNIX)
   target_compile_definitions(skyuv_client_runtime PUBLIC _POSIX_C_SOURCE=200809L)
 endif()
 skyuv_target_compile_warnings(skyuv_client_runtime)
+add_library(skyuv_client_lua OBJECT client/client_lua.c client/client_stdin.c)
+set_target_properties(skyuv_client_lua PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(skyuv_client_lua PRIVATE skyuv::lua skyuv_client_runtime)
+skyuv_target_compile_warnings(skyuv_client_lua)
 add_library(skyuv::platform ALIAS skyuv_platform)
 set_target_properties(skyuv_platform PROPERTIES EXPORT_NAME platform)
 
@@ -208,7 +213,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   add_library(
     skyuv_portable_lua_module_client
     MODULE
-      "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-clientsocket.c"
+      $<TARGET_OBJECTS:skyuv_client_lua>
       "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-crypt.c"
       "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lsha1.c"
   )
@@ -247,7 +252,7 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     )
   endif()
   target_link_libraries(
-    skyuv_portable_lua_module_client PRIVATE skyuv::lua skyuv::platform skyuv::libuv
+    skyuv_portable_lua_module_client PRIVATE skyuv::lua skyuv::platform skyuv::libuv skyuv_client_runtime
   )
   skyuv_target_compile_utf8(skyuv_portable_lua_module_client)
 
