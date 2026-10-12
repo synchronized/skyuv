@@ -17,6 +17,8 @@
 
 ## 路线图与计划
 
+- [`plans/010-windows-build-diagnostics.md`](plans/010-windows-build-diagnostics.md)：Windows 构建警告与诊断上下文治理。
+- [`versions/v0.2.0-beta.2.md`](versions/v0.2.0-beta.2.md)：构建诊断治理预览版规划。
 - [`ROADMAP.md`](ROADMAP.md)：全局阶段、依赖关系和状态摘要。
 - [`plans/README.md`](plans/README.md)：计划索引与状态定义。
 - [`plans/005-lua-runtime.md`](plans/005-lua-runtime.md)：已完成的 Lua 模块与运行环境计划及验收摘要。
@@ -42,6 +44,7 @@
 
 ## 实施记录
 
+- [`records/windows-build-diagnostics.md`](records/windows-build-diagnostics.md)：MSVC Debug 全量重建的警告基线与审查优先级。
 - [`records/lua-runtime-stage-4.md`](records/lua-runtime-stage-4.md)：阶段 4 的模块接入、
   跨平台验证过程和已知差异。
 - [`records/performance-baseline.md`](records/performance-baseline.md)：固定 Linux 环境的性能基线
