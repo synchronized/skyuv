@@ -5,6 +5,7 @@
 
 ## 交付与运行时
 
+- [`2026-10-12-v0.2.0-beta.3-release-acceptance.md`](2026-10-12-v0.2.0-beta.3-release-acceptance.md)：beta.3 三平台发布与公开资产复核。
 - [`client-libuv-beta.3.md`](client-libuv-beta.3.md)：beta.3 客户端迁移的三平台开发验收与生命周期结论。
 - [`windows-build-diagnostics.md`](windows-build-diagnostics.md)：Windows MSVC Debug 构建诊断首轮采样。
 - [`2026-10-12-v0.2.0-beta.1-release-acceptance.md`](2026-10-12-v0.2.0-beta.1-release-acceptance.md)：`v0.2.0-beta.1` 三平台预览版发布验收。
