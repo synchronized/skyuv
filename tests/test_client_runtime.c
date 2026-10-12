@@ -120,8 +120,10 @@ static void tcp_connections(void **unused) {
 	assert_int_equal(uv_tcp_bind(&refused, (const struct sockaddr *)&address, 0), 0);
 	address_length = (int)sizeof(address);
 	assert_int_equal(uv_tcp_getsockname(&refused, (struct sockaddr *)&address, &address_length), 0);
-	assert_int_equal(skyuv_client_runtime_connect(runtime, "127.0.0.1",
-		(int)ntohs(address.sin_port), &id), UV_ECONNREFUSED);
+	/* 未监听的绑定端口在 macOS 可返回超时，其他平台通常拒绝连接。 */
+	int failure = skyuv_client_runtime_connect(runtime, "127.0.0.1",
+		(int)ntohs(address.sin_port), &id);
+	assert_true(failure == UV_ECONNREFUSED || failure == UV_ETIMEDOUT);
 	assert_int_equal(id, 0);
 	assert_int_equal(skyuv_client_runtime_connect(runtime, "127.0.0.1", port, &id), 0);
 	/* 销毁时仍有已连接 socket，必须完成关闭回调后释放运行时。 */
