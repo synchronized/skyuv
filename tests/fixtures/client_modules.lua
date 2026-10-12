@@ -4,6 +4,10 @@ local socket = require "client.socket"
 local crypt = require "client.crypt"
 assert(type(socket.connect) == "function")
 assert(type(socket.select) == "function")
+local connected, reason = pcall(socket.connect, "127.0.0.1", 0)
+assert(not connected)
+assert(tostring(reason):find("native error", 1, true), tostring(reason))
+assert(not tostring(reason):find("native error 10093", 1, true), tostring(reason))
 assert(crypt.hexencode(crypt.sha1("abc")) ==
 	"a9993e364706816aba3e25717850c26c9cd0d89d")
 local data = "skyuv\0client"

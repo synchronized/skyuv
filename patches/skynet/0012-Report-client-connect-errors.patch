@@ -1,0 +1,67 @@
+--- a/lualib-src/lua-clientsocket.c
++++ b/lualib-src/lua-clientsocket.c
+@@ -8,6 +8,7 @@
+ #include <lauxlib.h>
+ #include <string.h>
+ #include <stdint.h>
++#include <uv.h>
+ #include <pthread.h>
+ #include <stdlib.h>
+ 
+@@ -33,10 +34,32 @@
+ #define CACHE_SIZE 0x1000	
+ 
+ static int
++connect_error(lua_State *L, const char *addr, int port, socket_fd fd) {
++#ifdef _WIN32
++	int native_error = WSAGetLastError();
++	if (fd != INVALID_SOCKET)
++		closesocket(fd);
++#else
++	int native_error = errno;
++	if (fd >= 0)
++		close(fd);
++#endif
++	int error = uv_translate_sys_error(native_error);
++	return luaL_error(L, "Connect %s %d failed: %s (%s, native error %d)",
++		addr, port, uv_strerror(error), uv_err_name(error), native_error);
++}
++
++static int
+ lconnect(lua_State *L) {
+ 	const char * addr = luaL_checkstring(L, 1);
+ 	int port = luaL_checkinteger(L, 2);
+ 	socket_fd fd = socket(AF_INET,SOCK_STREAM,0);
++#ifdef _WIN32
++	if (fd == INVALID_SOCKET)
++#else
++	if (fd < 0)
++#endif
++		return connect_error(L, addr, port, fd);
+ 	struct sockaddr_in my_addr;
+ 
+ 	my_addr.sin_addr.s_addr=inet_addr(addr);
+@@ -46,7 +69,7 @@
+ 	int r = connect(fd,(struct sockaddr *)&my_addr,sizeof(struct sockaddr_in));
+ 
+ 	if (r == -1) {
+-		return luaL_error(L, "Connect %s %d failed", addr, port);
++		return connect_error(L, addr, port, fd);
+ 	}
+ 
+ #ifdef _WIN32
+@@ -423,6 +446,14 @@
+ 
+ LUAMOD_API int
+ luaopen_client_socket(lua_State *L) {
++#ifdef _WIN32
++	/* 独立解释器尚未启动网络层，由 libuv 初始化进程级 Winsock。 */
++	uv_loop_t loop;
++	int init_error = uv_loop_init(&loop);
++	if (init_error != 0)
++		return luaL_error(L, "Initialize client socket failed: %s", uv_strerror(init_error));
++	uv_loop_close(&loop);
++#endif
+ 	luaL_checkversion(L);
+ 	luaL_Reg l[] = {
+ 		{ "connect", lconnect },

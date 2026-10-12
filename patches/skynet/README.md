@@ -80,3 +80,4 @@ git -C 3rd/skynet status --short
 - `0011-Add-client-socket-select-poll.patch`：为 `client.socket` 增加与
   `lsocket.select` 兼容的读写就绪轮询接口，并提供 `poll` 别名；句柄仍以 Lua
   整数传递，不改变现有 connect/send/recv API。
+- `0012-Report-client-connect-errors.patch`：连接失败时保留原生错误码，附带 libuv 错误名与原因并关闭失败 socket；独立 Windows Lua 加载模块时通过 libuv 初始化 Winsock，避免依赖 Skynet 网络层。
