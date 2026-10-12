@@ -403,6 +403,11 @@ add_test(NAME socket.stress COMMAND skyuv_test_socket_stress)
 set_tests_properties(socket.stress PROPERTIES LABELS stability TIMEOUT 20)
 
 if(TARGET skyuv_lua)
+  add_executable(skyuv_test_client_runtime test_client_runtime.c)
+  target_link_libraries(skyuv_test_client_runtime PRIVATE skyuv_client_runtime cmocka::cmocka)
+  skyuv_target_compile_warnings(skyuv_test_client_runtime)
+  add_test(NAME client.runtime COMMAND skyuv_test_client_runtime)
+  set_tests_properties(client.runtime PROPERTIES TIMEOUT 30 LABELS stability)
   if(TARGET skyuv_lua_interpreter)
     add_test(NAME lua.interpreter COMMAND skyuv_lua_interpreter -e
       "assert(6 * 7 == 42); assert(require('math').sqrt(81) == 9)")

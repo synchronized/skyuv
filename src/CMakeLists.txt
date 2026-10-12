@@ -4,6 +4,10 @@ add_library(skyuv_platform STATIC
   platform/thread.c
   platform/time.c
 )
+add_library(skyuv_client_runtime STATIC client/client_runtime.c)
+target_include_directories(skyuv_client_runtime PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/client")
+target_link_libraries(skyuv_client_runtime PUBLIC skyuv::libuv)
+skyuv_target_compile_warnings(skyuv_client_runtime)
 add_library(skyuv::platform ALIAS skyuv_platform)
 set_target_properties(skyuv_platform PROPERTIES EXPORT_NAME platform)
 

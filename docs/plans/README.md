@@ -30,7 +30,7 @@
 | 008 | [配置、日志与 PID 路径约定](008-runtime-paths.md) | 草案 | 007（不依赖固定性能基线） |
 | 009 | [CMake 第三方消费与 Lua C 模块接入](009-cmake-consumer-integration.md) | 进行中 | 005、007 |
 | 010 | [Windows 构建诊断治理](010-windows-build-diagnostics.md) | 就绪 | 可独立推进，不依赖固定性能基线 |
-| 011 | [client.socket 的 libuv 改造](011-client-socket-libuv.md) | 就绪 | 客户端初始化与诊断修复；下游兼容边界已确认 |
+| 011 | [client.socket 的 libuv 改造](011-client-socket-libuv.md) | 进行中 | 客户端初始化与诊断修复；下游兼容边界已确认 |
 
 后续计划在其前置阶段接近完成时编写，避免过早固化尚未验证的实现细节。
 
