@@ -47,6 +47,7 @@
 
 ## 实施记录
 
+- [`records/client-libuv-beta.3.md`](records/client-libuv-beta.3.md)：客户端 libuv 迁移开发验收。
 - [`records/windows-build-diagnostics.md`](records/windows-build-diagnostics.md)：MSVC Debug 全量重建的警告基线与审查优先级。
 - [`records/lua-runtime-stage-4.md`](records/lua-runtime-stage-4.md)：阶段 4 的模块接入、
   跨平台验证过程和已知差异。

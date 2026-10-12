@@ -75,5 +75,6 @@ Lua userdata GC 回收客户端运行时；stdin 使用进程级队列，后台�
 阻塞等待输入。读关闭后缓存消费完统一返回 EOF，Windows 原生 WSAESHUTDOWN 转换行为明确记录。
 Windows 全套 69/69 测试及客户端连续三轮测试通过；独立 Lua 包含十轮二进制收发、半关闭、
 五轮存活连接 GC 与 stdin 管道保持打开时的 GC/退出验证。
-接口、上限及生命周期见 [客户端指南](../guides/client-socket.md)。跨平台 CI 与发行验收尚待完成，
-不能宣称 beta.3 已发布。
+接口、上限及生命周期见 [客户端指南](../guides/client-socket.md)。三平台开发 CI、Windows Release
+完整测试与 sanitizer 已通过，详见 [开发验收记录](../records/client-libuv-beta.3.md)。
+发行工作流与公开资产验收尚待完成，不能宣称 beta.3 已发布。

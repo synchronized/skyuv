@@ -20,6 +20,30 @@
 
 - 后续版本继续维护 skyuv 作为 `add_subdirectory` 或 FetchContent 子项目的路径隔离。
 
+## 0.2.0-beta.3 - 2026-10-12
+
+本预览版交付 libuv 客户端网络，不代表 v0.2.0 正式版的全部门槛已满足。
+Windows 构建诊断治理仍按 beta.2 计划独立跟踪，未包含在本版完成范围。
+
+### 新增与变化
+
+- 便携 client.socket 改用专属 libuv I/O 线程，支持同步连接、完整发送、有界接收、
+  select/poll 就绪等待、半关闭及 Lua GC 清理；整数参数改为模块实例内的连接 ID。
+- connect 增加可选的秒级超时参数，失败异常包含目标地址、端口、libuv 错误名和原因。
+- 统一 client.dll/client.so，提供 client.socket 与 client.crypt；SHA-1 使用 crypt.sha1。
+- 提供默认启用的可选 Lua 解释器目标 skyuv_lua_interpreter，可通过
+  SKYUV_BUILD_LUA_INTERPRETER=OFF 关闭，解释器暂不加入安装包。
+- stdin 保持行与状态协议，使用进程级共享队列和 libuv 读取，避免 GC 与退出锁等待。
+
+### 兼容边界
+
+- 连接 ID 不是原生 fd/SOCKET，不能交给其他网络库；旧 client/socket.dll 或 socket.so 应清理。
+- 读半关闭执行原生适配，缓存消费完统一报告 EOF；Windows 原生 WSAESHUTDOWN 不直接暴露。
+- 使用过 stdin 的 client 模块持有进程级加载引用，驻留到进程退出。
+- 不包含 DNS、IPv6、异步 Lua API、共享 I/O 线程或稳定 ABI 承诺。
+
+详细约定见 [客户端指南](docs/guides/client-socket.md)。
+
 ## 0.2.0-beta.1 - 2026-10-12
 
 本预览版本用于验证新增 socket 就绪轮询能力，不代表 `v0.2.0` 正式版的全部交付范围。详见
