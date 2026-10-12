@@ -4,7 +4,8 @@ foreach(
   variable
   IN ITEMS
     SKYUV_TEST_ARCHIVE_DIR
-    SKYUV_TEST_LINKER
+    SKYUV_TEST_PE_READER
+    SKYUV_TEST_PE_READER_STYLE
     SKYUV_TEST_PACKAGE_EXTENSION
 )
   if(NOT DEFINED ${variable} OR "${${variable}}" STREQUAL "")
@@ -39,8 +40,15 @@ if(pe_count EQUAL 0)
 endif()
 
 foreach(pe_file IN LISTS pe_files)
+  if(SKYUV_TEST_PE_READER_STYLE STREQUAL "readobj")
+    set(reader_arguments --coff-imports)
+  elseif(SKYUV_TEST_PE_READER_STYLE STREQUAL "objdump")
+    set(reader_arguments -p)
+  else()
+    set(reader_arguments /DUMP /DEPENDENTS)
+  endif()
   execute_process(
-    COMMAND "${SKYUV_TEST_LINKER}" /DUMP /DEPENDENTS "${pe_file}"
+    COMMAND "${SKYUV_TEST_PE_READER}" ${reader_arguments} "${pe_file}"
     RESULT_VARIABLE dumpbin_result
     OUTPUT_VARIABLE dependencies
     ERROR_VARIABLE dumpbin_error

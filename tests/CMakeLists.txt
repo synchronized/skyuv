@@ -45,16 +45,32 @@ set_tests_properties(
 
 if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
   if(CMAKE_LINKER MATCHES "lld-link")
-    find_program(SKYUV_TEST_LINKER NAMES dumpbin REQUIRED)
+    find_program(SKYUV_TEST_PE_READER NAMES dumpbin llvm-readobj)
+    if(NOT SKYUV_TEST_PE_READER AND CMAKE_OBJDUMP)
+      set(SKYUV_TEST_PE_READER "${CMAKE_OBJDUMP}")
+      set(SKYUV_TEST_PE_READER_STYLE "objdump")
+    endif()
+    if(NOT SKYUV_TEST_PE_READER)
+      message(FATAL_ERROR "lld-link 下静态 CRT 审计需要 dumpbin、llvm-readobj 或 CMAKE_OBJDUMP")
+    endif()
+    if(NOT SKYUV_TEST_PE_READER_STYLE)
+      if(SKYUV_TEST_PE_READER MATCHES "llvm-readobj")
+        set(SKYUV_TEST_PE_READER_STYLE "readobj")
+      else()
+        set(SKYUV_TEST_PE_READER_STYLE "dumpbin")
+      endif()
+    endif()
   else()
-    set(SKYUV_TEST_LINKER "${CMAKE_LINKER}")
+    set(SKYUV_TEST_PE_READER "${CMAKE_LINKER}")
+    set(SKYUV_TEST_PE_READER_STYLE "dumpbin")
   endif()
   add_test(
     NAME package.static_crt
     COMMAND
       "${CMAKE_COMMAND}"
       "-DSKYUV_TEST_ARCHIVE_DIR=${PROJECT_BINARY_DIR}/package-test-output"
-      "-DSKYUV_TEST_LINKER=${SKYUV_TEST_LINKER}"
+      "-DSKYUV_TEST_PE_READER=${SKYUV_TEST_PE_READER}"
+      "-DSKYUV_TEST_PE_READER_STYLE=${SKYUV_TEST_PE_READER_STYLE}"
       "-DSKYUV_TEST_PACKAGE_EXTENSION=${SKYUV_PACKAGE_EXTENSION}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_static_crt.cmake"
   )
