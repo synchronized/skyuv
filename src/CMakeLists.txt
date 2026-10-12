@@ -4,12 +4,16 @@ add_library(skyuv_platform STATIC
   platform/thread.c
   platform/time.c
 )
-add_library(skyuv_client_runtime STATIC client/client_runtime.c platform/client_shutdown.c)
+add_library(skyuv_client_runtime STATIC client/client_runtime.c platform/client_shutdown.c platform/client_module.c)
 set_target_properties(skyuv_client_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(skyuv_client_runtime PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/client")
 target_link_libraries(skyuv_client_runtime PUBLIC skyuv::libuv)
 if(UNIX)
   target_compile_definitions(skyuv_client_runtime PUBLIC _POSIX_C_SOURCE=200809L)
+  target_link_libraries(skyuv_client_runtime PUBLIC ${CMAKE_DL_LIBS})
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_compile_definitions(skyuv_client_runtime PUBLIC _DEFAULT_SOURCE=1 PRIVATE _GNU_SOURCE=1)
 endif()
 skyuv_target_compile_warnings(skyuv_client_runtime)
 add_library(skyuv_client_lua OBJECT client/client_lua.c client/client_stdin.c)

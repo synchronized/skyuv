@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../platform/client_module.h"
 
 /* stdin 属于进程。阻塞读取线程只访问静态队列，不持有 Lua 对象；
  * 不因任一 Lua 状态 GC 关闭共享 stdin，进程退出负责终止尚在等待输入的线程。
@@ -25,7 +26,9 @@ static struct {
 static uv_once_t once = UV_ONCE_INIT;
 
 static void initialize(void) {
-	input.init_error = uv_mutex_init(&input.mutex);
+	input.init_error = skyuv_client_module_retain(&input);
+	if (input.init_error == 0)
+		input.init_error = uv_mutex_init(&input.mutex);
 }
 
 static void read_input(void *argument) {
