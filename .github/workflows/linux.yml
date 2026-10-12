@@ -399,10 +399,10 @@ jobs:
       - name: 构建并发测试
         run: >-
           cmake --build --preset linux-clang-tsan --target
-          skyuv_test_thread skyuv_test_atomic
+          skyuv_test_thread skyuv_test_atomic skyuv_test_client_runtime
 
       - name: 运行并发测试
-        run: ctest --preset linux-clang-tsan -R "platform\\.(thread|atomic)"
+        run: ctest --preset linux-clang-tsan -R "platform\\.(thread|atomic)|client\\.runtime"
 
   address-undefined-sanitizer:
     name: Clang AddressSanitizer + UndefinedBehaviorSanitizer
@@ -423,10 +423,10 @@ jobs:
         run: >-
           cmake --build --preset linux-clang-asan-ubsan --target
           skyuv_test_allocator skyuv_test_memory skyuv_test_thread skyuv_test_time
-          skyuv_test_atomic
+          skyuv_test_atomic skyuv_test_client_runtime
           skyuv_test_socket_internal skyuv_test_socket_stress
 
       - name: 运行内存与未定义行为测试
         run: >-
           ctest --preset linux-clang-asan-ubsan
-          -R "^(allocator\\.basic|memory\\.basic|platform\\.(thread|time|atomic)|socket\\.(internal|stress))$"
+          -R "^(allocator\\.basic|memory\\.basic|platform\\.(thread|time|atomic)|socket\\.(internal|stress)|client\\.runtime)$"

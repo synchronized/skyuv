@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "client_runtime.h"
 
@@ -134,9 +135,156 @@ static void tcp_connections(void **unused) {
 	assert_int_equal(uv_loop_close(&loop), 0);
 }
 
+struct echo_peer {
+	uv_tcp_t tcp;
+	size_t total;
+	int pending;
+};
+
+struct echo_write {
+	uv_write_t write;
+	struct echo_peer *peer;
+	char *data;
+};
+
+static void echo_written(uv_write_t *write, int status) {
+	struct echo_write *request = write->data;
+	struct echo_peer *peer = request->peer;
+	assert_int_equal(status, 0);
+	free(request->data);
+	free(request);
+	if (--peer->pending == 0 && peer->total == 131072U)
+		uv_close((uv_handle_t *)&peer->tcp, accepted_closed);
+}
+
+static void echo_allocate(uv_handle_t *handle, size_t suggested, uv_buf_t *buffer) {
+	(void)handle;
+	(void)suggested;
+	*buffer = uv_buf_init(malloc(4096), 4096);
+	assert_non_null(buffer->base);
+}
+
+static void echo_read(uv_stream_t *stream, ssize_t count, const uv_buf_t *buffer) {
+	struct echo_peer *peer = stream->data;
+	if (count <= 0) {
+		free(buffer->base);
+		assert_true(count == 0);
+		return;
+	}
+	struct echo_write *request = calloc(1, sizeof(*request));
+	assert_non_null(request);
+	request->peer = peer;
+	request->data = buffer->base;
+	request->write.data = request;
+	peer->total += (size_t)count;
+	++peer->pending;
+	uv_buf_t data = uv_buf_init(buffer->base, (unsigned int)count);
+	assert_int_equal(uv_write(&request->write, stream, &data, 1, echo_written), 0);
+	if (peer->total == 131072U)
+		assert_int_equal(uv_read_stop(stream), 0);
+}
+
+static void echo_accept(uv_stream_t *listener, int status) {
+	assert_int_equal(status, 0);
+	struct echo_peer *peer = calloc(1, sizeof(*peer));
+	assert_non_null(peer);
+	assert_int_equal(uv_tcp_init(listener->loop, &peer->tcp), 0);
+	peer->tcp.data = peer;
+	assert_int_equal(uv_accept(listener, (uv_stream_t *)&peer->tcp), 0);
+	assert_int_equal(uv_read_start((uv_stream_t *)&peer->tcp, echo_allocate, echo_read), 0);
+}
+
+struct send_call {
+	struct skyuv_client_runtime *runtime;
+	int64_t id;
+	char *data;
+	int result;
+	uv_sem_t *done;
+};
+
+static void send_from_worker(void *argument) {
+	struct send_call *call = argument;
+	call->result = skyuv_client_runtime_send(call->runtime, call->id, call->data, 131072U);
+	uv_sem_post(call->done);
+}
+
+static void tcp_io(void **unused) {
+	(void)unused;
+	uv_loop_t loop;
+	uv_tcp_t listener;
+	struct sockaddr_in address;
+	int length = (int)sizeof(address);
+	assert_int_equal(uv_loop_init(&loop), 0);
+	assert_int_equal(uv_tcp_init(&loop, &listener), 0);
+	assert_int_equal(uv_ip4_addr("127.0.0.1", 0, &address), 0);
+	assert_int_equal(uv_tcp_bind(&listener, (const struct sockaddr *)&address, 0), 0);
+	assert_int_equal(uv_listen((uv_stream_t *)&listener, 1, echo_accept), 0);
+	assert_int_equal(uv_tcp_getsockname(&listener, (struct sockaddr *)&address, &length), 0);
+	struct skyuv_client_runtime *runtime = NULL;
+	assert_int_equal(skyuv_client_runtime_create(&runtime), 0);
+	int64_t id = 0;
+	assert_int_equal(skyuv_client_runtime_connect(runtime, "127.0.0.1", (int)ntohs(address.sin_port), &id), 0);
+	char buffer[1024];
+	size_t size = 1;
+	assert_int_equal(skyuv_client_runtime_recv(runtime, id, buffer, sizeof(buffer), &size), UV_EAGAIN);
+	assert_int_equal(size, 0);
+	assert_int_equal(skyuv_client_runtime_send(runtime, id, NULL, 0), 0);
+	assert_int_equal(skyuv_client_runtime_send(runtime, id, NULL, 1), UV_EINVAL);
+	char *data = malloc(131072U);
+	assert_non_null(data);
+	for (size_t i = 0; i < 131072U; ++i)
+		data[i] = (char)(i % 127U);
+	uv_sem_t done;
+	assert_int_equal(uv_sem_init(&done, 0), 0);
+	struct send_call call = {runtime, id, data, 0, &done};
+	uv_thread_t worker;
+	assert_int_equal(uv_thread_create(&worker, send_from_worker, &call), 0);
+	/* 调用仍须串行，先让发送完成，同时推进测试服务端。 */
+	uint64_t send_deadline = uv_hrtime() + 10000000000ULL;
+	int waiting;
+	while ((waiting = uv_sem_trywait(&done)) != 0 && uv_hrtime() < send_deadline) {
+		(void)uv_run(&loop, UV_RUN_NOWAIT);
+		uv_sleep(1);
+	}
+	assert_int_equal(waiting, 0);
+	assert_int_equal(uv_thread_join(&worker), 0);
+	uv_sem_destroy(&done);
+	/* 暂不消费客户端缓存，服务端继续写，覆盖缓存满时停止读的路径。 */
+	for (int i = 0; i < 100; ++i) {
+		(void)uv_run(&loop, UV_RUN_NOWAIT);
+		uv_sleep(1);
+	}
+	assert_int_equal(call.result, 0);
+	size_t total = 0;
+	int status = UV_EAGAIN;
+	uint64_t deadline = uv_hrtime() + 10000000000ULL;
+	while (status != UV_EOF && uv_hrtime() < deadline) {
+		(void)uv_run(&loop, UV_RUN_NOWAIT);
+		status = skyuv_client_runtime_recv(runtime, id, buffer, sizeof(buffer), &size);
+		assert_true(status == 0 || status == UV_EAGAIN || status == UV_EOF);
+		if (status == 0) {
+			assert_true(total + size <= 131072U);
+			assert_memory_equal(buffer, data + total, size);
+			total += size;
+		} else {
+			uv_sleep(1);
+		}
+	}
+	assert_int_equal(status, UV_EOF);
+	assert_int_equal(total, 131072U);
+	assert_int_equal(skyuv_client_runtime_close(runtime, id), 0);
+	assert_int_equal(skyuv_client_runtime_send(runtime, id, data, 1), UV_EBADF);
+	assert_int_equal(skyuv_client_runtime_recv(runtime, id, buffer, sizeof(buffer), &size), UV_EBADF);
+	free(data);
+	skyuv_client_runtime_destroy(&runtime);
+	uv_close((uv_handle_t *)&listener, NULL);
+	(void)uv_run(&loop, UV_RUN_DEFAULT);
+	assert_int_equal(uv_loop_close(&loop), 0);
+}
+
 int main(void) {
 	const struct CMUnitTest tests[] = {
-		cmocka_unit_test(lifecycle), cmocka_unit_test(tcp_connections)
+		cmocka_unit_test(lifecycle), cmocka_unit_test(tcp_connections), cmocka_unit_test(tcp_io)
 	};
 	return cmocka_run_group_tests(tests, NULL, NULL);
 }

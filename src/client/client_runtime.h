@@ -22,5 +22,11 @@ int skyuv_client_runtime_connect(struct skyuv_client_runtime *runtime,
 	const char *address, int port, int64_t *id);
 /* 已关闭的正整数 ID 可重复关闭；不存在的 ID 返回 UV_EBADF。 */
 int skyuv_client_runtime_close(struct skyuv_client_runtime *runtime, int64_t id);
+/* send 等待全部写完成；调用返回前 buffer 必须有效。
+ * recv 非阻塞：无数据返回 UV_EAGAIN，缓存读完后 EOF 返回 UV_EOF；实际长度写入 size。 */
+int skyuv_client_runtime_send(struct skyuv_client_runtime *runtime, int64_t id,
+	const void *buffer, size_t size);
+int skyuv_client_runtime_recv(struct skyuv_client_runtime *runtime, int64_t id,
+	void *buffer, size_t capacity, size_t *size);
 
 #endif
