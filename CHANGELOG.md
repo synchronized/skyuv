@@ -20,6 +20,21 @@
 
 - 后续版本继续维护 skyuv 作为 `add_subdirectory` 或 FetchContent 子项目的路径隔离。
 
+## 0.2.0-beta.1 - 2026-10-12
+
+本预览版本用于验证新增 socket 就绪轮询能力，不代表 `v0.2.0` 正式版的全部交付范围。详见
+[`docs/versions/v0.2.0-beta.1.md`](docs/versions/v0.2.0-beta.1.md)。
+
+### 新增
+
+- 为 `client.socket` 增加 `select` 和 `poll`，支持对整数 socket 句柄等待读写就绪；
+- 为 MSVC/clang-cl 下指定的 skyuv 目标增加独立 UTF-8 编译选项，避免代码页 936 的 C4819 警告。
+
+### 已知限制
+
+- `client.socket` 仅覆盖出站 TCP 客户端用途，不等同于完整 lsocket；
+- 性能基线、配置/日志/PID 路径收口和独立 Lua 解释器动态模块 `require` 验证仍未完成。
+
 ## 0.1.0 - 2026-09-29
 
 固定范围和发布限制见

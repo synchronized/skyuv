@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(skyuv VERSION 0.1.1 LANGUAGES C)
+project(skyuv VERSION 0.2.0 LANGUAGES C)
 
 # skyuv 可能作为子项目嵌入；宿主工程的 CMAKE_SOURCE_DIR/CMAKE_BINARY_DIR
 # 不能用于定位 skyuv 自己的源码和生成文件。
@@ -8,7 +8,7 @@ set(SKYUV_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(SKYUV_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
 # CMake 的 project(VERSION) 只接受数字版本；预发布标识单独维护，并用于产物和标签。
-set(SKYUV_VERSION_PRERELEASE "")
+set(SKYUV_VERSION_PRERELEASE "beta.1")
 if(SKYUV_VERSION_PRERELEASE)
   set(SKYUV_RELEASE_VERSION "${PROJECT_VERSION}-${SKYUV_VERSION_PRERELEASE}")
 else()
