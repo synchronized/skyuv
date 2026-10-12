@@ -104,6 +104,12 @@ cmake --build --preset windows-vs2022-debug
 不要在未初始化的普通终端中直接调用 `windows-msvc-*` preset。也可以改用能够自行定位工具链的 `windows-vs2022-*` preset。
 
 ## 参与开发
+独立 Lua 解释器默认启用，CMake 目标为 `skyuv_lua_interpreter`，产物为构建目录
+`3rd/lua`（Windows 为 `3rd/lua.exe`，Visual Studio 生成器另含 `Debug` 或 `Release` 子目录）。
+例如执行 `cmake --build --preset windows-vs2022-debug --target skyuv_lua_interpreter`。
+配置时传入 `-DSKYUV_BUILD_LUA_INTERPRETER=OFF` 可关闭解释器，Lua 库仍保留。
+解释器暂不加入安装包。
+
 
 项目代码采用接近 Skynet 的 C 代码风格：使用制表符缩进、花括号与控制语句同行，并优先保持实现直接、依赖边界清晰。详细协作约定见 [AGENTS.md](AGENTS.md)，文档职责与维护方式见 [文档规范](DOCUMENTATION_GUIDE.md)。
 

@@ -64,7 +64,7 @@ jobs:
       - name: 构建 skyuv Linux 基线
         run: >-
           cmake --build --preset "${{ matrix.preset }}" --target
-          uv_a cmocka skyuv_lua skyuv_skynet skyuv_service_snlua
+          uv_a cmocka skyuv_lua skyuv_lua_interpreter skyuv_skynet skyuv_service_snlua
           skyuv_service_logger skyuv_service_harbor skyuv_lua_module_skynet
           skyuv skyuv_portable_service_snlua
           skyuv_portable_service_logger skyuv_portable_service_harbor
