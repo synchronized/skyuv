@@ -408,6 +408,11 @@ if(TARGET skyuv_lua)
       "assert(6 * 7 == 42); assert(require('math').sqrt(81) == 9)")
     add_test(NAME lua.interpreter_error COMMAND skyuv_lua_interpreter -e "error('expected')")
     set_tests_properties(lua.interpreter_error PROPERTIES WILL_FAIL TRUE)
+    if(TARGET skyuv_portable_lua_module_client)
+      add_test(NAME lua.client_modules COMMAND skyuv_lua_interpreter
+        "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/client_modules.lua"
+        "$<TARGET_FILE_DIR:skyuv_portable_lua_module_client>/?$<TARGET_FILE_SUFFIX:skyuv_portable_lua_module_client>")
+    endif()
   endif()
   add_executable(skyuv_test_lua test_lua.c)
   target_link_libraries(skyuv_test_lua PRIVATE skyuv::lua cmocka::cmocka)

@@ -202,14 +202,21 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     skyuv_portable_lua_module_client
     MODULE
       "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-clientsocket.c"
+      "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lua-crypt.c"
+      "${SKYUV_PORTABLE_LUALIB_SOURCE_DIR}/lsha1.c"
+  )
+  # 清理旧布局的已知生成文件，避免 Lua 优先加载仅包含 socket 的旧模块。
+  file(REMOVE
+    "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client/socket.dll"
+    "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client/socket.so"
   )
   set_target_properties(
     skyuv_portable_lua_module_client
     PROPERTIES
       C_EXTENSIONS TRUE
-      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
-      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
-      OUTPUT_NAME socket
+      LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+      RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+      OUTPUT_NAME client
       PREFIX ""
       WINDOWS_EXPORT_ALL_SYMBOLS TRUE
   )
@@ -217,8 +224,8 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
     set_target_properties(
       skyuv_portable_lua_module_client
       PROPERTIES
-        "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
-        "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib/client"
+        "LIBRARY_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
+        "RUNTIME_OUTPUT_DIRECTORY_${config}" "${PROJECT_BINARY_DIR}/3rd/portable/luaclib"
     )
   endforeach()
   target_include_directories(
@@ -540,8 +547,8 @@ install(
 
 install(
   TARGETS skyuv_portable_lua_module_client
-  LIBRARY DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/client" COMPONENT Runtime
-  RUNTIME DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}/client"
+  LIBRARY DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}" COMPONENT Runtime
+  RUNTIME DESTINATION "${SKYUV_INSTALL_LUACLIBDIR}"
   COMPONENT Runtime
 )
 
