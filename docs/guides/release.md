@@ -37,6 +37,16 @@ Release workflow 在三平台构建、交付测试和 SHA-256 复核全部通过
 变更；通过 Pull Request 合入 `main`。该分支不长期保留，也不承载新功能。若仓库维护者明确采用
 直接推送方式，可在当前分支完成相同审查和验证。
 
+版本文件准备完成并合入 `main` 后，可在仓库根目录执行只读检查：
+
+```powershell
+python scripts/check_release.py
+```
+
+检查器核对 CMake 版本、版本文档标题和索引、Changelog 章节、干净工作区、`main` 分支与
+`origin/main` 同步状态，以及本地和远端是否已有同名 tag。它不替代版本范围审查、构建测试或
+GitHub Release workflow，也不会修改文件或 Git 状态。
+
 合入前确认：
 
 - `git diff --check` 通过，版本号、预发布标识、Changelog、版本范围和 tag 完全一致；
@@ -85,6 +95,16 @@ git show -s --format="%h %D %s" vX.Y.Z
 发布完成后新增 `docs/records/YYYY-MM-DD-vX.Y.Z-release-acceptance.md`，记录版本、发布提交、tag、
 Release/Actions 链接、平台结果、资产名称、校验结果和剩余限制；更新版本文档状态及
 `docs/records/README.md`。该提交只补充已发生的发布事实，不更改已打 tag 的代码或替换发布资产。
+
+可在发布后生成待补充的记录草稿：
+
+```powershell
+python scripts/new_release_record.py --tag vX.Y.Z
+python scripts/new_release_record.py --tag vX.Y.Z-beta.2 --date YYYY-MM-DD
+```
+
+生成器拒绝覆盖已有文件。请人工补全提交、Actions 链接、平台结果、资产与 SHA-256、版本内容和限制，
+并更新 `docs/records/README.md`、`docs/README.md` 及版本文档状态；草稿本身不是验收证据。
 
 ## 发布边界
 
