@@ -17,6 +17,7 @@
 
 ## 路线图与计划
 
+- [`versions/v0.2.0-beta.3.md`](versions/v0.2.0-beta.3.md)：libuv 客户端网络版本范围与发布门槛。
 - [`plans/011-client-socket-libuv.md`](plans/011-client-socket-libuv.md)：客户端 libuv 迁移的线程、句柄与同步语义设计。
 - [`plans/010-windows-build-diagnostics.md`](plans/010-windows-build-diagnostics.md)：Windows 构建警告与诊断上下文治理。
 - [`versions/v0.2.0-beta.2.md`](versions/v0.2.0-beta.2.md)：构建诊断治理预览版规划。
