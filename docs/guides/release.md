@@ -1,57 +1,96 @@
-# 发布验收
+# 版本发布流程
 
-本文是 skyuv 维护者执行 Beta 或正式发布前的检查清单。当前 0.x 不承诺稳定 ABI；完成本清单
-也不能替代版本文档中对具体 component 和限制的声明。
+本文说明 skyuv 的版本决策、发布准备、三平台发布和发布后核验。日常开发及代码评审见
+[`development.md`](development.md)。0.x 阶段不承诺稳定 ABI；发布范围和限制以对应的版本文档为准。
 
-## 1. 确认发布身份
+## 流程概览
 
-- 在根目录 `CMakeLists.txt` 的 `project(skyuv VERSION ...)` 设置数字版本；
-- 用相邻的 `SKYUV_VERSION_PRERELEASE` 设置 Beta 或其他预发布标识；
-- 确认组合版本、CPack 文件名和预期标签一致；
-- 将面向使用者的变化写入根目录 `CHANGELOG.md`，将固定范围写入对应版本文档。
+```text
+确定版本范围 → 准备版本提交 → 合入 main → 三平台 Release 验证
+                                             ↓ 全部通过
+                                      创建 tag / Release
+                                             ↓
+                               核对公开资产并记录验收
+```
 
-当前预览版本身份由 [`v0.2.0-beta.1.md`](../versions/v0.2.0-beta.1.md) 维护；`v0.2.0`
-正式版的剩余任务和发布门槛由 [`v0.2.0.md`](../versions/v0.2.0.md) 维护。
+Release workflow 在三平台构建、交付测试和 SHA-256 复核全部通过后创建 tag 与 GitHub Release。
+失败时不会进入发布步骤；不要手工移动已发布 tag 或替换公开归档。
 
-## 2. 逐项确认交付边界
+## 1. 确定版本身份和范围
 
-| 组件 | 当前状态 | 发布前证据 |
+- 检查当前版本文档、路线图和未完成计划，决定本次发布是正式版还是预览版，以及实际包含的内容。
+- 0.x 阶段按交付范围选择版本：新阶段或能力里程碑使用新的 `0.y.0`，兼容性修复使用递增的
+  `0.y.z`；候选验证使用明确的预发布标识，例如 `0.2.0-beta.2`。已有公开版本号和 tag 不复用。
+- 版本号与 tag 必须和 `CMakeLists.txt` 中的 `project(skyuv VERSION ...)`、
+  `SKYUV_VERSION_PRERELEASE` 一致。
+- 在 `docs/versions/vX.Y.Z[-prerelease].md` 固定本次范围、明确未包含项、兼容性声明和发布门槛。
+  预览版不得暗示未完成的正式版计划已经验收。
+- 将已实现的用户可见变化从 `CHANGELOG.md` 的 `Unreleased` 移入带日期的版本章节；计划中的能力
+  不能写成已交付。
+- 更新 `docs/versions/README.md`、`docs/README.md` 及必要的发布指南链接。
+
+当前发布版和正式版准备状态见[版本索引](../versions/README.md)。
+
+## 2. 准备并审查版本提交
+
+推荐从最新 `main` 建立短期 `release/vX.Y.Z` 分支，只放版本号、Changelog、版本文档和必要索引
+变更；通过 Pull Request 合入 `main`。该分支不长期保留，也不承载新功能。若仓库维护者明确采用
+直接推送方式，可在当前分支完成相同审查和验证。
+
+合入前确认：
+
+- `git diff --check` 通过，版本号、预发布标识、Changelog、版本范围和 tag 完全一致；
+- 版本文档写明测试覆盖、限制和后续任务；正式版所有硬性发布门槛均有验收证据；
+- 计划索引、版本索引和文档入口没有过期的“当前版本”描述；
+- Release 目标提交位于 `main`，工作区干净，相关开发 CI 已通过。
+
+## 3. 执行三平台 Release
+
+发布入口为 `.github/workflows/release.yml`，必须从 `main` 手动触发。先确认 Release 页面没有同名
+tag 或版本；Git tag 和 GitHub Release 均不可复用。
+
+可先用 `publish_release=false` 演练构建、测试和 artifact 上传；正式发布时触发：
+
+```powershell
+gh workflow run release.yml --ref main `
+  -f publish_release=true `
+  -f tag=vX.Y.Z
+```
+
+例如预览版需填写 `tag=v0.2.0-beta.2`。也可以在 GitHub Actions 页面选中 `main`，填写相同参数。
+正式运行时，工作流依次构建 Windows、Linux 和 macOS 发行包，执行 `delivery` 测试并复核全部
+SHA-256；三平台全部成功后才创建 GitHub Release。包含连字符的版本会创建为 Pre-release。
+
+持续查看工作流直到最终结论。任一平台失败时，先修复问题、更新版本准备提交并重新验证；不要
+绕过失败步骤手工打 tag 或发布不完整资产。
+
+## 4. 发布后核验
+
+确认 GitHub Release 的 tag、目标提交、Pre-release 状态、三个平台归档及 `.sha256` 文件正确，
+并确认 Release workflow 的发布 job 成功。工作流会在发布前校验待上传资产；还可从公开 Release
+下载归档并按随附校验文件复核。
+
+GitHub Release 创建的远端 tag 不一定自动出现在本地。检查并同步：
+
+```powershell
+git ls-remote --tags origin "refs/tags/vX.Y.Z*"
+git fetch origin tag vX.Y.Z
+git show -s --format="%h %D %s" vX.Y.Z
+```
+
+不要仅因本地 `git tag` 没显示就重复创建 Release；先分别检查远端 Git tag 和 GitHub Release。
+
+## 5. 记录结果
+
+发布完成后新增 `docs/records/YYYY-MM-DD-vX.Y.Z-release-acceptance.md`，记录版本、发布提交、tag、
+Release/Actions 链接、平台结果、资产名称、校验结果和剩余限制；更新版本文档状态及
+`docs/records/README.md`。该提交只补充已发生的发布事实，不更改已打 tag 的代码或替换发布资产。
+
+## 发布边界
+
+| 组件 | skyuv 当前声明 | 发布说明要求 |
 |---|---|---|
-| Runtime | 0.x 非稳定 | 三平台安装树启动、TCP echo、Lua 模块和正常退出测试 |
-| CMake Consumer | 实验性 | 安装 package、`add_subdirectory` 和外部 Lua C 模块 smoke test |
-| skyuv 公共 C 接口 | 未冻结 | 不得在发布说明中标记为稳定 ABI |
-| Skynet 内部头文件与模块 | 未包含 | 仅作为内部构建实现，不进入稳定 SDK 承诺 |
-
-## 3. 本地验证
-
-在干净构建目录执行对应平台的 Release preset：
-
-```powershell
-cmake --preset windows-vs2022-release
-cmake --build --preset windows-vs2022-release
-ctest --preset windows-vs2022-release -L delivery
-```
-
-Linux 和 macOS 使用各自的 `linux-gcc-release`、`macos-clang-release` preset。随后检查安装树
-不包含源码或构建目录绝对路径，并生成 CPack 归档：
-
-```powershell
-cpack --config build/windows-vs2022-release/CPackConfig.cmake -C Release
-```
-
-## 4. CI 与发布工作流
-
-发布提交必须通过 Linux、macOS 和 Windows 的完整构建与交付验证。正式入口是
-`.github/workflows/release.yml`，手动运行时：
-
-- `publish_release=false`：只构建、测试和上传临时 artifact；
-- `publish_release=true`：在三平台成功后创建 GitHub Release；
-- `tag` 必须与 CMake 计算出的版本一致；当前预览版本使用 `v0.2.0-beta.1`。
-
-发布工作流会复核三个归档及其 SHA-256。预发布标签会创建为 GitHub pre-release；不要手工移动
-已经公开的标签或替换已发布归档。
-
-## 5. 发布后记录
-
-发布完成后新增 `docs/records/YYYY-MM-DD-vX.Y.Z-release-acceptance.md`，记录版本、提交、Release
-链接、三平台 artifact、测试结论、已知限制和未完成计划，并在对应版本文档中链接该记录。
+| Runtime | 0.x，未承诺稳定 ABI | 说明三平台已验证的运行行为和平台限制 |
+| CMake Consumer | 实验性 | 列出已验证的安装导出、子项目和 Lua 模块接入方式 |
+| skyuv 公共 C 接口 | 未冻结 | 不得宣称 ABI 稳定 |
+| Skynet 内部头文件与模块 | 内部构建接口 | 不作为稳定 SDK 或任意模块二进制兼容承诺 |

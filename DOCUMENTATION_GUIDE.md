@@ -105,6 +105,8 @@ README.md
 | 实施方案 | 对应 Plan |
 | 阶段状态与优先级 | Roadmap 摘要及对应 Plan 状态 |
 | 构建、运行或排错流程 | 对应 Guide |
+| 日常开发、验证与 CI 流程 | [`docs/guides/development.md`](docs/guides/development.md) |
+| 版本准备和发布 | [`docs/guides/release.md`](docs/guides/release.md) |
 | 项目定位或快速入口 | 根 README |
 | 测试、迁移和性能结果 | Record 或专用结果文档 |
 

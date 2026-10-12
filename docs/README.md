@@ -32,6 +32,7 @@
 
 ## 操作指南
 
+- [`guides/development.md`](guides/development.md)：任务拆分、分支、提交、验证和 CI 流程。
 - [`guides/release.md`](guides/release.md)：执行版本准备、三平台发布验收和 GitHub Release。
 - [`guides/runtime-distribution.md`](guides/runtime-distribution.md)：校验、解压和启动三平台运行时
   发行包，并迁移已有 Skynet 服务。
