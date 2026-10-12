@@ -1,7 +1,6 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <uv.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../platform/client_module.h"
@@ -31,34 +30,55 @@ static void initialize(void) {
 		input.init_error = uv_mutex_init(&input.mutex);
 }
 
-static void read_input(void *argument) {
-	(void)argument;
-	char buffer[1024];
-	while (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-		size_t length = strlen(buffer);
-		while (length > 0 && (buffer[length - 1] == '\n' || buffer[length - 1] == '\r'))
-			--length;
-		char *line = malloc(length + 1);
-		if (line != NULL) {
-			memcpy(line, buffer, length);
-			line[length] = 0;
-		}
-		uv_mutex_lock(&input.mutex);
-		unsigned int next = (input.tail + 1U) % 1024U;
-		if (line == NULL)
-			input.failed = 1;
-		else if (next == input.head) {
-			input.overflow = 1;
-			free(line);
-		} else {
-			input.lines[input.tail] = line;
-			input.tail = next;
-		}
-		uv_mutex_unlock(&input.mutex);
+static void queue_line(const char *buffer, size_t length) {
+	while (length > 0 && (buffer[length - 1] == '\n' || buffer[length - 1] == '\r'))
+		--length;
+	char *line = malloc(length + 1);
+	if (line != NULL) {
+		memcpy(line, buffer, length);
+		line[length] = 0;
 	}
 	uv_mutex_lock(&input.mutex);
-	input.eof = feof(stdin) != 0;
-	input.failed |= ferror(stdin) != 0;
+	unsigned int next = (input.tail + 1U) % 1024U;
+	if (line == NULL)
+		input.failed = 1;
+	else if (next == input.head) {
+		input.overflow = 1;
+		free(line);
+	} else {
+		input.lines[input.tail] = line;
+		input.tail = next;
+	}
+	uv_mutex_unlock(&input.mutex);
+}
+
+static void read_input(void *argument) {
+	(void)argument;
+	char bytes[1024];
+	char line[1024];
+	size_t length = 0;
+	int result;
+	for (;;) {
+		uv_fs_t request;
+		uv_buf_t buffer = uv_buf_init(bytes, sizeof(bytes));
+		/* 避免 fgets 在等待输入时持有 stdio 锁，阻塞进程退出。 */
+		result = uv_fs_read(NULL, &request, 0, &buffer, 1, -1, NULL);
+		uv_fs_req_cleanup(&request);
+		if (result <= 0)
+			break;
+		for (int i = 0; i < result; ++i) {
+			line[length++] = bytes[i];
+			if (bytes[i] == '\n' || length == sizeof(line) - 1) {
+				queue_line(line, length);
+				length = 0;
+			}
+		}
+	}
+	if (length != 0)
+		queue_line(line, length);
+	uv_mutex_lock(&input.mutex);
+	input.eof = result == 0;
+	input.failed |= result < 0;
 	input.finished = 1;
 	uv_mutex_unlock(&input.mutex);
 }
