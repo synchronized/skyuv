@@ -2,6 +2,7 @@
 #define SKYUV_CLIENT_RUNTIME_H
 
 #include <uv.h>
+#include <stdint.h>
 
 struct skyuv_client_runtime;
 typedef int (*skyuv_client_command)(uv_loop_t *loop, void *argument);
@@ -14,5 +15,12 @@ int skyuv_client_runtime_call(struct skyuv_client_runtime *runtime,
 	skyuv_client_command command, void *argument);
 /* 接受 NULL；返回后指针置空，允许重复销毁。 */
 void skyuv_client_runtime_destroy(struct skyuv_client_runtime **runtime);
+
+/* 仅接受 IPv4 数字地址；返回正整数 ID，错误路径将输出置零。
+ * ID 在实例内不复用，不能作为原生 socket 使用。调用与销毁仍须串行。 */
+int skyuv_client_runtime_connect(struct skyuv_client_runtime *runtime,
+	const char *address, int port, int64_t *id);
+/* 已关闭的正整数 ID 可重复关闭；不存在的 ID 返回 UV_EBADF。 */
+int skyuv_client_runtime_close(struct skyuv_client_runtime *runtime, int64_t id);
 
 #endif
