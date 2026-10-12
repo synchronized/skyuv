@@ -65,7 +65,7 @@ int32_t skyuv_atomic_i32_fetch_and(skyuv_atomic_i32 *atomic, int32_t value,
 #define SKYUV_INTERLOCKED_COMPARE_EXCHANGE_UINTPTR _InterlockedCompareExchange64
 #define SKYUV_INTERLOCKED_EXCHANGE_UINTPTR _InterlockedExchange64
 #define SKYUV_INTERLOCKED_EXCHANGE_ADD_UINTPTR _InterlockedExchangeAdd64
-typedef __int64 skyuv_interlocked_uintptr;
+typedef long long skyuv_interlocked_uintptr;
 #else
 #define SKYUV_INTERLOCKED_COMPARE_EXCHANGE_UINTPTR _InterlockedCompareExchange
 #define SKYUV_INTERLOCKED_EXCHANGE_UINTPTR _InterlockedExchange

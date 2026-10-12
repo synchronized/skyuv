@@ -41,6 +41,7 @@
 
 ```powershell
 .\scripts\msvc.ps1 -Action all -Preset windows-msvc-debug
+.\scripts\msvc.ps1 -Action all -Preset windows-clang-debug
 ```
 
 Linux 和 macOS 使用仓库中的 `linux-*`、`macos-*` CMake preset，并在 GitHub Actions 手动运行

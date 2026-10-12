@@ -6,7 +6,7 @@ include(CTest)
 
 # 必须与 skyuv 及其静态依赖使用相同的 MSVC CRT，避免模块边界出现
 # 不同 CRT 的内存分配和释放冲突。
-if(MSVC)
+if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 

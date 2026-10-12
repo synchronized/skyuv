@@ -92,6 +92,15 @@ cmake --build --preset windows-vs2022-debug
 .\scripts\msvc.ps1 -Preset windows-msvc-debug
 ```
 
+安装 LLVM/Clang 后，也可通过相同脚本加载 Windows SDK 与链接器环境，构建 Clang Debug/Release：
+
+```powershell
+.\scripts\msvc.ps1 -Preset windows-clang-debug
+.\scripts\msvc.ps1 -Preset windows-clang-release
+```
+
+这两个 preset 使用 `clang` 驱动器（MSVC ABI），与已有的 `windows-clang-cl-*`（`clang-cl` 驱动器）分开。
+
 不要在未初始化的普通终端中直接调用 `windows-msvc-*` preset。也可以改用能够自行定位工具链的 `windows-vs2022-*` preset。
 
 ## 参与开发

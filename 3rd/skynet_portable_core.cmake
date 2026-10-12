@@ -178,7 +178,8 @@ skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR
 skyuv_target_force_include(skyuv_skynet_portable_core "${SKYUV_SKYNET_COMPAT_DIR}/skyuv_time.h")
 target_include_directories(skyuv_skynet_portable_core PRIVATE "${SKYUV_SKYNET_COMPAT_DIR}/tls")
 skyuv_target_compile_utf8(skyuv_skynet_portable_core)
-if(SKYUV_USES_MSVC_FRONTEND)
+# Windows/MSVC ABI 下需要 strsep 兼容实现，clang GNU 前端同样适用。
+if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
   skyuv_target_force_include(skyuv_skynet_portable_core
                              "${SKYUV_SKYNET_COMPAT_DIR}/skyuv_string.h")
 endif()

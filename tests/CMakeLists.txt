@@ -43,13 +43,18 @@ set_tests_properties(
   PROPERTIES DEPENDS install.runtime_smoke LABELS delivery TIMEOUT 60
 )
 
-if(MSVC)
+if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+  if(CMAKE_LINKER MATCHES "lld-link")
+    find_program(SKYUV_TEST_LINKER NAMES dumpbin REQUIRED)
+  else()
+    set(SKYUV_TEST_LINKER "${CMAKE_LINKER}")
+  endif()
   add_test(
     NAME package.static_crt
     COMMAND
       "${CMAKE_COMMAND}"
       "-DSKYUV_TEST_ARCHIVE_DIR=${PROJECT_BINARY_DIR}/package-test-output"
-      "-DSKYUV_TEST_LINKER=${CMAKE_LINKER}"
+      "-DSKYUV_TEST_LINKER=${SKYUV_TEST_LINKER}"
       "-DSKYUV_TEST_PACKAGE_EXTENSION=${SKYUV_PACKAGE_EXTENSION}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_static_crt.cmake"
   )

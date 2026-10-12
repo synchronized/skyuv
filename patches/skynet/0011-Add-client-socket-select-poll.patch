@@ -7,7 +7,7 @@ diff --git a/lualib-src/lua-clientsocket.c b/lualib-src/lua-clientsocket.c
  #include <sys/socket.h>
 +#include <sys/select.h>
  typedef int socket_fd;
-@@ -154,7 +154,128 @@ lrecv(lua_State *L) {
+@@ -154,7 +154,125 @@ lrecv(lua_State *L) {
  	}
  	lua_pushlstring(L, buffer, r);
  	return 1;
@@ -34,10 +34,7 @@ diff --git a/lualib-src/lua-clientsocket.c b/lualib-src/lua-clientsocket.c
 +		lua_pop(L, 1);
 +		if ((intptr_t)fd < 0)
 +			continue;
-+#ifdef _WIN32
-+		if ((uintptr_t)fd >= FD_SETSIZE)
-+			return luaL_error(L, "bad argument to 'select' (socket handle too large)");
-+#else
++#ifndef _WIN32
 +		if (fd >= FD_SETSIZE)
 +			return luaL_error(L, "bad argument to 'select' (socket file descriptor too large)");
 +#endif

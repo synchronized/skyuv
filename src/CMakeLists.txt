@@ -176,7 +176,8 @@ set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")
   skyuv_add_portable_skynet_service(logger)
   skyuv_add_portable_skynet_service(harbor)
   skyuv_add_portable_skynet_service(gate)
-  if(SKYUV_USES_MSVC_FRONTEND)
+  # strsep 兼容实现按 Windows/MSVC ABI 引入；GNU 风格 Clang 前端也需要它。
+  if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
     skyuv_target_force_include(
       skyuv_portable_service_gate "${PROJECT_SOURCE_DIR}/src/compat/skynet/skyuv_string.h"
     )

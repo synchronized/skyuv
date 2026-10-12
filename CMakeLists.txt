@@ -21,7 +21,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 # Windows 发行包不依赖可再发行的动态 CRT。该设置必须覆盖主程序、动态模块、
 # 测试和静态链接进来的第三方目标，避免同一最终二进制混用两种 CRT。
-if(MSVC)
+if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
