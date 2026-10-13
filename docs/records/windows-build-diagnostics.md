@@ -218,3 +218,15 @@ clang-cl 将总开关设为 ON 并重建 uv_a 成功，恢复 8 条未使用函�
 重新配置与 uv_a 构建成功，输出 0 warning。例外可恢复，原始诊断未被永久删除。
 提交 `2092a42` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38366738054)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38366744354) 全部成功。
+
+## 2026-10-13 Release 验收中的进程指标测试同步
+
+clang-cl Release 首轮构建成功，但 72 项测试中 benchmark.process_metrics 失败。
+该测试先启动睡眠 0.15 秒的子进程，再启动监控；并发构建时父进程可能晚调度，
+监控只覆盖子进程末段，导致 monitored_wall_seconds >= 0.1 的断言失败。
+这是测试启动时序假设，不是编译器 Release 代码失败。
+
+测试子进程改为等待 stdin 启动消息，再进行分配与睡眠；父进程在实际监控启动后释放。
+首条路径特意延迟父进程 0.2 秒，验证不依赖父进程及时调度；wait_with_metrics 路径仅在
+真实 ProcessMetrics.start 后释放子进程，不修改生产监控协议或放宽时长断言。
+clang-cl Release 对应测试连续 20 次通过，全套 72/72 复验通过。
