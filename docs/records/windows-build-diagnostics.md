@@ -87,3 +87,18 @@ Clang Debug 全量重建仅剩 26 条第三方 CRT 警告、90 条 note，libuv 
 第三方子模块不修改，cmocka/Skynet CRT 提示和其他编译组合仍待后续治理。
 提交 `2defc29` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38344122237)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38344125789) 全部成功。
+
+## 2026-10-13 统一 Windows 第三方 CRT 策略
+
+用户确认三种 Windows 编译器统一局部处理第三方 CRT 提示。
+`cmake/skyuv_third_party_crt.cmake` 在项目目标定义完毕后按源码目录归属遍历：
+纯第三方目标定义 PRIVATE `_CRT_SECURE_NO_WARNINGS`，混合目标仅对第三方源文件设置该宏。
+原始第三方目录与构建目录第三方副本均覆盖；生成器表达式不推断为纯第三方来源。
+Windows MSVC/模拟 MSVC 工具链以外不启用；没有 PUBLIC 定义、全局标志或警告等级调整。
+
+Clang Debug 全量重建为 0 warning、0 note，全套 70/70 测试通过（58.33 秒）。
+clang-cl Debug 配置、全量构建与 70/70 测试通过（111.56 秒）；仍有 8 条 libuv
+未使用函数提示，本规则不关闭它们。编译命令审查在两种 Clang 中均确认 117 个第三方条目
+带宏、32 个自有条目不带宏。MSVC Debug 主程序、client 模块、解释器及相关测试通过。
+首次 MSVC 模块测试缺少 Lua 解释器产物，补齐目标后复验成功，没有修改源码以绕过测试。
+Release 组合、MSVC 高风险诊断及 beta.4 发布验收仍待完成。

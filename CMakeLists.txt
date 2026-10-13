@@ -276,6 +276,8 @@ set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
 set(CPACK_INSTALL_CMAKE_PROJECTS "${PROJECT_BINARY_DIR};${PROJECT_NAME};Runtime;/")
 set(CPACK_VERBATIM_VARIABLES YES)
 include(CPack)
+include(skyuv_third_party_crt)
+skyuv_third_party_crt("${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(SKYUV_CMAKE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/skyuv")
 configure_package_config_file(
