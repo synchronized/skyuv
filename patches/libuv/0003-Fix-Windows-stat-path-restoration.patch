@@ -1,0 +1,13 @@
+diff --git a/src/win/fs.c b/src/win/fs.c
+--- a/src/win/fs.c
++++ b/src/win/fs.c
+@@ -2041,1 +2041,1 @@
+-  WCHAR splitchar;
++  WCHAR splitchar = 0;
+@@ -2061,1 +2061,2 @@
+-  } else if (path[split - 1] == L'\\' || path[split - 1] == L'/') {
++  } else if (split > 0 &&
++             (path[split - 1] == L'\\' || path[split - 1] == L'/')) {
+@@ -2194,1 +2195,1 @@
+-  if (split != 0)
++  if (splitchar != 0)

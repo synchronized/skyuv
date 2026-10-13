@@ -133,3 +133,30 @@ Clang Debug 配置、构建与 71/71 测试通过，本轮输出无 warning；cl
 组合本轮未复验；其余高风险诊断尚未全部修复，不能据此宣称 beta.4 完成。
 提交 `8cbf15b` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38348783693)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38348787730) 全部成功。
+
+## 2026-10-13 Windows stat 回退路径恢复修复
+
+固定 libuv 版本的 `fs__stat_directory()` 仅在拆分目录与文件名时赋值 splitchar，
+退出时却以 split 非零判断是否恢复。因此根路径、盘符、末尾分隔符及纯点号路径可能
+用未初始化字符覆盖原路径；当 split 为零且 includes_name 为假时，分隔符判断还会读
+path[-1]。这些控制流问题不限于编译器误报，但实际触发还依赖 stat 兼容回退及访问失败条件。
+
+独立补丁 `0003-Fix-Windows-stat-path-restoration.patch` 将 splitchar 的零值表示为未拆分，
+只在保存了实际分隔符后恢复；检查分隔符前增加 split 非零条件。仅替换构建目录 fs.c，
+静态/共享目标都接入，不修改第三方子模块，不关闭 C4701。
+
+新增 `libuv.stat_path_restoration` 从实际编译副本提取完整回退函数，模拟系统边界，
+覆盖 11 类路径与成功、打开失败、Unicode 转换失败、目录查询失败、两类卷信息查询失败，
+验证缓冲区全量保持、错误码、句柄关闭次数和成功结果分配次数。模拟系统调用允许空路径，
+仅用于验证函数内部边界，不表示公共 stat API 接受空路径。
+测试首次构建因私有头目录中的 winsock.h 遮蔽 Windows SDK 头失败；改为相对路径包含
+winapi.h，并移除该私有目录搜索项后构建通过，未降低严格警告。
+复现时将生成目录夹具暂时恢复为原版控制流，并把原来未初始化的 splitchar 填为 `L'Z'`，
+使错误写入可确定观察而不依赖栈内容或触发运行时未初始化检查。该夹具构建成功，路径保持
+断言失败，CTest 退出码 8；随后恢复实际补丁函数。此证据验证原恢复条件错误，不宣称已在
+真实旧 Windows/ACL 环境重现整条公共 API 调用链；复现夹具不提交。
+MSVC Debug 配置、构建与 72/72 测试通过（59.16 秒），新增回退测试连续 100 次通过；
+Clang Debug 配置、构建与 72/72 测试通过（61.80 秒），本轮输出无 warning。
+clang-cl Debug 新增测试目标构建通过，测试连续 20 次通过。fs.c 的 splitchar C4701
+已消除，另外两处 original_position C4701 保留；Windows Release、共享 libuv 及真实
+旧版 stat 回退环境本轮未覆盖，beta.4 完整验收仍待完成。
