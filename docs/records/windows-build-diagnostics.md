@@ -102,3 +102,5 @@ clang-cl Debug 配置、全量构建与 70/70 测试通过（111.56 秒）；仍
 带宏、32 个自有条目不带宏。MSVC Debug 主程序、client 模块、解释器及相关测试通过。
 首次 MSVC 模块测试缺少 Lua 解释器产物，补齐目标后复验成功，没有修改源码以绕过测试。
 Release 组合、MSVC 高风险诊断及 beta.4 发布验收仍待完成。
+提交 `a3a3a1a` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38346082650)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38346086989) 全部成功。
