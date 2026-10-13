@@ -104,6 +104,7 @@ foreach(
   endif()
 endforeach()
 
+
 install(
   DIRECTORY "${PROJECT_SOURCE_DIR}/3rd/skynet/lualib/"
   DESTINATION "${SKYUV_INSTALL_LUALIBDIR}"
@@ -194,6 +195,8 @@ foreach(directory IN ITEMS src tests)
     add_subdirectory("${directory}")
   endif()
 endforeach()
+
+include(skyuv_windows_runtime)
 
 # 只导出面向外部 CMake 消费者的运行库目标。Skynet 运行时和其内部模块
 # 仍属于发行包目标，不作为稳定的第三方链接接口。

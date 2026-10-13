@@ -230,3 +230,38 @@ clang-cl Release 首轮构建成功，但 72 项测试中 benchmark.process_metr
 首条路径特意延迟父进程 0.2 秒，验证不依赖父进程及时调度；wait_with_metrics 路径仅在
 真实 ProcessMetrics.start 后释放子进程，不修改生产监控协议或放宽时长断言。
 clang-cl Release 对应测试连续 20 次通过，全套 72/72 复验通过。
+提交 `874c6c5` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38369312404)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38369318294) 全部成功。
+
+## 2026-10-13 Windows Release 与构建运行目录
+
+运行目录调整前，静态 MSVC、clang-cl、Clang Release 均构建成功且全套 72/72 测试
+通过（clang-cl 在上述测试同步修复后复验）。Release 新出现 libuv 断言变量提示：
+MSVC C4189 三处，Clang 两种前端五处，按源位置去重；保留，不扩大日常屏蔽清单。
+getaddrinfo.c 的 r、pipe.c 的 r、signal.c 的 r 仅供 assert 检查返回结果；signal.c 的
+removed_handle 仅供 assert 检查树删除结果，util.c 的 len 仅供 assert 检查格式化结果。
+Release 删除断言后变量未使用，相关操作调用仍执行。此审查不宣称被断言保护的所有
+错误组合已验证安全，不通过删除调用消除提示。
+
+既有 C4152 两处为 thread.c 通过 GetProcAddress 动态取得线程命名函数地址时的
+函数/数据指针扩展转换；C4702 两处为 uv_sem_trywait 的 abort 后返回及 tty 的无限循环
+后返回。保留源码依据，由统一诊断开关控制原有编号，不通过改变线程或 tty 行为消除警告。
+
+共享 Windows 构建初轮发现 uv.dll 只在第三方输出目录，测试程序目录无法加载依赖，
+产生系统模态弹窗；停止对应共享 CTest 后处理部署。用户确认统一 bin 运行布局：
+可执行程序及 uv.dll 直接输出到 build/<preset>/bin；其他 DLL 由独立部署目标复制，
+portable 模块保留 cservice/luaclib 子目录，源模块输出供现有目标引用，不改安装包布局。
+多配置生成器不额外叠加 Debug/Release，要求每种配置使用独立 preset 构建目录。
+
+新增 windows.runtime_layout 检查运行程序、DLL 存在性及复制 DLL 的 SHA-256 一致性，
+作为其他 Windows 测试的前置 fixture；缺少依赖时跳过程序测试，避免重复弹窗。
+部署目标原先与反向依赖测试程序的 DLL 构成环，已改为程序仅依赖 uv，部署目标独立
+依赖 DLL。暂时移动共享构建的 uv.dll 后，检查失败、lua.interpreter 未运行，CTest
+退出码 8；finally 恢复 DLL 后全套通过。未提交生成文件或复现用移动。
+
+调整后 MSVC、clang-cl、Clang 的共享 Release 全套各 73/73 通过，分别 57.64、84.74、
+55.50 秒，涵盖安装、发行包内容、解包运行及 Lua 客户端测试。共享构建同时编译 uv/uv_a
+时同一第三方诊断可能重复输出，仍按源位置识别，不承诺所有 Release 第三方提示归零。
+默认静态 MSVC Debug 新布局配置、构建及 73/73 测试通过（60.54 秒）。原始 Debug
+其他前端采样和静态 Release 结果见前述记录，新的 bin 布局本轮额外覆盖三种共享 Release
+和默认静态 Debug；未将剩余版本发布门槛写成已完成，不修改当前 beta.3 版本号。

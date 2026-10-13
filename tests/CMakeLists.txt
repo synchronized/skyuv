@@ -467,3 +467,14 @@ if(TARGET skyuv_lua)
   skyuv_target_compile_warnings(skyuv_test_lua)
   add_test(NAME lua.basic COMMAND skyuv_test_lua)
 endif()
+
+if(WIN32)
+  get_property(windows_runtime_tests DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY TESTS)
+  add_test(NAME windows.runtime_layout COMMAND "${CMAKE_COMMAND}" -P
+    "${SKYUV_BINARY_DIR}/generated/verify-runtime-$<CONFIG>.cmake")
+  set_tests_properties(windows.runtime_layout PROPERTIES FIXTURES_SETUP windows_runtime_ready)
+  # 缺失 DLL 时只报告部署失败，不继续启动会触发系统模态弹窗的程序。
+  foreach(windows_runtime_test IN LISTS windows_runtime_tests)
+    set_property(TEST ${windows_runtime_test} APPEND PROPERTY FIXTURES_REQUIRED windows_runtime_ready)
+  endforeach()
+endif()
