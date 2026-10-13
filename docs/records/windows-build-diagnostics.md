@@ -104,3 +104,30 @@ clang-cl Debug 配置、全量构建与 70/70 测试通过（111.56 秒）；仍
 Release 组合、MSVC 高风险诊断及 beta.4 发布验收仍待完成。
 提交 `a3a3a1a` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38346082650)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38346086989) 全部成功。
+
+## 2026-10-13 MSVC 高风险诊断复核
+
+当前提交全量 MSVC Debug 重建退出码 0，日志 `build/beta4-msvc-review-build.log`。
+仍为 171 条，编号和数量与首轮相同；CRT 策略不影响这些诊断。
+
+| 位置 | 控制流结论 | 本轮处置 |
+|---|---|---|
+| thread.c 两处 C4334 | `uv_cpumask_size()` 在 x64 返回 64，原表达式在 32 位 `int` 上移位后才转换为 `DWORD_PTR` | 独立补丁在移位前转换为指针宽度无符号整数 |
+| fs.c 两处 original_position | 仅当 SetFilePointerEx 成功并设置 restore_position 后使用输出值 | 保留诊断，不用默认值掩盖系统调用契约 |
+| core.c user_timeout | 仅在 UV_METRICS_IDLE_TIME 分支赋值且设置 reset_timeout，同一标志保护读取 | 保留诊断，属于关联状态控制流 |
+| pipe.c duplex_flags | open_named_pipe 的每条成功返回路径均写出参数，失败则不读取 | 保留诊断，属于函数成功返回契约 |
+| process-stdio.c fdopt | 超过 stdio_count 时只设 UV_IGNORE，只有其他分支读取 data 联合体 | 保留诊断，不改写整个结构体以消除提示 |
+| winsock.c iosb | 先写 iosb_ptr->Status；等待完成后通过局部 iosb.Status 读取，同一对象存在指针别名 | 保留诊断；本轮未覆盖 NtDeviceIoControlFile 全部错误组合 |
+| fs.c splitchar | 仅拆分路径分支赋值，cleanup 却只以 split 非零保护恢复；不拆分的根路径、相对目录也可能进入恢复 | 记录潜在真实缺陷，需针对 stat 兼容回退路径建立复现后独立修复，不关闭 C4701 |
+
+亲和性补丁仅应用到构建副本，不涉及 Skynet worker 迁移或 CPU group 扩展。
+测试既调用真实 libuv API 并恢复原线程掩码，也从实际编译副本提取该函数，模拟进程/线程
+掩码，逐位覆盖允许与不允许的 CPU，包括 31、32、63 位；不依赖本机 CPU 数量。
+本机只有 6 个逻辑 CPU，单独的实际 API 测试在原版库上也通过，因此不能作为高位缺陷复现证据。
+随后将生成目录测试夹具中的表达式暂时恢复为原版（仅夹具关闭 C4334，以便运行），
+实际编译输入保持补丁版：原表达式构建成功，但高位测试失败，CTest 退出码 8。
+恢复补丁表达式后构建通过，测试连续 100 次通过；没有提交复现用的生成文件或关闭警告设置。
+MSVC Debug 全套 71/71 测试通过；本轮补丁消除两处 C4334，其余类别保留。
+Clang Debug 配置、构建与 71/71 测试通过，本轮输出无 warning；clang-cl Debug
+配置与新增测试目标构建通过，亲和性测试连续 20 次通过。Windows Release 与共享 libuv
+组合本轮未复验；其余高风险诊断尚未全部修复，不能据此宣称 beta.4 完成。

@@ -12,6 +12,8 @@ if(WIN32)
   file(MAKE_DIRECTORY "${SKYUV_LIBUV_PATCH_DIR}/src/win")
   configure_file("libuv/src/win/winsock.c"
     "${SKYUV_LIBUV_PATCH_DIR}/src/win/winsock.c" COPYONLY)
+  configure_file("libuv/src/win/thread.c"
+    "${SKYUV_LIBUV_PATCH_DIR}/src/win/thread.c" COPYONLY)
   file(RELATIVE_PATH SKYUV_LIBUV_PATCH_RELATIVE "${SKYUV_SOURCE_DIR}" "${SKYUV_LIBUV_PATCH_DIR}")
   execute_process(COMMAND "${GIT_EXECUTABLE}" apply --unidiff-zero
     "--directory=${SKYUV_LIBUV_PATCH_RELATIVE}"
@@ -27,16 +29,35 @@ if(WIN32)
   if(SKYUV_LIBUV_PATCH_POSITION EQUAL -1)
     message(FATAL_ERROR "libuv IPv6 初始化补丁未生效")
   endif()
+  execute_process(COMMAND "${GIT_EXECUTABLE}" apply --unidiff-zero
+    "--directory=${SKYUV_LIBUV_PATCH_RELATIVE}"
+    "${SKYUV_SOURCE_DIR}/patches/libuv/0002-Fix-Windows-affinity-mask-width.patch"
+    WORKING_DIRECTORY "${SKYUV_SOURCE_DIR}"
+    RESULT_VARIABLE SKYUV_LIBUV_PATCH_RESULT ERROR_VARIABLE SKYUV_LIBUV_PATCH_ERROR)
+  if(NOT SKYUV_LIBUV_PATCH_RESULT EQUAL 0)
+    message(FATAL_ERROR "应用 libuv 线程亲和性位宽补丁失败：${SKYUV_LIBUV_PATCH_ERROR}")
+  endif()
+  file(READ "${SKYUV_LIBUV_PATCH_DIR}/src/win/thread.c" SKYUV_LIBUV_PATCHED_CONTENT)
+  string(FIND "${SKYUV_LIBUV_PATCHED_CONTENT}"
+    "threadmask |= (DWORD_PTR) 1 << i;" SKYUV_LIBUV_PATCH_POSITION)
+  if(SKYUV_LIBUV_PATCH_POSITION EQUAL -1)
+    message(FATAL_ERROR "libuv 线程亲和性位宽补丁未生效")
+  endif()
   foreach(uv_target IN ITEMS uv uv_a)
     if(TARGET ${uv_target})
       get_target_property(uv_original_sources ${uv_target} SOURCES)
       set(uv_patched_sources)
       set(uv_winsock_replaced FALSE)
+      set(uv_thread_replaced FALSE)
       foreach(uv_source IN LISTS uv_original_sources)
         if(uv_source STREQUAL "src/win/winsock.c" OR
            uv_source STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/libuv/src/win/winsock.c")
           list(APPEND uv_patched_sources "${SKYUV_LIBUV_PATCH_DIR}/src/win/winsock.c")
           set(uv_winsock_replaced TRUE)
+        elseif(uv_source STREQUAL "src/win/thread.c" OR
+               uv_source STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/libuv/src/win/thread.c")
+          list(APPEND uv_patched_sources "${SKYUV_LIBUV_PATCH_DIR}/src/win/thread.c")
+          set(uv_thread_replaced TRUE)
         elseif(IS_ABSOLUTE "${uv_source}" OR uv_source MATCHES "^\\$<")
           list(APPEND uv_patched_sources "${uv_source}")
         else()
@@ -45,6 +66,9 @@ if(WIN32)
       endforeach()
       if(NOT uv_winsock_replaced)
         message(FATAL_ERROR "libuv ${uv_target} 的 winsock.c 编译输入未找到，需审查补丁接入")
+      endif()
+      if(NOT uv_thread_replaced)
+        message(FATAL_ERROR "libuv ${uv_target} 的 thread.c 编译输入未找到，需审查补丁接入")
       endif()
       set_property(TARGET ${uv_target} PROPERTY SOURCES "${uv_patched_sources}")
       # 恢复原文件在 src/win 内的引号头文件搜索顺序。

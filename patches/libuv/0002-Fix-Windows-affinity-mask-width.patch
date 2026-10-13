@@ -1,0 +1,8 @@
+diff --git a/src/win/thread.c b/src/win/thread.c
+--- a/src/win/thread.c
++++ b/src/win/thread.c
+@@ -197,2 +197,2 @@
+-      if (procmask & (1 << i))
+-        threadmask |= 1 << i;
++      if (procmask & ((DWORD_PTR) 1 << i))
++        threadmask |= (DWORD_PTR) 1 << i;

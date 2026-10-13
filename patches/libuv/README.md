@@ -7,3 +7,7 @@
   联合体层括号，保留 ::1 的全部初始化字节，消除 Clang -Wmissing-braces。
   仅替换 Windows winsock.c 编译输入；静态和共享 libuv 均使用副本。子模块升级或 SDK
   宏形态改变后需重新检查；补丁失配时配置失败，不能静默跳过。
+- `0002-Fix-Windows-affinity-mask-width.patch`：线程亲和性掩码在移位前将 `1` 转为
+  `DWORD_PTR`，避免 Windows x64 上对 32 位整数移位后才扩展到 64 位。
+  仅替换 Windows thread.c 编译输入；不改变 CPU group 或调度模型。
+  `libuv.affinity_mask_width` 逐位验证进程允许和不允许的 CPU 位，并恢复原线程亲和性。
