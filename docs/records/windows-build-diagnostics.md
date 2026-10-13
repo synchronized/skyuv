@@ -85,3 +85,5 @@ Clang Debug 全量重建仅剩 26 条第三方 CRT 警告、90 条 note，libuv 
 非零 IPv6 地址保持及无效参数；最终头文件搜索顺序调整后，Clang 网络相关三项及 MSVC
 初始化/客户端两项复验通过。共享 libuv 构建及初始化测试也通过。
 第三方子模块不修改，cmocka/Skynet CRT 提示和其他编译组合仍待后续治理。
+提交 `2defc29` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38344122237)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38344125789) 全部成功。
