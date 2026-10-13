@@ -199,3 +199,5 @@ Windows Release 与共享 libuv 本轮未复验，beta.4 发布验收仍待完�
 删除新缓存并以旧转换开关 ON 重新配置时，新开关迁移为 ON；uv_a 构建成功，恢复
 C4244 107、C4245 28、C4267 20、C4701 6、C4152 2、C4702 2，共 165 条。
 随后显式设置新开关 OFF，在旧值仍为 ON 时也正确生效，重新配置与 uv_a 构建成功。
+提交 `f1cfca1` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38363773110)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38363785961) 全部成功。
