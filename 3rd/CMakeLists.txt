@@ -112,7 +112,12 @@ if(WIN32)
 endif()
 
 if(WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "Clang"
-   AND CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+   AND NOT SKYUV_LIBUV_DIAGNOSTICS)
+  if(CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    set(SKYUV_LIBUV_UNUSED_FUNCTION_OPTION /clang:-Wno-unused-function)
+  else()
+    set(SKYUV_LIBUV_UNUSED_FUNCTION_OPTION -Wno-unused-function)
+  endif()
   foreach(uv_target IN ITEMS uv uv_a)
     if(TARGET ${uv_target})
       # Clang 的 Windows ABI 不定义 __GNUC__，补齐树宏已经提供的 unused 扩展入口。
@@ -122,7 +127,8 @@ if(WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "Clang"
       # heap-inl.h 的共享静态实现不能通过宏覆盖，例外仅限已审查的两个翻译单元。
       set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/libuv/src/timer.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/libuv/src/win/core.c"
-        TARGET_DIRECTORY ${uv_target} APPEND PROPERTY COMPILE_OPTIONS -Wno-unused-function)
+        TARGET_DIRECTORY ${uv_target} APPEND PROPERTY COMPILE_OPTIONS
+        ${SKYUV_LIBUV_UNUSED_FUNCTION_OPTION})
     endif()
   endforeach()
 endif()

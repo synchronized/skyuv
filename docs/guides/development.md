@@ -59,7 +59,9 @@ cmake --build --preset windows-vs2022-debug --clean-first
 ```
 
 该开关默认 OFF；审查结束后重新配置为 OFF 恢复日常策略。Clang GNU 前端、Linux 和
-macOS 不受该 MSVC 编号策略影响。清单外的新警告继续保留；关闭输出不代表
+macOS 不受该 MSVC 编号策略影响。Windows Clang 两种前端还通过该开关控制已审查的
+libuv unused 标记与 timer.c/core.c 未使用函数例外；ON 时恢复原始提示。
+清单外的新警告继续保留；关闭输出不代表
 已证明第三方转换安全。诊断历史见 [构建诊断记录](../records/windows-build-diagnostics.md)。
 旧转换开关仅在新开关尚未设置时作为初始值迁移；后续使用新开关。
 cmocka 在 MSVC/clang-cl 下使用 PRIVATE `/utf-8`，按真实编码消除 C4819，未屏蔽该诊断。

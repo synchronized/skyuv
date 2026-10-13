@@ -201,3 +201,18 @@ C4244 107、C4245 28、C4267 20、C4701 6、C4152 2、C4702 2，共 165 条。
 随后显式设置新开关 OFF，在旧值仍为 ON 时也正确生效，重新配置与 uv_a 构建成功。
 提交 `f1cfca1` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38363773110)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38363785961) 全部成功。
+
+## 2026-10-13 clang-cl 未使用函数提示
+
+将 Windows Clang GNU 前端已审查的 unused 策略扩展到 clang-cl，统一受
+`SKYUV_LIBUV_DIAGNOSTICS` 控制。OFF 时 libuv 目标 PRIVATE 定义 UV__UNUSED 属性，
+只对 timer.c/win/core.c 设置未使用函数例外；clang-cl 使用 `/clang:-Wno-unused-function`，
+GNU 前端仍使用 `-Wno-unused-function`。ON 时两种前端均撤销这些设置，恢复原始提示。
+CRT 独立策略不变，不关闭所有警告，不修改第三方源码或自有目标严格检查。
+
+clang-cl Debug 配置、构建及 72/72 测试通过（75.64 秒），本轮构建 0 warning。
+Clang GNU Debug 配置、相关目标构建和三项 libuv 测试通过；编译命令确认例外只在
+libuv 范围内，函数抑制只作用于两个已审查的翻译单元。Windows Release 和共享 libuv
+矩阵仍待集中验收，不能据此宣称 beta.4 已结束。
+clang-cl 将总开关设为 ON 并重建 uv_a 成功，恢复 8 条未使用函数提示；随后恢复 OFF，
+重新配置与 uv_a 构建成功，输出 0 warning。例外可恢复，原始诊断未被永久删除。
