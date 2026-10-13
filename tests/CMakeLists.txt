@@ -469,6 +469,11 @@ if(TARGET skyuv_lua)
 endif()
 
 if(WIN32)
+  if(TARGET skyuv_lua_interpreter AND TARGET skyuv_portable_lua_module_client)
+    add_test(NAME windows.project_client_modules
+      COMMAND "${SKYUV_BINARY_DIR}/project/bin/$<TARGET_FILE_NAME:skyuv_lua_interpreter>" -e
+      "package.cpath = [[${SKYUV_BINARY_DIR}/project/luaclib/?.dll]]; assert(require('client.socket')); assert(require('client.crypt'))")
+  endif()
   get_property(windows_runtime_tests DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY TESTS)
   add_test(NAME windows.runtime_layout COMMAND "${CMAKE_COMMAND}" -P
     "${SKYUV_BINARY_DIR}/generated/verify-runtime-$<CONFIG>.cmake")

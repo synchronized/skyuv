@@ -47,10 +47,11 @@
 Linux 和 macOS 使用仓库中的 `linux-*`、`macos-*` CMake preset，并在 GitHub Actions 手动运行
 对应工作流。修改范围和平台覆盖应在提交或 Pull Request 说明中列出；无法覆盖的平台要明确标注。
 
-Windows 构建运行目录统一为 `build/<preset>/bin`：可执行文件与共享 `uv.dll` 放在根目录，
-服务 DLL 复制到 `bin/cservice`，Lua DLL 复制到 `bin/luaclib` 并保留模块子目录。
+Windows 构建运行根目录统一为 `build/<preset>/project`：可执行文件与共享 `uv.dll` 放在
+`project/bin`，服务 DLL 复制到同级 `project/cservice`，Lua DLL 复制到 `project/luaclib`
+并保留模块子目录。
 使用完整 `cmake --build --preset ...` 构建会部署模块；原模块构建目录保留供目标引用使用。
-例如独立解释器使用 `build/<preset>/bin/lua.exe`，不再从 `3rd/Debug` 或 `3rd/Release` 启动。
+例如独立解释器使用 `build/<preset>/project/bin/lua.exe`，不再从 `3rd/Debug` 或 `3rd/Release` 启动。
 此目录是构建运行布局，不包含完整发行包的 Lua 源码和配置；交付仍以 install/CPack 为入口。
 Windows CTest 先检查运行文件及 DLL 哈希，检查失败时跳过其余测试，避免缺失 DLL 弹窗。
 

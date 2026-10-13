@@ -267,3 +267,17 @@ portable 模块保留 cservice/luaclib 子目录，源模块输出供现有目�
 和默认静态 Debug；未将剩余版本发布门槛写成已完成，不修改当前 beta.3 版本号。
 提交 `722c8c8` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38370895011)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38370902365) 全部成功。
+
+## 2026-10-13 独立 project 运行根目录
+
+用户明确运行根目录应为 build/<preset>/project，而不是 build/<preset>/bin。
+Windows 程序及 uv.dll 改为 project/bin，服务 DLL 为同级 project/cservice，Lua DLL
+为同级 project/luaclib，保留 Lua 模块子目录。部署脚本与存在性/哈希检查均使用新根目录。
+不修改安装包布局，不把 project 写成已包含完整 Lua 源码与配置的发行包。
+
+新增 windows.project_client_modules 从明确的 project/bin/lua.exe 加载
+project/luaclib 中 client.socket 与 client.crypt，验证新布局可运行，而不只检查文件存在。
+共享 MSVC Release 先完成原全套 73/73 测试（58.71 秒），随后新目录加载与前置部署
+检查两项通过。静态 MSVC Debug 首轮日志测试只留下 bootstrap 记录，未见预期标记；
+同一测试连续 20 次复验通过，未放宽断言或修改日志实现，首次失败原因未确定。
+随后静态 MSVC Debug 全套 74/74 复验通过（55.86 秒），包含新目录客户端加载测试。
