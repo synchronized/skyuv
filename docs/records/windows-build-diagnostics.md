@@ -216,3 +216,5 @@ libuv 范围内，函数抑制只作用于两个已审查的翻译单元。Windo
 矩阵仍待集中验收，不能据此宣称 beta.4 已结束。
 clang-cl 将总开关设为 ON 并重建 uv_a 成功，恢复 8 条未使用函数提示；随后恢复 OFF，
 重新配置与 uv_a 构建成功，输出 0 warning。例外可恢复，原始诊断未被永久删除。
+提交 `2092a42` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38366738054)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38366744354) 全部成功。
