@@ -160,3 +160,5 @@ Clang Debug 配置、构建与 72/72 测试通过（61.80 秒），本轮输出�
 clang-cl Debug 新增测试目标构建通过，测试连续 20 次通过。fs.c 的 splitchar C4701
 已消除，另外两处 original_position C4701 保留；Windows Release、共享 libuv 及真实
 旧版 stat 回退环境本轮未覆盖，beta.4 完整验收仍待完成。
+提交 `394e138` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38356058512)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38356061845) 全部成功。
