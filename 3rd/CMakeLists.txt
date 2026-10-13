@@ -7,11 +7,12 @@ set(ENABLE_CLANG_TIDY OFF CACHE BOOL "不对第三方 libuv 运行 clang-tidy" F
 add_subdirectory(libuv EXCLUDE_FROM_ALL)
 
 if(WIN32 AND CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"
-   AND NOT SKYUV_LIBUV_CONVERSION_DIAGNOSTICS)
+   AND NOT SKYUV_LIBUV_DIAGNOSTICS)
   foreach(uv_target IN ITEMS uv uv_a)
     if(TARGET ${uv_target})
-      # 日常构建减少第三方转换提示；诊断构建恢复基线，不表示转换已证明安全。
-      target_compile_options(${uv_target} PRIVATE /wd4244 /wd4245 /wd4267)
+      # 仅屏蔽已记录的第三方诊断；审查时恢复上游策略，不表示相关代码已证明安全。
+      target_compile_options(${uv_target} PRIVATE
+        /wd4244 /wd4245 /wd4267 /wd4701 /wd4152 /wd4702)
     endif()
   endforeach()
 endif()
@@ -173,6 +174,14 @@ if(SKYUV_BUILD_TESTS)
                  "${SKYUV_CMOCKA_CMAKE_CONTENT}")
   file(WRITE "${SKYUV_CMOCKA_CMAKELISTS}" "${SKYUV_CMOCKA_CMAKE_CONTENT}")
   add_subdirectory("${SKYUV_CMOCKA_SOURCE_DIR}" cmocka EXCLUDE_FROM_ALL)
+  if(WIN32 AND CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    # cmocka.h 为 UTF-8；指定真实编码，避免通过关闭 C4819 隐藏编码错误。
+    foreach(cmocka_target IN ITEMS cmocka cmocka-static)
+      if(TARGET ${cmocka_target})
+        target_compile_options(${cmocka_target} PRIVATE /utf-8)
+      endif()
+    endforeach()
+  endif()
 endif()
 
 # Skynet 当前没有 CMake 构建入口。待适配层边界确定后，在 skyuv 自有目标中

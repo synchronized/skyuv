@@ -181,3 +181,21 @@ MSVC 设为 ON 后重新配置并构建 uv_a，恢复 C4244 107、C4245 28、C42
 clang-cl 编译数据库确认 37 条 libuv 条目带屏蔽选项，没有扩散到其他来源。
 提交 `d17fc35` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38359917692)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38359929436) 全部成功。
+
+## 2026-10-13 合并 libuv 总诊断开关与 cmocka 编码
+
+用户确认合并为 `SKYUV_LIBUV_DIAGNOSTICS`，默认 OFF，仅对 Windows MSVC/clang-cl 的
+uv、uv_a PRIVATE 关闭 C4244/C4245/C4267/C4701/C4152/C4702；ON 恢复这些提示。
+清单外的新诊断继续保留，不全局关闭警告。旧转换开关仅在新开关尚未设置时迁移初始值，
+新开关显式值与后续缓存值优先。未初始化诊断被屏蔽不表示全部系统调用错误组合已验证安全。
+
+cmocka、cmocka-static 存在时在上述前端使用 PRIVATE `/utf-8`，按头文件真实编码处理
+C4819，不关闭该警告；自有目标继续沿用严格警告策略，第三方源码工作树保持干净。
+MSVC Debug 全量重建 0 条 warning，72/72 测试通过（61.44 秒）；clang-cl Debug
+构建与 72/72 测试通过（92.05 秒），仍有 8 条 libuv 未使用函数提示，本轮不扩大屏蔽范围。
+MSVC 的 64 个自有目标未带屏蔽选项；clang-cl 编译数据库验证选项仅在 libuv 范围内，
+cmocka 编译条目带 `/utf-8`。Clang GNU 前端与非 Windows 不受该编号策略影响；
+Windows Release 与共享 libuv 本轮未复验，beta.4 发布验收仍待完成。
+删除新缓存并以旧转换开关 ON 重新配置时，新开关迁移为 ON；uv_a 构建成功，恢复
+C4244 107、C4245 28、C4267 20、C4701 6、C4152 2、C4702 2，共 165 条。
+随后显式设置新开关 OFF，在旧值仍为 ON 时也正确生效，重新配置与 uv_a 构建成功。

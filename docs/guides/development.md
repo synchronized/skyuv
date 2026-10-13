@@ -47,19 +47,22 @@
 Linux 和 macOS 使用仓库中的 `linux-*`、`macos-*` CMake preset，并在 GitHub Actions 手动运行
 对应工作流。修改范围和平台覆盖应在提交或 Pull Request 说明中列出；无法覆盖的平台要明确标注。
 
-## 第三方转换诊断
+## 第三方构建诊断
 
-Windows MSVC 与 clang-cl 日常构建仅对 libuv 目标局部关闭 C4244、C4245、C4267，
+Windows MSVC 与 clang-cl 日常构建仅对 libuv 目标局部关闭 C4244、C4245、C4267、
+C4701、C4152、C4702，
 不传播给 skyuv 自有代码。升级依赖或进行诊断审查时恢复提示并全量重建：
 
 ```powershell
-cmake --preset windows-vs2022-debug -DSKYUV_LIBUV_CONVERSION_DIAGNOSTICS=ON
+cmake --preset windows-vs2022-debug -DSKYUV_LIBUV_DIAGNOSTICS=ON
 cmake --build --preset windows-vs2022-debug --clean-first
 ```
 
 该开关默认 OFF；审查结束后重新配置为 OFF 恢复日常策略。Clang GNU 前端、Linux 和
-macOS 不受该 MSVC 编号策略影响。未初始化、移位等其他诊断继续保留；关闭输出不代表
+macOS 不受该 MSVC 编号策略影响。清单外的新警告继续保留；关闭输出不代表
 已证明第三方转换安全。诊断历史见 [构建诊断记录](../records/windows-build-diagnostics.md)。
+旧转换开关仅在新开关尚未设置时作为初始值迁移；后续使用新开关。
+cmocka 在 MSVC/clang-cl 下使用 PRIVATE `/utf-8`，按真实编码消除 C4819，未屏蔽该诊断。
 
 ## 完成标准
 
