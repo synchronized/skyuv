@@ -178,3 +178,6 @@ C4702 2、C4819 3。全套 72/72 测试通过（115.25 秒）。生成工程检�
 原始 155 条转换基线继续保留，后续依赖升级与定期审查通过诊断开关采样。
 MSVC 设为 ON 后重新配置并构建 uv_a，恢复 C4244 107、C4245 28、C4267 20 条，
 构建成功；随后恢复 OFF，重新配置与 uv_a 构建成功。开关控制输出，不改变源码语义。
+clang-cl 编译数据库确认 37 条 libuv 条目带屏蔽选项，没有扩散到其他来源。
+提交 `d17fc35` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38359917692)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38359929436) 全部成功。
