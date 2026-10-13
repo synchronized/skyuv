@@ -131,3 +131,5 @@ MSVC Debug 全套 71/71 测试通过；本轮补丁消除两处 C4334，其余�
 Clang Debug 配置、构建与 71/71 测试通过，本轮输出无 warning；clang-cl Debug
 配置与新增测试目标构建通过，亲和性测试连续 20 次通过。Windows Release 与共享 libuv
 组合本轮未复验；其余高风险诊断尚未全部修复，不能据此宣称 beta.4 完成。
+提交 `8cbf15b` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38348783693)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38348787730) 全部成功。
