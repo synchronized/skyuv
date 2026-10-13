@@ -40,6 +40,7 @@
 
 - [`guides/client-socket.md`](guides/client-socket.md)：libuv 客户端 API、连接 ID、超时、半关闭及 stdin 生命周期。
 - [`guides/development.md`](guides/development.md)：任务拆分、分支、提交、验证和 CI 流程。
+- [`guides/packaging.md`](guides/packaging.md)：本地 Runtime 安装、CPack 打包、产物校验及构建运行目录边界。
 - [`guides/release.md`](guides/release.md)：执行版本准备、三平台发布验收和 GitHub Release。
 - `scripts/check_release.py`：只读检查版本文件与 Git 发布前置条件；用法见发布指南。
 - `scripts/new_release_record.py`：生成待人工补全的发布验收记录草稿；用法见发布指南。

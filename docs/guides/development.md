@@ -56,6 +56,8 @@ Windows 构建运行根目录统一为 `build/<preset>/project`：可执行文�
 Windows CTest 先检查运行文件及 DLL 哈希，检查失败时跳过其余测试，避免缺失 DLL 弹窗。
 
 ## 第三方构建诊断
+本地生成发行归档与未压缩安装目录见 [打包指南](packaging.md)。
+
 
 Windows MSVC 与 clang-cl 日常构建仅对 libuv 目标局部关闭 C4244、C4245、C4267、
 C4701、C4152、C4702，

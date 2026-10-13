@@ -4,6 +4,9 @@
 [`development.md`](development.md)。0.x 阶段不承诺稳定 ABI；发布范围和限制以对应的版本文档为准。
 
 ## 流程概览
+本地 CPack 命令、产物位置与 Runtime 组件边界见 [打包指南](packaging.md)。
+本文负责版本身份、发布流程与公开资产验收。
+
 
 ```text
 确定版本范围 → 准备版本提交 → 合入 main → 三平台 Release 验证
