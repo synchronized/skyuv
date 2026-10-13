@@ -6,6 +6,16 @@ set(ENABLE_CLANG_TIDY OFF CACHE BOOL "不对第三方 libuv 运行 clang-tidy" F
 
 add_subdirectory(libuv EXCLUDE_FROM_ALL)
 
+if(WIN32 AND CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"
+   AND NOT SKYUV_LIBUV_CONVERSION_DIAGNOSTICS)
+  foreach(uv_target IN ITEMS uv uv_a)
+    if(TARGET ${uv_target})
+      # 日常构建减少第三方转换提示；诊断构建恢复基线，不表示转换已证明安全。
+      target_compile_options(${uv_target} PRIVATE /wd4244 /wd4245 /wd4267)
+    endif()
+  endforeach()
+endif()
+
 if(WIN32)
   find_package(Git REQUIRED)
   set(SKYUV_LIBUV_PATCH_DIR "${CMAKE_CURRENT_BINARY_DIR}/libuv-patched")

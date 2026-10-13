@@ -162,3 +162,19 @@ clang-cl Debug 新增测试目标构建通过，测试连续 20 次通过。fs.c
 旧版 stat 回退环境本轮未覆盖，beta.4 完整验收仍待完成。
 提交 `394e138` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38356058512)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38356061845) 全部成功。
+
+## 2026-10-13 libuv 转换诊断分层策略
+
+用户确认日常构建局部屏蔽转换提示，保留诊断审查入口。新增 CMake 开关
+`SKYUV_LIBUV_CONVERSION_DIAGNOSTICS`，默认 OFF；Windows MSVC/clang-cl 仅对 uv、uv_a
+PRIVATE 设置 `/wd4244 /wd4245 /wd4267`，ON 时不设置，保持上游 `/W4`。
+Clang GNU 前端和非 Windows 平台不受影响；不修改第三方源码、不向消费者传播，
+不降低 skyuv 的严格警告，不关闭其他诊断，不代表 155 处转换已证明安全。
+
+MSVC Debug 全量重建成功，三类转换提示为零，剩余 13 条：C4701 6、C4152 2、
+C4702 2、C4819 3。全套 72/72 测试通过（115.25 秒）。生成工程检查确认 uv_a
+带局部选项，64 个自有目标均不带。clang-cl 相关构建与三项 libuv 测试通过；首次
+测试缺少初始化测试产物，补齐目标后复验成功，不修改测试来绕过失败。
+原始 155 条转换基线继续保留，后续依赖升级与定期审查通过诊断开关采样。
+MSVC 设为 ON 后重新配置并构建 uv_a，恢复 C4244 107、C4245 28、C4267 20 条，
+构建成功；随后恢复 OFF，重新配置与 uv_a 构建成功。开关控制输出，不改变源码语义。

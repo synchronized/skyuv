@@ -26,6 +26,7 @@ if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
 endif()
 
 option(SKYUV_BUILD_TESTS "构建 skyuv 测试" ON)
+option(SKYUV_LIBUV_CONVERSION_DIAGNOSTICS "保留 Windows libuv 的整数转换诊断" OFF)
 option(SKYUV_BUILD_LUA_INTERPRETER "构建独立 Lua 解释器" ON)
 option(SKYUV_BUILD_SHARED "将 skyuv 构建为动态库" OFF)
 if(WIN32)

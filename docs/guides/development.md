@@ -47,7 +47,22 @@
 Linux 和 macOS 使用仓库中的 `linux-*`、`macos-*` CMake preset，并在 GitHub Actions 手动运行
 对应工作流。修改范围和平台覆盖应在提交或 Pull Request 说明中列出；无法覆盖的平台要明确标注。
 
+## 第三方转换诊断
+
+Windows MSVC 与 clang-cl 日常构建仅对 libuv 目标局部关闭 C4244、C4245、C4267，
+不传播给 skyuv 自有代码。升级依赖或进行诊断审查时恢复提示并全量重建：
+
+```powershell
+cmake --preset windows-vs2022-debug -DSKYUV_LIBUV_CONVERSION_DIAGNOSTICS=ON
+cmake --build --preset windows-vs2022-debug --clean-first
+```
+
+该开关默认 OFF；审查结束后重新配置为 OFF 恢复日常策略。Clang GNU 前端、Linux 和
+macOS 不受该 MSVC 编号策略影响。未初始化、移位等其他诊断继续保留；关闭输出不代表
+已证明第三方转换安全。诊断历史见 [构建诊断记录](../records/windows-build-diagnostics.md)。
+
 ## 完成标准
+
 
 - 实现、测试、CMake 和文档与任务范围一致，第三方源码工作树干净；
 - 相关本地验证及要求的远端 CI 均通过，未覆盖的平台和已知限制已说明；
