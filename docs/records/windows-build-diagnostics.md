@@ -64,3 +64,7 @@ CRT 宏只移除 Microsoft CRT 的供应商弃用标记，不代表所有调用�
 libuv 的 winsock.c 初始化括号提示，以及 cmocka/Skynet 的 CRT 提示本批保留，后续分别处理。
 MSVC、clang-cl、Release 及 beta.4 完整验收仍待完成，不能宣称 beta.4 已发布。
 Windows Clang Debug 本轮 CTest 69/69 通过，耗时 98.62 秒，包含交付和稳定性标签测试。
+提交 `c69c549` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38340119711)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38340122894) 全部成功。
+Windows MSVC Debug 配置、客户端运行时构建和对应 CTest 通过，第三方子模块工作树干净。
+这些验证不替代 beta.4 要求的六种 Windows 组合完整验收。
