@@ -281,3 +281,5 @@ project/luaclib 中 client.socket 与 client.crypt，验证新布局可运行，
 检查两项通过。静态 MSVC Debug 首轮日志测试只留下 bootstrap 记录，未见预期标记；
 同一测试连续 20 次复验通过，未放宽断言或修改日志实现，首次失败原因未确定。
 随后静态 MSVC Debug 全套 74/74 复验通过（55.86 秒），包含新目录客户端加载测试。
+提交 `0613cb0` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38373080374)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38373087474) 全部成功。
