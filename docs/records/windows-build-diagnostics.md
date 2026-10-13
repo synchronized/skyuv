@@ -38,3 +38,29 @@ clang-cl/Clang 的 `note` 清单。未采集 Release 和其他 Windows 工具链
 本轮只建立诊断基线和版本计划，没有修复编译警告，也未改变依赖版本或警告选项。
 全量重建后执行 `ctest --preset windows-vs2022-debug --output-on-failure`，
 64/64 测试通过，耗时 77.31 秒。本轮仅修改文档，不要求重新触发平台 CI。
+
+## 2026-10-13 Windows Clang Debug 首批治理
+
+基线源码提交 `a627242`，Clang 23.1.1，GNU 命令行前端、MSVC ABI。
+使用 `scripts/msvc.ps1` 初始化环境，再执行 `cmake --build --preset windows-clang-debug --clean-first`。
+完整重建成功；本机日志为 `build/beta4-clang-before.log` 和 `build/beta4-clang-after.log`。
+
+| 诊断 | 修复前 | 首批处理后 |
+|---|---:|---:|
+| CRT 弃用提示 | 45 | 26 |
+| 未使用静态函数 | 8 | 0 |
+| 初始化子对象缺少括号 | 1 | 1 |
+| warning 总数 | 54 | 27 |
+| note 上下文 | 177 | 91 |
+
+完整日志比用户提供的截断片段多出第三方 CRT 提示。首批处理仅作用于 Windows Clang GNU
+前端的 libuv 目标：定义 `_CRT_SECURE_NO_WARNINGS`，通过 `UV__UNUSED` 扩展入口为红黑树
+生成函数提供 unused 属性；heap-inl.h 的静态实现仅在 timer.c 与 win/core.c 两个翻译单元
+局部豁免 `-Wunused-function`。作用域为 libuv 子目录，不传播到 skyuv 自有目标。
+
+CRT 宏只移除 Microsoft CRT 的供应商弃用标记，不代表所有调用已证明无缺陷，也不修改
+函数、缓冲区或 ABI。堆函数例外只针对完整采样中确认的共享头文件实现；libuv 升级或调整
+这两个翻译单元时应重新审查并移除不再必要的例外。
+libuv 的 winsock.c 初始化括号提示，以及 cmocka/Skynet 的 CRT 提示本批保留，后续分别处理。
+MSVC、clang-cl、Release 及 beta.4 完整验收仍待完成，不能宣称 beta.4 已发布。
+Windows Clang Debug 本轮 CTest 69/69 通过，耗时 98.62 秒，包含交付和稳定性标签测试。

@@ -6,6 +6,22 @@ set(ENABLE_CLANG_TIDY OFF CACHE BOOL "不对第三方 libuv 运行 clang-tidy" F
 
 add_subdirectory(libuv EXCLUDE_FROM_ALL)
 
+if(WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "Clang"
+   AND CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+  foreach(uv_target IN ITEMS uv uv_a)
+    if(TARGET ${uv_target})
+      # Clang 的 Windows ABI 不定义 __GNUC__，补齐树宏已经提供的 unused 扩展入口。
+      # CRT 提示仅限第三方 libuv；不改变 skyuv 自有目标的警告策略。
+      target_compile_definitions(${uv_target} PRIVATE
+        _CRT_SECURE_NO_WARNINGS "UV__UNUSED=__attribute__((unused))")
+      # heap-inl.h 的共享静态实现不能通过宏覆盖，例外仅限已审查的两个翻译单元。
+      set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/libuv/src/timer.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/libuv/src/win/core.c"
+        TARGET_DIRECTORY ${uv_target} APPEND PROPERTY COMPILE_OPTIONS -Wno-unused-function)
+    endif()
+  endforeach()
+endif()
+
 if(SKYUV_USE_SHARED_LIBUV)
   set(SKYUV_LIBUV_TARGET uv)
   add_library(skyuv::libuv ALIAS uv)
