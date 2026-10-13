@@ -68,3 +68,20 @@ Windows Clang Debug 本轮 CTest 69/69 通过，耗时 98.62 秒，包含交付�
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38340122894) 全部成功。
 Windows MSVC Debug 配置、客户端运行时构建和对应 CTest 通过，第三方子模块工作树干净。
 这些验证不替代 beta.4 要求的六种 Windows 组合完整验收。
+
+## 2026-10-13 libuv IPv6 初始化括号补丁
+
+Windows SDK 10.0.22621.0 的 IN6_ADDR 包含结构体、联合体和 Byte[16] 数组，
+IN6ADDR_LOOPBACK_INIT 只包含数组层括号。补丁补齐外层括号，不改变回环地址值。
+见 [libuv 补丁说明](../../patches/libuv/README.md)。依赖提交保持不变。
+
+构建入口复制单个 winsock.c 到生成目录，应用独立补丁，再替换静态/共享 libuv 编译输入。
+每次配置从上游文件重新复制，允许重复配置；检查 Git 退出码、补丁后的内容和编译输入匹配，
+任何失配均配置失败。首次尝试 Git 从构建子目录运行时跳过补丁却返回成功，已修正为从源码
+根目录指定相对路径应用，并增加内容校验，避免仅凭退出码误判。
+
+Clang Debug 全量重建仅剩 26 条第三方 CRT 警告、90 条 note，libuv 无警告。
+全套 CTest 70/70 通过（62.15 秒）。新增测试直接检查 :: 转为 ::1 的 16 字节、端口保持、
+非零 IPv6 地址保持及无效参数；最终头文件搜索顺序调整后，Clang 网络相关三项及 MSVC
+初始化/客户端两项复验通过。共享 libuv 构建及初始化测试也通过。
+第三方子模块不修改，cmocka/Skynet CRT 提示和其他编译组合仍待后续治理。

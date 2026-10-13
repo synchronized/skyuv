@@ -1,0 +1,6 @@
+diff --git a/src/win/winsock.c b/src/win/winsock.c
+--- a/src/win/winsock.c
++++ b/src/win/winsock.c
+@@ -570,1 +570,1 @@
+-      struct in6_addr init_sin6_addr = IN6ADDR_LOOPBACK_INIT;
++      struct in6_addr init_sin6_addr = { { IN6ADDR_LOOPBACK_INIT } };

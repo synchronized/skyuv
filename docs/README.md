@@ -32,6 +32,7 @@
 
 ## 参考资料
 
+- [`../patches/libuv/README.md`](../patches/libuv/README.md)：libuv 构建副本补丁与维护边界。
 - [`DEPENDENCIES.md`](DEPENDENCIES.md)：依赖库策略、平台边界与启用条件。
 - [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：Lua 模块接入状态、风险与验证等级。
 
