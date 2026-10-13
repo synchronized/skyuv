@@ -265,3 +265,5 @@ portable 模块保留 cservice/luaclib 子目录，源模块输出供现有目�
 默认静态 MSVC Debug 新布局配置、构建及 73/73 测试通过（60.54 秒）。原始 Debug
 其他前端采样和静态 Release 结果见前述记录，新的 bin 布局本轮额外覆盖三种共享 Release
 和默认静态 Debug；未将剩余版本发布门槛写成已完成，不修改当前 beta.3 版本号。
+提交 `722c8c8` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38370895011)
+及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38370902365) 全部成功。
