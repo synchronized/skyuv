@@ -283,3 +283,20 @@ project/luaclib 中 client.socket 与 client.crypt，验证新布局可运行，
 随后静态 MSVC Debug 全套 74/74 复验通过（55.86 秒），包含新目录客户端加载测试。
 提交 `0613cb0` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38373080374)
 及 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38373087474) 全部成功。
+
+## 2026-10-14 最终矩阵中的路径测试复制范围
+
+从 `3446696` 初始化子模块并建立新的 Windows 构建目录。MSVC 使用 19.42 工具链，
+clang-cl 使用 Clang 23.1.1；Python 为 3.9.13。MSVC Debug 与 clang-cl Debug 首轮各有
+`skynet.portable.paths` 超过 15 秒，其余 73 项通过；单项复验通过。MSVC 单项连续 20 次
+和随后全套 74 项复验通过，但 clang-cl 冷构建再次出现同样超时，不能仅以重试作为处置。
+
+超时遗留的临时目录仅完成部分 Lua 模块复制，尚未复制服务 DLL。原脚本递归复制整个
+`3rd/portable`，包含 PDB；clang-cl Debug 输入共 24 个文件、97,948,706 字节。
+此证据把本次超时定位在测试准备阶段，不证明 Skynet 启动或 DLL 路径语义发生失败，
+也不能据此确定磁盘或防病毒软件是唯一原因。
+
+路径测试改为仅递归复制 DLL，保留模块目录和含空格的临时根目录，启动标志断言和
+15 秒 CTest 超时不变。现有真实模块加载测试继续验证复制内容足以启动服务并加载
+`client.socket`；clang-cl Debug 修改后连续 20 次通过，总计 20.63 秒（含 fixture 重复）。
+本机原始日志位于 `build/beta4-final-*.log` 和 `build/beta4-paths-dll-only.log`，不提交。

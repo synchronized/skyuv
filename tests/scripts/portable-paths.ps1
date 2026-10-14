@@ -19,7 +19,8 @@ $modules = Join-Path $root "skyuv path modules-$token"
 $config = Join-Path $root "skyuv-paths-$token.conf"
 
 try {
-	Copy-Item -LiteralPath $PortableDirectory -Destination $modules -Recurse
+	# 路径测试只需运行 DLL；复制调试符号会让冷构建的文件搬运占用启动验收时间。
+	Copy-Item -LiteralPath $PortableDirectory -Destination $modules -Recurse -Filter "*.dll"
 	$modulePath = $modules.Replace("\", "/")
 	$sourcePath = $SkynetSource.Replace("\", "/")
 	$fixturePath = $FixtureSource.Replace("\", "/")
