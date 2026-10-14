@@ -106,6 +106,7 @@ else()
   skyuv_target_compile_warnings(skyuv_daemon)
 endif()
 add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES})
+set_target_properties(skyuv_skynet_runtime_compat PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(
   skyuv_skynet_runtime_compat
   PRIVATE
