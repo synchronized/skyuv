@@ -1,0 +1,11 @@
+--- a/service-src/service_logger.c
++++ b/service-src/service_logger.c
+@@ -50,7 +50,7 @@
+ 	switch (type) {
+ 	case PTYPE_SYSTEM:
+ 		if (inst->filename) {
+-			inst->handle = freopen(inst->filename, "a", inst->handle);
++			inst->handle = skyuv_logger_reopen(inst->handle, inst->filename);
+ 		}
+ 		break;
+ 	case PTYPE_TEXT:

@@ -504,3 +504,26 @@ if(WIN32)
     set_property(TEST ${windows_runtime_test} APPEND PROPERTY FIXTURES_REQUIRED windows_runtime_ready)
   endforeach()
 endif()
+
+if(NOT WIN32)
+  add_executable(skyuv_test_pid pid_probe.c)
+  target_include_directories(skyuv_test_pid PRIVATE "${PROJECT_SOURCE_DIR}/src/platform")
+  target_link_libraries(skyuv_test_pid PRIVATE skyuv_daemon)
+  skyuv_target_compile_warnings(skyuv_test_pid)
+  add_test(NAME skynet.portable.daemon_lifecycle COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/portable_daemon.py"
+    --executable "$<TARGET_FILE:skyuv>"
+    --config-template "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-logger-file.conf")
+  set_tests_properties(skynet.portable.daemon_lifecycle PROPERTIES LABELS stability TIMEOUT 60)
+  add_test(NAME platform.pid_lifecycle COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/pid_lifecycle.py" "$<TARGET_FILE:skyuv_test_pid>")
+  set_tests_properties(platform.pid_lifecycle PROPERTIES LABELS stability TIMEOUT 60)
+endif()
+
+add_executable(skyuv_test_logger_reopen logger_reopen.c)
+target_include_directories(skyuv_test_logger_reopen PRIVATE "${PROJECT_SOURCE_DIR}/src/compat/skynet")
+target_link_libraries(skyuv_test_logger_reopen PRIVATE skyuv_skynet_runtime_compat)
+skyuv_target_compile_warnings(skyuv_test_logger_reopen)
+add_test(NAME platform.logger_reopen COMMAND "${Python3_EXECUTABLE}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/scripts/logger_reopen.py" "$<TARGET_FILE:skyuv_test_logger_reopen>")
+set_tests_properties(platform.logger_reopen PROPERTIES LABELS stability TIMEOUT 30)

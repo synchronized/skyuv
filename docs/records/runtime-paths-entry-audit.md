@@ -81,3 +81,32 @@ Linux Clang Release 配置、构建与完整 CTest 67/67 通过。提交 `e389e5
 首次 macOS 验证发现临时目录符号链接使测试预期路径与 realpath 输出不一致，已统一按规范
 路径比较，并在 Linux 符号链接临时目录中复验通过；运行时的启动和日志写入不受该测试问题影响。
 环境覆盖值改用 libuv 读取，超长值明确失败。Windows 未在本机验证。
+
+## 日志与 Unix PID 生命周期实现
+
+本批以 `src/platform/daemon.c` 替换便携目标的上游 Unix daemon 实现。PID 协调锁在 fork 前
+取得，`<pidfile>.lock` 保留以固定锁 inode；PID 文件另行加锁以检测已有实例。文件描述符
+设为 close-on-exec，在进程运行期间持续持有；错误分支释放资源，正常关闭与 `atexit` 重复
+清理安全。只有持有的 PID 文件与路径仍指向同一设备和 inode 时才删除，避免删除替换文件。
+异常退出留下的 PID 在取得锁且进程不存在后可恢复；普通 `exit()` 启动失败也会释放 PID。
+macOS 保留不 fork 的上游模式，Windows 继续拒绝 daemon。
+
+协调文件不自动删除，运行期间禁止部署者替换或删除 PID/锁文件。实现以支持 `flock` 的
+本地文件系统为边界，不把网络文件系统或外部修改目录的竞态作为已支持能力。
+
+logger 重开通过补丁 `0014` 委托到平台适配函数：先打开新文件，成功才替换并关闭旧句柄，
+失败在 stderr 输出最终路径并继续使用旧文件；后续再次重开可恢复。Actor 串行处理 logger
+回调，旧句柄不由其他线程并发关闭。
+
+新增验证：
+
+- `platform.logger_reopen`：20 次失败保留、继续写入旧文件及恢复切换。
+- `platform.pid_lifecycle`：并发启动冲突、并发启停、SIGKILL 残留、活跃外部 PID、错误退出、
+  文件身份保护、符号链接拒绝、重复关闭，以及 32 fd 限制下 100 次取得/发布/释放。
+- `skynet.portable.daemon_lifecycle`：真实 daemon 从两处工作目录启动，使用同一个 PID 路径，
+  冲突实例失败，正常退出清理，以及 logger 初始化失败后锁和 PID 清理。
+- `install.runtime_smoke`：Unix 安装树设为只读，验证新模式标准输出和外置配置文件日志；
+  测试结束后恢复临时树权限用于删除。Windows 未设置 ACL，不能据此宣称 Windows 只读验证。
+
+Linux Clang Release 配置、严格构建及完整 CTest 71/71 通过；Linux/macOS CI 和 Windows
+覆盖状态在本批最终验证后补充。计划 008 仍在进行中，Windows 与完整发行交付收口未完成。

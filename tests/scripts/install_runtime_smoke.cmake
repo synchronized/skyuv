@@ -92,6 +92,19 @@ file(MAKE_DIRECTORY "${deployment_root}")
 file(READ "${config}" external_config)
 string(REPLACE "logger = nil" "logger = \"node.log\"" external_config "${external_config}")
 file(WRITE "${deployment_root}/node.conf" "${external_config}")
+if(NOT WIN32)
+	# 模拟只读程序树；标准输出和外置日志都不能要求安装树可写。
+	file(CHMOD_RECURSE "${install_root}"
+		PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+endif()
+execute_process(
+	COMMAND "${executable}" --runtime-paths "examples/skyuv.conf"
+	WORKING_DIRECTORY "${temp_root}"
+	TIMEOUT 15
+	RESULT_VARIABLE readonly_result
+	OUTPUT_VARIABLE readonly_output
+	ERROR_VARIABLE readonly_error
+)
 execute_process(
 	COMMAND "${executable}" --runtime-paths "${deployment_root}/node.conf"
 	WORKING_DIRECTORY "${temp_root}"
@@ -100,6 +113,14 @@ execute_process(
 	OUTPUT_VARIABLE external_output
 	ERROR_VARIABLE external_error
 )
+if(NOT WIN32)
+	# 恢复仅用于清理临时安装树，即使启动失败也先恢复权限再报告。
+	file(CHMOD_RECURSE "${install_root}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+endif()
+set(readonly_log "${readonly_output}\n${readonly_error}")
+if(NOT readonly_result EQUAL 0 OR NOT readonly_log MATCHES "SKYUV_RUNTIME_SMOKE_OK")
+	message(FATAL_ERROR "只读安装树标准输出模式失败：\n${readonly_log}")
+endif()
 if(NOT external_result EQUAL 0 OR NOT EXISTS "${deployment_root}/log/node.log")
 	message(FATAL_ERROR "新模式安装树外配置启动失败：\n${external_output}\n${external_error}")
 endif()

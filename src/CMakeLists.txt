@@ -84,21 +84,26 @@ set(
   SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES
   compat/skynet/skyuv_memory.c
   compat/skynet/skyuv_runtime.c
+  platform/logger.c
 )
 if(WIN32)
   list(APPEND SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES compat/skynet/start/skyuv_daemon.c)
 else()
   add_library(
-    skyuv_skynet_daemon_upstream STATIC
-    "${PROJECT_BINARY_DIR}/3rd/skynet-patched/skynet-src/skynet_daemon.c"
+    skyuv_daemon STATIC
+    platform/daemon.c
   )
   target_include_directories(
-    skyuv_skynet_daemon_upstream
+    skyuv_daemon
     PRIVATE "${PROJECT_SOURCE_DIR}/3rd/skynet/skynet-src"
   )
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_compile_definitions(skyuv_skynet_daemon_upstream PRIVATE _DEFAULT_SOURCE)
+    target_compile_definitions(skyuv_daemon PRIVATE _DEFAULT_SOURCE)
   endif()
+  if(APPLE)
+    target_compile_definitions(skyuv_daemon PRIVATE _DARWIN_C_SOURCE)
+  endif()
+  skyuv_target_compile_warnings(skyuv_daemon)
 endif()
 add_library(skyuv_skynet_runtime_compat STATIC ${SKYUV_SKYNET_RUNTIME_COMPAT_SOURCES})
 target_include_directories(
@@ -151,7 +156,7 @@ target_link_libraries(
     skyuv_skynet_runtime_compat
 )
 if(NOT WIN32)
-  target_link_libraries(skyuv PRIVATE skyuv_skynet_daemon_upstream)
+  target_link_libraries(skyuv PRIVATE skyuv_daemon)
 endif()
 target_include_directories(skyuv PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/runtime")
 skyuv_target_compile_warnings(skyuv)
