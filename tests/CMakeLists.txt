@@ -541,7 +541,7 @@ add_test(NAME cmake.consumer_dynamic COMMAND "${CMAKE_COMMAND}"
 set_tests_properties(cmake.consumer_dynamic PROPERTIES TIMEOUT 180 RUN_SERIAL TRUE)
 
 if(SKYUV_STAGE_PROJECT)
-  add_test(NAME runtime.project COMMAND "${Python3_EXECUTABLE}"
+  add_test(NAME runtime.project COMMAND "${Python3_EXECUTABLE}" -X utf8
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/project_runtime.py"
     --project-root "${PROJECT_BINARY_DIR}/project"
     --executable-name "$<TARGET_FILE_NAME:skyuv>"
