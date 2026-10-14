@@ -39,7 +39,7 @@ def main() -> int:
 				assert all(marker in text for marker in markers), text
 				assert not (config_root / 'relative log.txt').exists()
 			if absolute:
-				assert text.count(markers[0]) == 2, '绝对日志路径未由两个工作目录共享'
+				assert text.count(markers[0]) == 2, f'绝对日志路径未由两个工作目录共享：\n{text}'
 	print('旧入口的相对日志工作目录基准、绝对路径和日志重开验证通过')
 	return 0
 
