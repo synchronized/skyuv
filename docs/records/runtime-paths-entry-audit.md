@@ -75,3 +75,9 @@ Linux Clang Release 配置、构建与完整 CTest 67/67 通过。提交 `e389e5
 本批 Linux Clang Release 配置、严格构建及完整 CTest 68/68 通过；随后对最后的入口调整
 重新运行新旧路径两组测试，并通过新增的真实安装树外置配置测试。此安装测试同时验证自动
 定位安装根、随包相对模块加载、日志落在外置配置根以及前台不创建运行目录。
+
+最终实现提交 `fc28b9d` 的 [Linux 完整 CI](https://github.com/synchronized/skyuv/actions/runs/38534220727)
+与 [macOS Debug/Release CI](https://github.com/synchronized/skyuv/actions/runs/38534226308) 全部通过。
+首次 macOS 验证发现临时目录符号链接使测试预期路径与 realpath 输出不一致，已统一按规范
+路径比较，并在 Linux 符号链接临时目录中复验通过；运行时的启动和日志写入不受该测试问题影响。
+环境覆盖值改用 libuv 读取，超长值明确失败。Windows 未在本机验证。

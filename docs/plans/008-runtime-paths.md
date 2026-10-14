@@ -82,7 +82,7 @@
 
 ## 已确认的接口设计
 
-采用显式启用的新目录模式，保留无选项入口的兼容行为。新入口拟为：
+采用显式启用的新目录模式，保留无选项入口的兼容行为。新入口为：
 
 ```sh
 skyuv --runtime-paths [--install-root DIR] [--log-root DIR] [--run-root DIR] CONFIG
@@ -106,7 +106,8 @@ skyuv --runtime-paths [--install-root DIR] [--log-root DIR] [--run-root DIR] CON
   自定义 `logservice` 的启动参数不当成文件路径重写。
 - Unix 相对 `daemon` 值以运行根为基准，绝对值保持原意。Windows 无论新旧模式均拒绝
   daemon，并且不为该配置创建运行目录或 PID 文件。
-- 新模式只在启用文件 logger 或 Unix daemon 时递归创建最终选定的日志/运行根；
+- 新模式只在相对文件 logger 或 Unix daemon 路径需要根目录时递归创建最终选定的日志/运行根；
+  绝对文件路径不要求默认根目录存在或可写；
   不创建配置根、安装根，亦不自动创建 `logger` / `daemon` 文件名中额外的父目录。
   已有目录不更改权限，失败诊断包含最终路径；未启用的根目录不要求存在或可写。
 - 启动前输出最终安装根、配置根及启用的日志/PID 路径，保留跨平台一致的诊断格式。
