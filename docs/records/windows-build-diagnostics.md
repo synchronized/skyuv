@@ -356,3 +356,10 @@ Windows 工作流此前只显式构建发行模块，而运行布局 fixture 检
 完整构建默认目标，包含解释器、测试程序及 DLL 部署，再执行原 delivery 验收；不移除
 fixture、不放宽文件或哈希检查，不改变发行包组件范围。本机 VS2022 Release 完成配置、
 完整构建及 fixture 加四项 delivery 测试，5/5 通过（4.96 秒）。
+
+修复提交 `ba05a24` 的 [Linux CI](https://github.com/synchronized/skyuv/actions/runs/38506065976)
+（七组合含 ASan/UBSan、TSan）与
+[macOS CI](https://github.com/synchronized/skyuv/actions/runs/38506069976) 均成功。
+[三平台 Release 演练](https://github.com/synchronized/skyuv/actions/runs/38506073876)
+全部成功，下载 Windows amd64、Linux x86-64、macOS arm64 三个归档后再次复核随附
+SHA-256，三者均一致。认证阻塞与 Windows 工作流失败已解除；本演练没有创建公开版本。
