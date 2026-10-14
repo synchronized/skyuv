@@ -23,7 +23,8 @@ def main() -> int:
 	executable = args.executable.resolve()
 	template = args.config_template.read_text(encoding='utf-8')
 	with tempfile.TemporaryDirectory(prefix='skyuv runtime paths ') as directory:
-		root = Path(directory)
+		# macOS 临时目录含符号链接，预期路径必须与入口的 realpath 一致。
+		root = Path(directory).resolve()
 		install = root / 'install space'
 		config_root = root / ('config space' if os.name == 'nt' else 'config "quote space')
 		callers = [root / 'caller one', root / 'caller two']
