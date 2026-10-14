@@ -21,5 +21,13 @@ Windows 保留用于 DLL 装载的程序相邻依赖安排，之后同样执行 
 删除生成目录中的 logger 模块和示例配置后重新部署，再启动验证。该测试串行运行以避免
 与归档 echo 测试争用端口；Windows 复用 DLL 预检夹具，缺失依赖时不启动程序。
 
-本机 Linux Clang Release 配置、完整构建与 CTest 73/73 通过。Linux/macOS CI 最终结果在
-提交后补充；Windows 本机验证不可用，不能以 CMake 配置与 Unix 结果宣告 Windows 验收完成。
+本机 Linux Clang Release 配置、完整构建与 CTest 73/73 通过。最终提交 `16a3a4c` 的
+[Linux 完整 CI](https://github.com/synchronized/skyuv/actions/runs/38554794191)、
+[macOS Debug/Release CI](https://github.com/synchronized/skyuv/actions/runs/38554794235) 与
+[三平台发行演练](https://github.com/synchronized/skyuv/actions/runs/38554793916) 全部通过。
+发行演练包含 Windows x64 Release 完整构建和交付检查，`publish_release=false`，未创建 Release。
+Windows 本机及 Debug 验证未执行；已执行的 Windows 运行树、安装和解压验证来自 Hosted Runner。
+
+首次 Windows 演练在所有目录操作完成后，因 Python 使用 cp1252 打印中文成功提示而失败；
+已通过 `-X utf8` 明确测试编码，并在本机 `LC_ALL=C`、`PYTHONUTF8=0` 环境下复验通过。
+最终 Windows 演练也通过，无需降低警告策略或改变运行时行为。
