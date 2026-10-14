@@ -85,7 +85,7 @@ jobs:
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
           skyuv_portable_lua_module_bson skyuv_portable_lua_module_sproto
           skyuv_portable_lua_module_lpeg skyuv_portable_lua_module_md5
-          skyuv_portable_lua_module_control
+          skyuv_portable_lua_module_control skyuv_stage_runtime
 
       - name: 验证安装与归档
         run: ctest --preset linux-gcc-release -L delivery
@@ -127,7 +127,7 @@ jobs:
           skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
           skyuv_portable_lua_module_bson skyuv_portable_lua_module_sproto
           skyuv_portable_lua_module_lpeg skyuv_portable_lua_module_md5
-          skyuv_portable_lua_module_control
+          skyuv_portable_lua_module_control skyuv_stage_runtime
 
       - name: 验证安装与归档
         run: ctest --preset macos-clang-release -L delivery

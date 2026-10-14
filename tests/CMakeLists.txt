@@ -548,7 +548,7 @@ if(SKYUV_STAGE_PROJECT)
     --module-suffix "$<TARGET_FILE_SUFFIX:skyuv_portable_service_logger>"
     --build-directory "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
     --cmake "${CMAKE_COMMAND}")
-  set_tests_properties(runtime.project PROPERTIES TIMEOUT 60 RUN_SERIAL TRUE)
+  set_tests_properties(runtime.project PROPERTIES TIMEOUT 60 RUN_SERIAL TRUE LABELS delivery)
   if(WIN32)
     set_property(TEST runtime.project APPEND PROPERTY FIXTURES_REQUIRED windows_runtime_ready)
   endif()
