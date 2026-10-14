@@ -25,3 +25,37 @@ Markdown 报告。只有环境、提交、工具链与参数一致的两次采�
 ## 首轮结果
 
 尚未采集。固定 Runner 未部署前，共享 Runner 的缩短版验证不得填写到本节。
+
+## 2026-10-14 本机探索性对照与背压负载修复
+
+本次在 Arch Linux x86_64、4 个逻辑 CPU、约 16 GiB 内存上，以 Clang 23.1.1、Release 和
+jemalloc 运行配对；预热 2 秒，测量 5 轮，每轮 10 秒，TCP/UDP echo 消息为 64 字节。
+CPU 调频策略不可读取，未部署固定 Runner，也未完成双时段采集，因此本次结果不是权威基线，
+不改变上述首轮验收状态，不用于设置回归阈值。
+
+| 场景 | skyuv 中位吞吐 | 原版中位吞吐 | skyuv 相对差异 |
+| --- | ---: | ---: | ---: |
+| Actor ping-pong | 203390.67 ops/s | 200686.66 ops/s | +1.35% |
+| TCP 长连接 | 13386.49 ops/s | 15022.43 ops/s | -10.89% |
+| TCP 短连接 | 5763.58 ops/s | 5502.64 ops/s | +4.74% |
+| TCP 背压 | 150861.38 B/s | 150498.84 B/s | +0.24% |
+| UDP request/reply | 13084.22 ops/s | 11299.80 ops/s | +15.79% |
+
+前四类中的 Actor、TCP 长/短连接与 UDP 采集基于 `c11ecf7`。旧背压负载持续发送，仅输出
+warning；主机时间 14:36:41，内核记录全机 OOM 并杀死 skyuv，匿名 RSS 为 15349696 KiB。
+这说明旧负载自身可造成无限队列积压，不能据此判定运行时存在泄漏。
+
+修复 `dd96161` 只改变共同测试负载、回归测试与说明，未改变运行时源码。双方背压服务以
+4 MiB 队列阈值暂停生产，每批 1 MiB 后等待网络线程并读取快照；修复后重测背压，并为双方
+采集进程设置相同的 2 GiB 虚拟内存上限。双方五轮均完成且触发 warning，峰值 RSS 分别为
+29.21 MiB 与 47.43 MiB。背压吞吐受慢客户端读取节奏限制，不代表网络层最大吞吐。
+
+原始 JSON、配对清单、日志、环境快照、OOM 证据及生成报告保存在采集机的
+`build/performance-local/results/`，未提交生成数据。不同场景的源码快照以各自 JSON 为准。
+原版使用仓库现有流程，在隔离副本中以其上游 Makefile 构建；skyuv 使用 CMake Release preset。
+本次仍需固定环境复测，不能将表中差异解释为跨环境的性能承诺。
+
+验证：CMake 配置及构建通过，CTest 66/66 通过；新增模拟慢接收端、恢复读取和断开的
+20 次重复测试通过。修复提交的 [Linux 完整 CI](https://github.com/synchronized/skyuv/actions/runs/38525266906)
+与 [macOS Debug/Release CI](https://github.com/synchronized/skyuv/actions/runs/38525270851)
+全部通过；Windows 未在本机验证。
