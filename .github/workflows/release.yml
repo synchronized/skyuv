@@ -36,16 +36,9 @@ jobs:
           cmake --preset windows-vs2022-release
           -DSKYUV_USE_SHARED_LIBUV=OFF
 
-      - name: 构建运行时目标
-        run: >-
-          cmake --build --preset windows-vs2022-release --target
-          skyuv
-          skyuv_portable_service_snlua skyuv_portable_service_logger
-          skyuv_portable_service_harbor skyuv_portable_service_gate
-          skyuv_portable_lua_module_skynet skyuv_portable_lua_module_client
-          skyuv_portable_lua_module_bson skyuv_portable_lua_module_sproto
-          skyuv_portable_lua_module_lpeg skyuv_portable_lua_module_md5
-          skyuv_portable_lua_module_control
+      # Windows 运行布局 fixture 检查全部注册程序；完整构建也会部署模块 DLL。
+      - name: 构建 Windows 验收目标并部署运行目录
+        run: cmake --build --preset windows-vs2022-release
 
       - name: 验证安装与归档
         run: ctest --preset windows-vs2022-release -L delivery

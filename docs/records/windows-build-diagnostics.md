@@ -342,3 +342,17 @@ C4701 6、C4152 2、C4702 2，共 165 条；恢复 OFF 后完整构建成功。
 验收。CPack 生成本地 `skyuv-0.2.0-beta.4-windows-amd64.zip` 与随附 SHA-256。
 此 Windows 本地产物不替代 Linux/macOS 发行包、远端 Release 工作流或公开资产验收；
 Changelog 中 beta.4 明确标为待发布，计划保持进行中。
+
+## 2026-10-14 远端认证恢复与 Release 构建修复
+
+GitHub 设备授权完成后，`490de52` 的
+[Linux CI](https://github.com/synchronized/skyuv/actions/runs/38505547809)（含 ASan/UBSan、TSan）
+与 [macOS CI](https://github.com/synchronized/skyuv/actions/runs/38505552068) 均通过。
+首次 [Release 演练](https://github.com/synchronized/skyuv/actions/runs/38505555478) 的 Linux
+与 macOS 成功，Windows 运行布局 fixture 因缺少 `skyuv_lua_interpreter` 失败，四项 delivery
+测试按依赖跳过；未创建 tag 或 Release。
+
+Windows 工作流此前只显式构建发行模块，而运行布局 fixture 检查所有注册程序。修复为
+完整构建默认目标，包含解释器、测试程序及 DLL 部署，再执行原 delivery 验收；不移除
+fixture、不放宽文件或哈希检查，不改变发行包组件范围。本机 VS2022 Release 完成配置、
+完整构建及 fixture 加四项 delivery 测试，5/5 通过（4.96 秒）。
