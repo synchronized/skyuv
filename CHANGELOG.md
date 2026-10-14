@@ -20,6 +20,30 @@
 
 - 后续版本继续维护 skyuv 作为 `add_subdirectory` 或 FetchContent 子项目的路径隔离。
 
+## 0.2.0-beta.4 - 待发布
+
+本预览版已完成 Windows 本地验收，远端 CI 和三平台发行验收尚待完成，尚未发布。
+
+### 构建与诊断
+
+- Windows Microsoft CRT 工具链按第三方源码归属局部处理 CRT 弃用提示；cmocka 使用
+  UTF-8 编码，Clang 两种前端局部处理已审查的 libuv 未使用函数提示。
+- 增加 `SKYUV_LIBUV_DIAGNOSTICS` 审查入口，默认关闭已审查的 Windows libuv 日常提示；
+  开启后恢复原始诊断，自有目标的严格警告与警告即错误保持开启。
+- Windows 构建运行根目录统一为 `build/<preset>/project`，程序与共享 `uv.dll` 放在
+  `bin`，服务与 Lua DLL 分别放在 `cservice`、`luaclib`；安装包布局不变。
+- CTest 先检查运行文件和 DLL 哈希，缺少依赖时跳过后续运行测试，并验证新目录下真实
+  加载 `client.socket` 与 `client.crypt`。
+
+### 修复
+
+- 通过构建副本补丁修复 libuv Windows IPv6 初始化括号、线程亲和性高位移位、
+  stat 回退路径恢复及路径起点前读取问题，保持第三方源码工作树不变。
+- 进程指标测试增加启动同步，避免子进程先结束导致监控窗口不足。
+- Windows 含空格路径测试只复制启动链必需的 DLL，避免无关模块和调试符号复制占用验收时间。
+
+本版不包含固定 Linux 权威性能基线、配置/日志/PID 路径收口或正式 v0.2.0 验收。
+
 ## 0.2.0-beta.3 - 2026-10-12
 
 本预览版交付 libuv 客户端网络，不代表 v0.2.0 正式版的全部门槛已满足。

@@ -20,7 +20,7 @@
 - [`versions/v0.2.0-beta.3.md`](versions/v0.2.0-beta.3.md)：libuv 客户端网络版本范围与发布门槛。
 - [`plans/011-client-socket-libuv.md`](plans/011-client-socket-libuv.md)：客户端 libuv 迁移的线程、句柄与同步语义设计。
 - [`plans/010-windows-build-diagnostics.md`](plans/010-windows-build-diagnostics.md)：Windows 构建警告与诊断上下文治理。
-- [`versions/v0.2.0-beta.4.md`](versions/v0.2.0-beta.4.md)：构建诊断治理预览版规划。
+- [`versions/v0.2.0-beta.4.md`](versions/v0.2.0-beta.4.md)：构建诊断治理预览版范围与待完成的发布验收。
 - [`versions/v0.2.0-beta.2.md`](versions/v0.2.0-beta.2.md)：已由 beta.4 承接的未发布历史规划。
 - [`ROADMAP.md`](ROADMAP.md)：全局阶段、依赖关系和状态摘要。
 - [`plans/README.md`](plans/README.md)：计划索引与状态定义。
@@ -52,7 +52,7 @@
 
 - [`records/2026-10-12-v0.2.0-beta.3-release-acceptance.md`](records/2026-10-12-v0.2.0-beta.3-release-acceptance.md)：三平台预览版发布验收。
 - [`records/client-libuv-beta.3.md`](records/client-libuv-beta.3.md)：客户端 libuv 迁移开发验收。
-- [`records/windows-build-diagnostics.md`](records/windows-build-diagnostics.md)：MSVC Debug 全量重建的警告基线与审查优先级。
+- [`records/windows-build-diagnostics.md`](records/windows-build-diagnostics.md)：Windows 诊断基线、缺陷复现与 beta.4 本地构建矩阵。
 - [`records/lua-runtime-stage-4.md`](records/lua-runtime-stage-4.md)：阶段 4 的模块接入、
   跨平台验证过程和已知差异。
 - [`records/performance-baseline.md`](records/performance-baseline.md)：固定 Linux 环境的性能基线

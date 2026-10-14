@@ -335,3 +335,10 @@ C4701 6、C4152 2、C4702 2，共 165 条；恢复 OFF 后完整构建成功。
 `gh api user` 同样确认本机认证失效；这些工作流未运行，不能记作通过或测试失败。
 恢复 GitHub CLI 认证后，必须对最终准备提交触发 Linux/macOS CI 并查看最终结果，再执行
 三平台 Release、SHA-256 和公开资产核验。当前尚无 beta.4 tag 或 Release。
+
+最小夹具最终在六种静态与三种共享组合中各重复 3 次通过，MSVC Debug 全套复验 74/74
+通过（42.22 秒）。切换 `SKYUV_VERSION_PRERELEASE` 为 beta.4 后，MSVC Release 再次
+完成配置、构建与 74/74 CTest（51.24 秒），包含安装、归档内容、解包运行和静态 CRT
+验收。CPack 生成本地 `skyuv-0.2.0-beta.4-windows-amd64.zip` 与随附 SHA-256。
+此 Windows 本地产物不替代 Linux/macOS 发行包、远端 Release 工作流或公开资产验收；
+Changelog 中 beta.4 明确标为待发布，计划保持进行中。

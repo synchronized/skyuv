@@ -2,8 +2,8 @@
 
 ## 状态
 
-进行中。已完成 MSVC 首轮采样和 Windows Clang Debug 完整采样，首批 libuv 诊断配置已实现；
-其余工具链、剩余诊断及发布验收尚待完成。
+进行中。诊断治理、缺陷补丁、六种 Windows 静态组合及三种共享 Release 本地验收已完成；
+远端 CI、三平台发行验收与发布收口尚待完成。
 计划作为 `v0.2.0-beta.4` 的独立预览范围，承接未发布 beta.2 规划，不等待固定 Linux 性能 Runner。
 
 ## 背景与目标
@@ -65,9 +65,11 @@ Windows 构建输出包含大量第三方警告及随附说明，影响新增问
 
 ## 未决问题与完成摘要
 
-2026-10-13 已确认本次为 windows-clang-debug。用户日志仅覆盖 18 条 libuv 警告及
-46 条 note，末尾截断；完整 Clang/clang-cl 与 Release 清单尚待全量采集。
-Windows Clang Debug 全量重建已完成，首批 libuv 配置将警告从 54 条降至 27 条、note 从
-177 条降至 91 条。随后增加独立 libuv IPv6 初始化括号补丁，应用到构建副本，
-Clang Debug 剩余 26 条 CRT 警告、90 条 note；全套 70 项测试通过，MSVC 与共享 libuv
-相关验证通过。其余构建组合验证与剩余诊断审查尚未完成，没有待用户确认的规划阻塞项。
+- 已完成第三方 CRT 策略、cmocka 编码和 Clang 两种前端的 unused 治理；日常例外仅限
+  第三方目标，`SKYUV_LIBUV_DIAGNOSTICS=ON` 可恢复已审查的 libuv 提示。
+- 已通过独立补丁修复 IPv6 初始化括号、亲和性高位移位和 stat 回退路径恢复，新增复现测试
+  与重复验证；其余未初始化、指针转换、不可达代码及 Release 断言变量提示已有保留依据。
+- 2026-10-14 已完成六种静态组合及三种共享 Release 的集中本地验收，修复路径测试的
+  无关文件复制问题，并复验诊断开关与自有编译策略。后续完成远端 CI 和三平台发行包验收，
+  再发布 beta.4；当前 GitHub CLI 认证失效阻塞工作流触发，不表示 CI 测试失败。
+  详细证据和已知限制见 [构建诊断记录](../records/windows-build-diagnostics.md)。
