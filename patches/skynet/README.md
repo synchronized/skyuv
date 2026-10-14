@@ -81,3 +81,10 @@ git -C 3rd/skynet status --short
   `lsocket.select` 兼容的读写就绪轮询接口，并提供 `poll` 别名；句柄仍以 Lua
   整数传递，不改变现有 connect/send/recv API。
 - `0012-Report-client-connect-errors.patch`：连接失败时保留原生错误码，附带 libuv 错误名与原因并关闭失败 socket；独立 Windows Lua 加载模块时通过 libuv 初始化 Winsock，避免依赖 Skynet 网络层。
+
+## 0013：运行路径配置入口
+
+上游 `skynet_main.c` 将配置加载脚本与初始化流程封装为内部符号，适配层无法在配置执行前
+注入根目录、在环境初始化前解析输出路径。此最小补丁只把配置加载调用委托给 skyuv 适配层，
+旧模式仍执行原脚本；新模式的脚本和路径策略位于 `src/runtime/`、`src/platform/`。
+补丁只应用到构建副本，不修改上游源码工作树，不改变 Actor 调度。

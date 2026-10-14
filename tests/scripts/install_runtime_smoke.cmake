@@ -86,5 +86,26 @@ if(NOT run_log MATCHES "SKYUV_RUNTIME_SMOKE_OK")
 	message(FATAL_ERROR "安装树示例缺少成功标记：\n${run_log}")
 endif()
 
-file(REMOVE_RECURSE "${install_root}")
-message(STATUS "安装树运行验证通过")
+set(deployment_root "${temp_root}/skyuv external config ${test_id}")
+file(REMOVE_RECURSE "${deployment_root}")
+file(MAKE_DIRECTORY "${deployment_root}")
+file(READ "${config}" external_config)
+string(REPLACE "logger = nil" "logger = \"node.log\"" external_config "${external_config}")
+file(WRITE "${deployment_root}/node.conf" "${external_config}")
+execute_process(
+	COMMAND "${executable}" --runtime-paths "${deployment_root}/node.conf"
+	WORKING_DIRECTORY "${temp_root}"
+	TIMEOUT 15
+	RESULT_VARIABLE external_result
+	OUTPUT_VARIABLE external_output
+	ERROR_VARIABLE external_error
+)
+if(NOT external_result EQUAL 0 OR NOT EXISTS "${deployment_root}/log/node.log")
+	message(FATAL_ERROR "新模式安装树外配置启动失败：\n${external_output}\n${external_error}")
+endif()
+file(READ "${deployment_root}/log/node.log" external_log)
+if(NOT external_log MATCHES "SKYUV_RUNTIME_SMOKE_OK" OR EXISTS "${deployment_root}/run")
+	message(FATAL_ERROR "新模式日志或前台运行目录验证失败：\n${external_log}")
+endif()
+file(REMOVE_RECURSE "${deployment_root}" "${install_root}")
+message(STATUS "安装树及新模式外置配置运行验证通过")

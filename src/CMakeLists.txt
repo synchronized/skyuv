@@ -110,9 +110,22 @@ target_include_directories(
 )
 skyuv_target_compile_warnings(skyuv_skynet_runtime_compat)
 
+# 配置加载脚本随可执行文件嵌入，发行运行不依赖源码树。
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/runtime/config_loader.lua")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/runtime/config_loader.lua" SKYUV_CONFIG_SCRIPT)
+string(REPLACE "\r\n" "\n" SKYUV_CONFIG_SCRIPT "${SKYUV_CONFIG_SCRIPT}")
+string(REPLACE "\\" "\\\\" SKYUV_CONFIG_SCRIPT "${SKYUV_CONFIG_SCRIPT}")
+string(REPLACE "\"" "\\\"" SKYUV_CONFIG_SCRIPT "${SKYUV_CONFIG_SCRIPT}")
+string(REPLACE "\n" "\\n\"\n\"" SKYUV_CONFIG_SCRIPT "${SKYUV_CONFIG_SCRIPT}")
+configure_file(runtime/runtime_config_script.h.in runtime/runtime_config_script.h @ONLY)
+target_include_directories(skyuv_skynet_portable_core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/runtime")
+
 add_executable(
   skyuv
   runtime/launcher.c
+  runtime/config.c
+  platform/runtime_paths.c
   $<TARGET_OBJECTS:skyuv_skynet_portable_core>
 )
 set_target_properties(
@@ -140,6 +153,7 @@ target_link_libraries(
 if(NOT WIN32)
   target_link_libraries(skyuv PRIVATE skyuv_skynet_daemon_upstream)
 endif()
+target_include_directories(skyuv PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/runtime")
 skyuv_target_compile_warnings(skyuv)
 
 set(SKYUV_PORTABLE_SKYNET_ROOT "${PROJECT_SOURCE_DIR}/3rd/skynet")

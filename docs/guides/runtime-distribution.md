@@ -113,6 +113,33 @@ Windows 使用：
 若业务包含自编译 Lua C 模块，需要使用目标平台重新构建，并自行保证其 Lua ABI、依赖库和
 运行库与当前发行包兼容。首个版本不发布公共头文件，因此该能力不属于正式 SDK 承诺。
 
+## 新目录模式（当前源码）
+
+当前源码提供显式的 `--runtime-paths` 入口；已发布的 beta.4 发行包尚不包含该入口。
+旧命令行继续保留上述工作目录行为。新模式可将业务配置和运行数据放在安装树之外：
+
+```shell
+/path/to/install/bin/skyuv --runtime-paths /path/to/deploy/config/node.conf
+```
+
+源码构建的可执行文件没有安装 `bin/` 布局时，必须显式指定 `--install-root`。
+主配置优先相对调用目录解析，不存在时再尝试安装根；解析后模块相对路径使用安装根。
+嵌套 `include` 相对包含它的配置文件解析。
+
+默认日志根为主配置所在目录下的 `log/`，运行根为同目录下的 `run/`。覆盖顺序为命令行
+`--log-root` / `--run-root`、环境变量 `SKYUV_LOG_ROOT` / `SKYUV_RUN_ROOT`、配置键
+`skyuv_log_root` / `skyuv_run_root`、默认值。相对根目录值均以主配置所在目录为基准。
+重复选项、空目录值和未知选项会失败；选项必须放在主配置之前，可用 `--` 分隔配置文件名。
+
+配置加载时可引用只读 Lua 变量 `skyuv_install_root`、`skyuv_config_root`，不需要把路径拼接
+进 Lua 源码；最终四个根目录也可通过 `skynet.getenv()` 查询。默认 logger 的相对 `logger`
+值以日志根解析，绝对值保持原意，`nil` 继续标准输出；自定义 `logservice` 参数保持原意。
+仅相对文件 logger 或 Unix daemon 会创建对应根目录，不额外创建文件名中的子目录。
+标准输出模式不会创建日志目录，Windows daemon 会在创建目录前失败。
+
+启动诊断显示根目录和已启用的最终日志/PID 路径。Unix daemon 的相对 PID 使用运行根，
+但其锁和退出所有权修复仍在计划 008 中进行；此入口不代表计划已完成或正式版已验收。
+
 ## 平台差异与限制
 
 | 能力 | Linux | macOS | Windows |

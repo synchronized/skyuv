@@ -1,0 +1,6 @@
+#ifndef SKYUV_RUNTIME_CONFIG_SCRIPT_H
+#define SKYUV_RUNTIME_CONFIG_SCRIPT_H
+
+static const char skyuv_config_script[] = "@SKYUV_CONFIG_SCRIPT@";
+
+#endif

@@ -1,0 +1,21 @@
+--- a/skynet-src/skynet_main.c
++++ b/skynet-src/skynet_main.c
+@@ -1,4 +1,5 @@
+ #include "skynet.h"
++#include "runtime_paths.h"
+ 
+ #include "skynet_imp.h"
+ #include "skynet_env.h"
+@@ -144,11 +145,7 @@
+ 	struct lua_State *L = luaL_newstate();
+ 	luaL_openlibs(L);	// link lua lib
+ 
+-	int err =  luaL_loadbufferx(L, load_config, strlen(load_config), "=[skynet config]", "t");
+-	assert(err == LUA_OK);
+-	lua_pushstring(L, config_file);
+-
+-	err = lua_pcall(L, 1, 1, 0);
++	int err = skyuv_config_load(L, load_config, config_file);
+ 	if (err) {
+ 		fprintf(stderr,"%s\n",lua_tostring(L,-1));
+ 		lua_close(L);

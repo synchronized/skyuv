@@ -89,6 +89,13 @@ add_test(
 )
 set_tests_properties(skynet.portable.paths_legacy PROPERTIES TIMEOUT 45)
 add_test(
+  NAME skynet.portable.runtime_paths
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/runtime_paths.py"
+    --executable "$<TARGET_FILE:skyuv>"
+    --config-template "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-logger-file.conf"
+)
+set_tests_properties(skynet.portable.runtime_paths PROPERTIES TIMEOUT 60)
+add_test(
   NAME package.extracted_runtime
   COMMAND
     "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_extracted_runtime.py"
