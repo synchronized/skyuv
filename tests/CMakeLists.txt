@@ -82,6 +82,13 @@ endif()
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
+  NAME skynet.portable.paths_legacy
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/runtime_paths_legacy.py"
+    --executable "$<TARGET_FILE:skyuv>"
+    --config-template "${PROJECT_BINARY_DIR}/3rd/skyuv-portable-logger-file.conf"
+)
+set_tests_properties(skynet.portable.paths_legacy PROPERTIES TIMEOUT 45)
+add_test(
   NAME package.extracted_runtime
   COMMAND
     "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/package_extracted_runtime.py"

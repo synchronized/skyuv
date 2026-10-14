@@ -27,7 +27,7 @@
 | 005 | [Lua 模块与运行环境](005-lua-runtime.md) | 已完成 | 004 |
 | 006 | [性能和稳定性](006-performance-stability.md) | 进行中 | 005 |
 | 007 | [跨平台交付](007-cross-platform-delivery.md) | 进行中 | 006 |
-| 008 | [配置、日志与 PID 路径约定](008-runtime-paths.md) | 草案 | 007（不依赖固定性能基线） |
+| 008 | [配置、日志与 PID 路径约定](008-runtime-paths.md) | 就绪 | 007（不依赖固定性能基线） |
 | 009 | [CMake 第三方消费与 Lua C 模块接入](009-cmake-consumer-integration.md) | 进行中 | 005、007 |
 | 010 | [Windows 构建诊断治理](010-windows-build-diagnostics.md) | 已完成 | 可独立推进，不依赖固定性能基线 |
 | 011 | [client.socket 的 libuv 改造](011-client-socket-libuv.md) | 已完成 | 客户端初始化与诊断修复；下游兼容边界已确认 |
