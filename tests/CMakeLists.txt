@@ -539,3 +539,17 @@ add_test(NAME cmake.consumer_dynamic COMMAND "${CMAKE_COMMAND}"
   "-DSKYUV_TEST_LUA=$<TARGET_FILE:skyuv_lua_interpreter>"
   -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/consumer_dynamic.cmake")
 set_tests_properties(cmake.consumer_dynamic PROPERTIES TIMEOUT 180 RUN_SERIAL TRUE)
+
+if(SKYUV_STAGE_PROJECT)
+  add_test(NAME runtime.project COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/project_runtime.py"
+    --project-root "${PROJECT_BINARY_DIR}/project"
+    --executable-name "$<TARGET_FILE_NAME:skyuv>"
+    --module-suffix "$<TARGET_FILE_SUFFIX:skyuv_portable_service_logger>"
+    --build-directory "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
+    --cmake "${CMAKE_COMMAND}")
+  set_tests_properties(runtime.project PROPERTIES TIMEOUT 60 RUN_SERIAL TRUE)
+  if(WIN32)
+    set_property(TEST runtime.project APPEND PROPERTY FIXTURES_REQUIRED windows_runtime_ready)
+  endif()
+endif()

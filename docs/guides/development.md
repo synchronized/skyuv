@@ -47,13 +47,23 @@
 Linux 和 macOS 使用仓库中的 `linux-*`、`macos-*` CMake preset，并在 GitHub Actions 手动运行
 对应工作流。修改范围和平台覆盖应在提交或 Pull Request 说明中列出；无法覆盖的平台要明确标注。
 
-Windows 构建运行根目录统一为 `build/<preset>/project`：可执行文件与共享 `uv.dll` 放在
-`project/bin`，服务 DLL 复制到同级 `project/cservice`，Lua DLL 复制到 `project/luaclib`
-并保留模块子目录。
-使用完整 `cmake --build --preset ...` 构建会部署模块；原模块构建目录保留供目标引用使用。
-例如独立解释器使用 `build/<preset>/project/bin/lua.exe`，不再从 `3rd/Debug` 或 `3rd/Release` 启动。
-此目录是构建运行布局，不包含完整发行包的 Lua 源码和配置；交付仍以 install/CPack 为入口。
-Windows CTest 先检查运行文件及 DLL 哈希，检查失败时跳过其余测试，避免缺失 DLL 弹窗。
+三平台完整构建默认生成 `build/<preset>/project/`，复用 Runtime 安装规则组装
+`bin/`、`cservice/`、`luaclib/`、`lualib/`、`service/`、`examples/` 和 `licenses/`。
+原编译产物继续由 CMake 管理；Windows 为 DLL 装载保留程序及共享 `uv.dll` 相邻的布局。
+独立 Lua 解释器启用时也出现在 `project/bin/`，但不改变 Runtime 发行组件的内容。
+
+例如 Linux 从任意目录运行：
+
+```shell
+/path/to/build/linux-clang-release/project/bin/skyuv examples/skyuv.conf
+```
+
+使用完整 `cmake --build --preset ...` 构建会执行 `skyuv_stage_runtime`；只构建某个源码目标
+不保证部署更新，也可显式构建该目标补齐运行树。源码嵌入时默认不自动组装；顶层可通过
+`-DSKYUV_STAGE_PROJECT=OFF` 关闭完整运行树组装。每个 preset 应保持独立构建目录，多配置
+生成器按最后部署的配置使用 `project/`，不同时混用 Debug/Release。
+Windows CTest 保留运行文件及 DLL 哈希检查，失败时跳过依赖测试，避免缺失 DLL 弹窗。
+`runtime.project` 验证三平台目录外启动、echo、Lua 模块加载和删除产物后的再次部署。
 
 ## 第三方构建诊断
 本地生成发行归档与未压缩安装目录见 [打包指南](packaging.md)。

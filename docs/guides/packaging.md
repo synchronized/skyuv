@@ -77,11 +77,11 @@ Get-Content "<归档路径>.sha256"
 
 | 目录或组件 | 用途 |
 |---|---|
-| Windows `build/<preset>/project/` | 本机构建运行根目录，含 bin、cservice、luaclib 及测试产物 |
+| 三平台 `build/<preset>/project/` | 完整构建自动组装的运行树，含程序、模块、Lua 库、服务、示例和许可证；可额外含构建工具 |
 | CMake `Runtime` 安装组件 | 主程序、运行模块、Lua 库与服务、示例配置、许可证及必要共享依赖 |
 | `build/<preset>/packages/` | 根据 Runtime 安装规则生成的交付归档和校验文件 |
 
-CPack 当前仅打包 Runtime 组件，不把整个 project 目录塞入归档。`project/bin/lua.exe`
+CPack 当前仅打包 Runtime 组件，不把整个 project 目录塞入归档。`project/bin/lua` / `lua.exe`
 是可选的构建解释器，目前没有 Runtime 安装规则；测试程序也不随运行时包交付。
 需要解释器或自有业务服务随包交付时，应先明确安装规则和验证范围。
 开发头文件与 CMake 导出属于 Development 组件，不在当前运行时归档中。

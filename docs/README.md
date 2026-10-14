@@ -50,6 +50,8 @@
 
 ## 实施记录
 
+- [`records/build-project-layout.md`](records/build-project-layout.md)：三平台完整构建统一生成 project 运行树及验证。
+
 - [`records/linux-v0.2.0-closure.md`](records/linux-v0.2.0-closure.md)：v0.2.0 Linux 功能、动态模块、解压包验收及正式性能基线剩余条件。
 
 - [`records/runtime-paths-entry-audit.md`](records/runtime-paths-entry-audit.md)：计划 008 的路径入口、日志和 PID 所有权审计与兼容行为回归。

@@ -26,6 +26,7 @@ if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
 endif()
 
 option(SKYUV_BUILD_TESTS "构建 skyuv 测试" ON)
+option(SKYUV_STAGE_PROJECT "完整构建后生成 project 运行目录" "${PROJECT_IS_TOP_LEVEL}")
 set(SKYUV_LIBUV_DIAGNOSTICS_DEFAULT OFF)
 # 迁移旧缓存时保留用户的诊断选择；显式设置新开关时以新值为准。
 if(DEFINED SKYUV_LIBUV_CONVERSION_DIAGNOSTICS)
@@ -196,7 +197,6 @@ foreach(directory IN ITEMS src tests)
   endif()
 endforeach()
 
-include(skyuv_windows_runtime)
 
 # 只导出面向外部 CMake 消费者的运行库目标。Skynet 运行时和其内部模块
 # 仍属于发行包目标，不作为稳定的第三方链接接口。
@@ -315,3 +315,5 @@ install(
   DESTINATION "${SKYUV_CMAKE_INSTALL_DIR}"
   COMPONENT Development
 )
+
+include(skyuv_build_runtime)
