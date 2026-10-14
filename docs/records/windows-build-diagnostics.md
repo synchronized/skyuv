@@ -286,8 +286,8 @@ project/luaclib 中 client.socket 与 client.crypt，验证新布局可运行，
 
 ## 2026-10-14 最终矩阵中的路径测试复制范围
 
-从 `3446696` 初始化子模块并建立新的 Windows 构建目录。MSVC 使用 19.42 工具链，
-clang-cl 使用 Clang 23.1.1；Python 为 3.9.13。MSVC Debug 与 clang-cl Debug 首轮各有
+从 `3446696` 初始化子模块并建立新的 Windows 构建目录。MSVC 使用 19.42.34436.0，
+clang-cl 使用 Clang 22.1.8；Python 为 3.9.13。MSVC Debug 与 clang-cl Debug 首轮各有
 `skynet.portable.paths` 超过 15 秒，其余 73 项通过；单项复验通过。MSVC 单项连续 20 次
 和随后全套 74 项复验通过，但 clang-cl 冷构建再次出现同样超时，不能仅以重试作为处置。
 
@@ -300,3 +300,38 @@ clang-cl 使用 Clang 23.1.1；Python 为 3.9.13。MSVC Debug 与 clang-cl Debug
 15 秒 CTest 超时不变。现有真实模块加载测试继续验证复制内容足以启动服务并加载
 `client.socket`；clang-cl Debug 修改后连续 20 次通过，总计 20.63 秒（含 fixture 重复）。
 本机原始日志位于 `build/beta4-final-*.log` 和 `build/beta4-paths-dll-only.log`，不提交。
+
+随后重新生成 MSVC Debug DLL 后，整个运行 DLL 树的递归复制仍超时，临时目录同样仅有
+部分 Lua DLL。因此只排除 PDB 不能作为最终修复。夹具进一步只复制 logger、snlua、harbor、
+skynet 与 client 五个启动链模块，增加逐模块准备日志，继续保留原目录含空格、真实启动
+断言和 15 秒超时。遗漏 harbor 的初次最小夹具明确报服务加载失败，补齐后正常启动；
+成功运行的复制阶段耗时 0.034 秒。这一失败确认夹具仍检查实际服务依赖，没有绕过启动。
+
+## 2026-10-14 集中本地验收与发布阻塞
+
+六种静态组合完成 CMake 配置、构建和全套 CTest，三种编译器的共享 Release 使用独立
+构建目录完成同样验证。各组合均有 74 项测试；最终最小路径夹具另在九种组合中重复验证，
+避免把早期递归复制夹具的成功结果作为最终修复证据。版本标识切换前的构建仍为 beta.3；
+这批结果用于验收 beta.4 的实现，不代表 beta.4 发行包已经发布。
+
+| 编译器 | 静态 Debug | 静态 Release | 共享 Release |
+|---|---|---|---|
+| MSVC 19.42.34436.0 | 74/74 | 74/74 | 74/74 |
+| clang-cl 22.1.8 | 74/74 | 74/74 | 74/74 |
+| Clang GNU 前端 22.1.8 | 74/74 | 74/74 | 74/74 |
+
+默认 Debug 诊断输出为零；Release 保留此前审查的 libuv 断言变量提示，MSVC 按位置去重
+为 3 处，Clang 两种前端为 5 处。共享构建同时编译 uv/uv_a 会重复打印相同源位置，
+不把重复输出计为新的缺陷。MSVC 静态 Release 的首次完整构建警告与共享采样一致，
+随后增量构建日志不能用于声称其原始完整构建零警告。
+
+MSVC Debug 的总诊断开关 ON 重建成功，恢复 C4244 107、C4245 28、C4267 20、
+C4701 6、C4152 2、C4702 2，共 165 条；恢复 OFF 后完整构建成功。
+六种静态组合各 34 个自有编译条目均启用警告即错误，不含第三方 CRT 宏、libuv unused
+属性或局部警告抑制。原始 JSON 位于 `build/beta4-compile-audit.json`，不提交。
+所有第三方子模块工作树干净，未升级依赖。
+
+路径测试首批修复提交 `aa5a9b0` 已推送。随后手动触发 Linux/macOS CI 均收到 HTTP 401，
+`gh api user` 同样确认本机认证失效；这些工作流未运行，不能记作通过或测试失败。
+恢复 GitHub CLI 认证后，必须对最终准备提交触发 Linux/macOS CI 并查看最终结果，再执行
+三平台 Release、SHA-256 和公开资产核验。当前尚无 beta.4 tag 或 Release。

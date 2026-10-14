@@ -19,8 +19,20 @@ $modules = Join-Path $root "skyuv path modules-$token"
 $config = Join-Path $root "skyuv-paths-$token.conf"
 
 try {
-	# 路径测试只需运行 DLL；复制调试符号会让冷构建的文件搬运占用启动验收时间。
-	Copy-Item -LiteralPath $PortableDirectory -Destination $modules -Recurse -Filter "*.dll"
+	# 只搬运本夹具启动链需要的模块；无关模块和调试符号不属于路径验收。
+	$requiredModules = @(
+		"cservice/logger.dll", "cservice/snlua.dll", "cservice/harbor.dll",
+		"luaclib/skynet.dll", "luaclib/client.dll"
+	)
+	$prepareWatch = [Diagnostics.Stopwatch]::StartNew()
+	foreach ($relativeModule in $requiredModules) {
+		Write-Output "准备路径测试模块：$relativeModule"
+		$source = Join-Path $PortableDirectory $relativeModule
+		$destination = Join-Path $modules $relativeModule
+		New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
+		Copy-Item -LiteralPath $source -Destination $destination
+	}
+	Write-Output "路径测试模块准备完成，耗时 $($prepareWatch.Elapsed.TotalSeconds) 秒"
 	$modulePath = $modules.Replace("\", "/")
 	$sourcePath = $SkynetSource.Replace("\", "/")
 	$fixturePath = $FixtureSource.Replace("\", "/")
