@@ -45,8 +45,10 @@ Lua 值而非拼接 Lua 代码，以避免路径中的引号或反斜杠破坏�
 同一配置的相对日志落在各调用目录，绝对日志由两次启动共享；双方均验证重开前后标记。
 测试保留全部模块绝对路径，避免将模块定位失败混入日志基准结论。
 
-Linux Clang Release 配置、构建与完整 CTest 67/67 通过。手动 Linux/macOS CI 的最终状态在
-本轮提交后补充。Windows 本机不可用，Windows 行为仍需 Windows 验证，不以 Unix 结果替代。
+Linux Clang Release 配置、构建与完整 CTest 67/67 通过。提交 `e389e55` 的
+[Linux 完整 CI](https://github.com/synchronized/skyuv/actions/runs/38531579908) 与
+[macOS Debug/Release CI](https://github.com/synchronized/skyuv/actions/runs/38531585782)
+全部通过。Windows 本机不可用，Windows 行为仍需 Windows 验证，不以 Unix 结果替代。
 
 ## 后续边界
 
