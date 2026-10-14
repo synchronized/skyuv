@@ -2,7 +2,6 @@
 #include "runtime_config_script.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <lua.h>
@@ -35,8 +34,15 @@ static int resolve_root(lua_State *L, const char *option, const char *environmen
 						const char *fallback, char *output, size_t capacity) {
 	int valid = 1;
 	const char *value = option;
+	char environment_value[SKYUV_RUNTIME_PATH_CAPACITY];
+	size_t environment_size = sizeof(environment_value);
 	if (value == NULL) {
-		value = getenv(environment);
+		int result = uv_os_getenv(environment, environment_value, &environment_size);
+		if (result == 0) {
+			value = environment_value;
+		} else if (result != UV_ENOENT) {
+			return result;
+		}
 	}
 	if (value == NULL) {
 		value = config_string(L, key, &valid);
