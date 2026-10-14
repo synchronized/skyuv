@@ -195,6 +195,13 @@ add_test(
   COMMAND
     "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tcp_backpressure_benchmark_test.py"
 )
+add_test(
+  NAME benchmark.backpressure_queue
+  COMMAND "$<TARGET_FILE:skyuv_lua_interpreter>"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/backpressure_queue_test.lua"
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/skyuv_benchmark_tcp_backpressure.lua"
+)
+set_tests_properties(benchmark.backpressure_queue PROPERTIES LABELS stability TIMEOUT 10)
 set_tests_properties(
   benchmark.tcp_backpressure
   PROPERTIES LABELS stability WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
