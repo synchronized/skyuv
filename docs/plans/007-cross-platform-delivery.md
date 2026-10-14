@@ -133,3 +133,9 @@ skyuv/
 
 Windows 已选择静态 CRT，并通过跨模块内存所有权测试、PE 导入审计和全新 Sandbox 启动验证，
 详见 [`../records/windows-static-crt-ownership-audit.md`](../records/windows-static-crt-ownership-audit.md)。
+
+## v0.2.0 Linux 交付补充
+
+当前 Runtime 安装与解压包的新目录模式、外置日志和 Unix daemon 已通过 Linux 完整矩阵；
+记录见 [Linux 功能与交付收口](../records/linux-v0.2.0-closure.md)。此结果不代替固定机
+性能基线或 Windows 新行为验收，也不表示正式 v0.2.0 已发布。

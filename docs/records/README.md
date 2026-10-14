@@ -5,6 +5,8 @@
 
 ## 交付与运行时
 
+- [`linux-v0.2.0-closure.md`](linux-v0.2.0-closure.md)：v0.2.0 Linux 功能和交付收口与性能基线外部条件。
+
 - [`2026-10-14-v0.2.0-beta.4-release-acceptance.md`](2026-10-14-v0.2.0-beta.4-release-acceptance.md)：beta.4 三平台发布与公开资产复核。
 - [`2026-10-12-v0.2.0-beta.3-release-acceptance.md`](2026-10-12-v0.2.0-beta.3-release-acceptance.md)：beta.3 三平台发布与公开资产复核。
 - [`client-libuv-beta.3.md`](client-libuv-beta.3.md)：beta.3 客户端迁移的三平台开发验收与生命周期结论。

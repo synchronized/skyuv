@@ -123,10 +123,11 @@
 - 源码嵌入和安装 package 两种方式的构建及 smoke test 均已在 Windows 本地通过；
 - Linux CI 和 macOS CI 已在 `ee82490` 上通过，包含嵌入式 CMake 测试和第三方源码状态检查；
 - 已新增 `cmake.consumer_dynamic`：源码嵌入与可重定位安装 package 两种方式均通过独立
-  Lua 的真实动态 `require`，同时验证模块搜索路径缺失的错误路径；Linux 本地通过。
-- 完整 Linux/macOS CI 与 Windows 新动态加载验证结果仍需补齐，不以旧静态注册测试替代。
+  Lua 的真实动态 `require`，同时验证模块搜索路径缺失的错误路径；Linux 本地及完整 CI 通过，macOS Debug/Release CI 也已通过。
+- Linux/macOS 完整 CI 已通过；Windows 新动态加载验证仍待补齐，不以旧静态注册测试替代。
+- Linux 收口证据见 [Linux 功能与交付收口](../records/linux-v0.2.0-closure.md)。
 
 ## 完成摘要
 
-Linux 独立动态加载已在本地通过；待本批 CI 与 Windows 新验证补齐后，再将本计划标记为已完成。
+Linux 独立动态加载已在本地通过；待 Windows 新验证补齐后，再将本计划标记为已完成。
 详细构建结果和平台差异记录在 `docs/records/`，本计划只保留最终状态和遗留限制。

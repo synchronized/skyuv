@@ -174,7 +174,8 @@ macOS 保留上游不 fork 的兼容行为，Windows 保留明确拒绝。并发
 3. 已补齐根目录、覆盖顺序、错误路径、日志重开失败恢复及 PID 生命周期测试；
    适配补丁只应用到构建副本，不直接修改第三方源码。
 4. Unix 只读安装树、真实 daemon 和 Linux/macOS 矩阵已通过；继续补齐 Windows 新模式与
-   只读 ACL 验收。解压包新模式已补齐本地 Linux 专项测试，最终 CI 结果仍需记录；
+   只读 ACL 验收。解压包新模式已通过 Linux/macOS 完整 CI；
    三平台未验证项不得记为完成。
 
-设计审计与验证记录见 [运行路径入口审计](../records/runtime-paths-entry-audit.md)。
+设计审计与验证记录见 [运行路径入口审计](../records/runtime-paths-entry-audit.md)，
+解压包专项结果见 [Linux 功能与交付收口](../records/linux-v0.2.0-closure.md)。
