@@ -25,3 +25,19 @@ cmake -S . -B build -DSKYUV_SOURCE_DIR=/path/to/skyuv
 ```
 
 该方式用于验证 `add_subdirectory`，实际分发优先使用安装 package。
+
+## 独立解释器动态加载验证
+
+额外传入与 skyuv 配套构建的独立 Lua 解释器路径：
+
+```shell
+cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/skyuv-install \
+  -DSKYUV_LUA_EXECUTABLE=/path/to/skyuv-build/3rd/lua
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+多配置生成器需为构建和 CTest 指定相同配置。测试分别验证静态注册和真实动态 `require`；
+后者使用模块实际输出目录设置 `package.cpath`，并检查移除搜索路径后加载失败。
+源码嵌入方式可自动引用 `skyuv_lua_interpreter`，运行测试前需构建该解释器目标。
+解释器、模块、Lua 版本及 Windows CRT 必须匹配；这不构成任意第三方二进制模块的 ABI 承诺。

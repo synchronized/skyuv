@@ -527,3 +527,15 @@ skyuv_target_compile_warnings(skyuv_test_logger_reopen)
 add_test(NAME platform.logger_reopen COMMAND "${Python3_EXECUTABLE}"
   "${CMAKE_CURRENT_SOURCE_DIR}/scripts/logger_reopen.py" "$<TARGET_FILE:skyuv_test_logger_reopen>")
 set_tests_properties(platform.logger_reopen PROPERTIES LABELS stability TIMEOUT 30)
+
+add_test(NAME cmake.consumer_dynamic COMMAND "${CMAKE_COMMAND}"
+  "-DSKYUV_TEST_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
+  "-DSKYUV_TEST_BUILD_DIR=${PROJECT_BINARY_DIR}"
+  "-DSKYUV_TEST_CONFIG=$<CONFIG>"
+  "-DSKYUV_TEST_COMPILER=${CMAKE_C_COMPILER}"
+  "-DSKYUV_TEST_GENERATOR=${CMAKE_GENERATOR}"
+  "-DSKYUV_TEST_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
+  "-DSKYUV_TEST_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}"
+  "-DSKYUV_TEST_LUA=$<TARGET_FILE:skyuv_lua_interpreter>"
+  -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/consumer_dynamic.cmake")
+set_tests_properties(cmake.consumer_dynamic PROPERTIES TIMEOUT 180 RUN_SERIAL TRUE)
