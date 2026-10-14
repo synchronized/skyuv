@@ -110,3 +110,12 @@ logger 重开通过补丁 `0014` 委托到平台适配函数：先打开新文�
 
 Linux Clang Release 配置、严格构建及完整 CTest 71/71 通过；Linux/macOS CI 和 Windows
 覆盖状态在本批最终验证后补充。计划 008 仍在进行中，Windows 与完整发行交付收口未完成。
+
+本批最终提交 `9b94c9c` 的 [Linux 完整 CI](https://github.com/synchronized/skyuv/actions/runs/38540758583)
+与 [macOS Debug/Release CI](https://github.com/synchronized/skyuv/actions/runs/38540764793) 全部通过。
+Linux ASan/UBSan 已额外覆盖 PID 与日志恢复测试。GCC 首次发现适配静态库缺少 PIC，已为
+共享 logger 使用的库启用 PIC，并在本机完成 GCC system Debug 构建及六项相关测试。
+后续一次 Clang Debug 验证发现旧路径测试的日志标记数量未满足预期，原夹具只固定等待
+50 毫秒；已改为核对本次追加的日志落盘后再关闭，失败断言包含日志内容。GCC 上日志、旧路径
+与新路径三项各重复五次全部通过，最终 CI 也通过。Windows 新模式、只读 ACL 及解压包新模式
+专项验收仍待补齐，不将 Unix 结果代替 Windows 验证。
