@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
+import signal
+import stat
 import shutil
 import socket
 import subprocess
@@ -155,6 +158,106 @@ def run_echo(executable: Path, log_path: Path, outside_root: Path) -> None:
 			process.wait()
 
 
+def run_runtime_paths(executable: Path, package_root: Path, outside_root: Path) -> None:
+	deployment = outside_root / "deployment space"
+	config_root = deployment / "config space"
+	config_root.mkdir(parents=True)
+	log_root = deployment / "log space"
+	run_root = deployment / "run space"
+	log_file = log_root / "node.log"
+	pid_file = run_root / "node.pid"
+	stop_file = config_root / "stop flag"
+	config = config_root / "node.conf"
+	content = (package_root / "examples/skyuv.conf").read_text(encoding="utf-8")
+	content = content.replace("logger = nil", 'logger = "node.log"')
+	content += '\nstart = "runtime_paths_probe"\n'
+	content += 'luaservice = luaservice .. ";" .. skyuv_config_root .. "/?.lua"\n'
+	content += 'expected_config = skyuv_config_root\nstop_file = skyuv_config_root .. "/stop flag"\n'
+	config.write_text(content, encoding="utf-8")
+	(config_root / "runtime_paths_probe.lua").write_text('''local skynet = require "skynet.manager"
+local control = require "skyuv.control"
+skynet.start(function()
+	assert(skynet.getenv("skyuv_config_root") == skynet.getenv("expected_config"))
+	skynet.error("SKYUV_RUNTIME_PATHS_BEFORE")
+	assert(control.reopen_log())
+	skynet.error("SKYUV_RUNTIME_PATHS_AFTER")
+	local deadline = skynet.now() + 500
+	while true do
+		local file = assert(io.open(skynet.getenv("logger")))
+		local text = assert(file:read("*a"))
+		file:close()
+		if text:find("SKYUV_RUNTIME_PATHS_BEFORE", 1, true) and
+			text:find("SKYUV_RUNTIME_PATHS_AFTER", 1, true) then break end
+		assert(skynet.now() < deadline)
+		skynet.sleep(1)
+	end
+	if skynet.getenv("probe_daemon") then
+		while true do
+			local file = io.open(skynet.getenv("stop_file"))
+			if file then file:close(); break end
+			skynet.sleep(1)
+		end
+	end
+	skynet.abort()
+end)
+''', encoding="utf-8")
+	callers = [outside_root / "caller one", outside_root / "caller two"]
+	for caller in callers:
+		caller.mkdir()
+	command = [str(executable), "--runtime-paths", "--log-root", str(log_root),
+		"--run-root", str(run_root), str(config)]
+	modes = {}
+	if os.name != "nt":
+		for path in [package_root, *package_root.rglob("*")]:
+			if not path.is_symlink():
+				modes[path] = stat.S_IMODE(path.stat().st_mode)
+				path.chmod(modes[path] & ~0o222)
+	try:
+		for caller in callers:
+			log_file.unlink(missing_ok=True)
+			result = subprocess.run(command, cwd=caller, capture_output=True, timeout=15)
+			if result.returncode != 0:
+				raise RuntimeError((result.stdout + result.stderr).decode("utf-8", errors="replace"))
+			text = log_file.read_text(encoding="utf-8")
+			assert "SKYUV_RUNTIME_PATHS_BEFORE" in text and "SKYUV_RUNTIME_PATHS_AFTER" in text
+			assert not run_root.exists(), "前台模式意外创建运行目录"
+		if os.name != "nt":
+			log_file.unlink()
+			config.write_text(content + 'daemon = "node.pid"\nprobe_daemon = "true"\n', encoding="utf-8")
+			with (deployment / "daemon launch.log").open("wb") as launch_log:
+				process = subprocess.Popen(command, cwd=callers[0], stdout=launch_log, stderr=launch_log)
+				owned_pid = None
+				try:
+					deadline = time.monotonic() + 10
+					while time.monotonic() < deadline:
+						if pid_file.is_file() and pid_file.read_text().strip():
+							owned_pid = int(pid_file.read_text())
+						if owned_pid and log_file.is_file() and "SKYUV_RUNTIME_PATHS_AFTER" in log_file.read_text():
+							break
+						time.sleep(0.02)
+					else:
+						raise RuntimeError("解压包 daemon 未就绪")
+					conflict = subprocess.run(command, cwd=callers[1], capture_output=True, timeout=10)
+					assert conflict.returncode != 0 and int(pid_file.read_text()) == owned_pid
+				finally:
+					stop_file.touch()
+					process.wait(timeout=10)
+					deadline = time.monotonic() + 10
+					while pid_file.exists() and time.monotonic() < deadline:
+						time.sleep(0.02)
+					if pid_file.exists() and owned_pid and owned_pid > 0:
+						try:
+							os.kill(owned_pid, signal.SIGKILL)
+						except ProcessLookupError:
+							pass
+						raise RuntimeError("解压包 daemon 退出后未清理 PID")
+				assert Path(str(pid_file) + ".lock").is_file()
+	finally:
+		for path, mode in modes.items():
+			path.chmod(mode)
+	print("PACKAGE_RUNTIME_PATHS_OK")
+
+
 def main() -> int:
 	arguments = parse_arguments()
 	archives = list(arguments.archive_directory.glob(f"*{arguments.archive_extension}"))
@@ -165,7 +268,7 @@ def main() -> int:
 		raise RuntimeError(f"发行归档文件名缺少项目版本：{archive.name}")
 	verify_checksum(archive)
 	with tempfile.TemporaryDirectory(prefix="skyuv extracted package ") as directory:
-		extract_root = Path(directory)
+		extract_root = Path(directory).resolve()
 		shutil.unpack_archive(archive, extract_root)
 		package_root = find_package_root(extract_root)
 		verify_manifest(package_root, arguments.project_version, arguments.allocator)
@@ -174,6 +277,7 @@ def main() -> int:
 			raise RuntimeError(f"发行归档缺少主程序：{executable}")
 		run_smoke(executable, extract_root)
 		run_echo(executable, extract_root / "echo.log", extract_root)
+		run_runtime_paths(executable, package_root, extract_root)
 	print("PACKAGE_EXTRACTED_RUNTIME_OK")
 	return 0
 
