@@ -246,6 +246,11 @@ set_tests_properties(
   benchmark.udp_comparison_protocol PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 20
 )
 if(TARGET skyuv)
+  add_test(NAME benchmark.skyuv_only
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/skyuv_only_benchmark_test.py"
+      --executable "$<TARGET_FILE:skyuv>"
+      --actor-config "${PROJECT_BINARY_DIR}/3rd/skyuv-benchmark-actor.conf")
+  set_tests_properties(benchmark.skyuv_only PROPERTIES TIMEOUT 60 RUN_SERIAL TRUE)
   add_test(
     NAME benchmark.actor_ping_pong
     COMMAND

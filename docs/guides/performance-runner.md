@@ -27,7 +27,8 @@
    ```
 
 5. 预检退出码为 0 且 JSON 中 `ready` 为 `true` 后，手动运行“Linux 性能基线”，选择
-   `self-hosted-fixed`。
+   `self-hosted-fixed`。默认采集原版配对；验证 skyuv 自身回归基线时选择 `skyuv_only=true`，
+   此时不构建或运行原版，报告明确不含原版性能结论。
 6. 使用完全相同的提交与参数，在另一个独立时段再次采集。
 7. 解压两次 artifact，使用 `benchmarks/baseline_noise.py` 生成漂移比较结果。
 

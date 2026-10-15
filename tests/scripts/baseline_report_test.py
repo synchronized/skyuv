@@ -71,6 +71,14 @@ def main() -> int:
 		assert "3.00 MiB" in report
 		assert "test-cpu \\| fixed" in report
 		assert "[tcp-echo-skyuv.json](tcp-echo/tcp-echo-skyuv.json)" in report
+		write_json(scenario / "tcp-echo-comparison.json", {
+			"benchmark": "tcp_echo", "paired": False, "results": results[:1],
+		})
+		subprocess.run([sys.executable, str(repository / "benchmarks/baseline_report.py"),
+			"--input-directory", str(root), "--output", str(output)], check=True)
+		report = output.read_text(encoding="utf-8")
+		assert "不含原版性能对照" in report
+		assert "skyuv 相对原版吞吐差异" not in report
 	return 0
 
 

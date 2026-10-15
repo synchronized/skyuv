@@ -83,7 +83,7 @@ def generate_report(input_directory: Path) -> str:
 		f"| 提交 | `{environment.get('commit', 'unknown')}` |",
 		f"| 权威结果 | {'是' if authoritative else '否'} |",
 		"",
-		"## 配对结果",
+		"## 采集结果",
 	]
 
 	if environment.get("environment_policy") == "approved-vmware":
@@ -134,6 +134,8 @@ def generate_report(input_directory: Path) -> str:
 		])
 		if client_saturation:
 			lines.extend(["", f"> 客户端瓶颈提示：{'；'.join(client_saturation)}。"])
+		if not manifest.get("paired", True):
+			lines.extend(["", "本场景仅采集 skyuv，用于自身回归基线；不含原版性能对照。"])
 		upstream = throughputs.get("upstream")
 		skyuv = throughputs.get("skyuv")
 		if upstream and skyuv is not None:

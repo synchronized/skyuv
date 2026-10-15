@@ -41,8 +41,9 @@ def main() -> int:
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--skyuv-executable", type=Path, required=True)
 	parser.add_argument("--skyuv-config", type=Path, required=True)
-	parser.add_argument("--upstream-executable", type=Path, required=True)
-	parser.add_argument("--upstream-config", type=Path, required=True)
+	parser.add_argument("--skyuv-only", action="store_true", help="仅采集 skyuv，不产生原版对照")
+	parser.add_argument("--upstream-executable", type=Path)
+	parser.add_argument("--upstream-config", type=Path)
 	parser.add_argument("--build-type", required=True)
 	parser.add_argument("--allocator", required=True)
 	parser.add_argument("--compiler", required=True)
@@ -57,6 +58,8 @@ def main() -> int:
 	parser.add_argument("--ready-marker", default="SKYUV_UDP_BENCHMARK_READY")
 	parser.add_argument("--output-directory", type=Path, required=True)
 	args = parser.parse_args()
+	if not args.skyuv_only and (args.upstream_executable is None or args.upstream_config is None):
+		parser.error("配对采集需要 --upstream-executable 和 --upstream-config")
 	if (
 		not 1 <= args.port <= 65535
 		or not 1 <= args.message_size <= 65507
@@ -72,6 +75,8 @@ def main() -> int:
 		("skyuv", args.skyuv_executable, args.skyuv_config),
 		("upstream", args.upstream_executable, args.upstream_config),
 	):
+		if args.skyuv_only and implementation == "upstream":
+			continue
 		config = config.resolve()
 		log_path = args.output_directory / f"udp-request-reply-{implementation}-server.log"
 		output = args.output_directory / f"udp-request-reply-{implementation}.json"
@@ -121,7 +126,7 @@ def main() -> int:
 
 	manifest = {
 		"benchmark": "udp_request_reply",
-		"paired": True,
+		"paired": not args.skyuv_only,
 		"parameters": {
 			"host": args.host,
 			"port": args.port,

@@ -28,6 +28,14 @@ Runner、CPU、工具链、频率策略、提交和场景参数一致，再输�
 固定 Runner 在采集前由 `runner_preflight.py` 检查平台、架构、工具、内存、磁盘、工作树和调频
 策略；部署步骤与故障处理见 [`固定 Linux 性能 Runner 配置指南`](../docs/guides/performance-runner.md)。
 
+## skyuv 自身基线
+
+工作流输入 `skyuv_only=true` 可跳过原版构建和运行，仅采集 skyuv 的五个场景。
+三个 `compare_*.py` 入口均支持 `--skyuv-only`，此时无需传原版路径；默认仍要求配对路径。
+单实现清单明确标记 `paired=false`，报告不生成相对原版差异。两次单实现结果可通过
+`baseline_noise.py` 比较；不要把单实现基线的稳定性当成原版对照已完成。
+固定 Runner 的环境、提交、参数一致性和双时段要求仍然适用。
+
 ## TCP 长连接 echo
 
 先启动 skyuv 或原版 Skynet 的固定长度 echo 服务，再运行同一个客户端：

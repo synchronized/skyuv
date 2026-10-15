@@ -13,8 +13,9 @@ def main() -> int:
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--skyuv-executable", type=Path, required=True)
 	parser.add_argument("--skyuv-config", type=Path, required=True)
-	parser.add_argument("--upstream-executable", type=Path, required=True)
-	parser.add_argument("--upstream-config", type=Path, required=True)
+	parser.add_argument("--skyuv-only", action="store_true", help="仅采集 skyuv，不产生原版对照")
+	parser.add_argument("--upstream-executable", type=Path)
+	parser.add_argument("--upstream-config", type=Path)
 	parser.add_argument("--build-type", required=True)
 	parser.add_argument("--allocator", required=True)
 	parser.add_argument("--compiler", required=True)
@@ -23,6 +24,8 @@ def main() -> int:
 	parser.add_argument("--iterations", type=int, default=5)
 	parser.add_argument("--output-directory", type=Path, required=True)
 	args = parser.parse_args()
+	if not args.skyuv_only and (args.upstream_executable is None or args.upstream_config is None):
+		parser.error("配对采集需要 --upstream-executable 和 --upstream-config")
 
 	args.output_directory.mkdir(parents=True, exist_ok=True)
 	runner = Path(__file__).with_name("actor_ping_pong.py")
@@ -31,6 +34,8 @@ def main() -> int:
 		("skyuv", args.skyuv_executable, args.skyuv_config),
 		("upstream", args.upstream_executable, args.upstream_config),
 	):
+		if args.skyuv_only and implementation == "upstream":
+			continue
 		output = args.output_directory / f"actor-ping-pong-{implementation}.json"
 		command = [
 			sys.executable, str(runner),
@@ -57,7 +62,7 @@ def main() -> int:
 
 	manifest = {
 		"benchmark": "actor_ping_pong",
-		"paired": True,
+		"paired": not args.skyuv_only,
 		"parameters": {
 			"warmup_seconds": args.warmup,
 			"duration_seconds": args.duration,

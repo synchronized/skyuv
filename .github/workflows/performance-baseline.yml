@@ -19,6 +19,11 @@ on:
         options:
           - standard
           - approved-vmware
+      skyuv_only:
+        description: 仅采集 skyuv 自身基线，不构建或运行原版
+        required: true
+        default: false
+        type: boolean
       warmup_seconds:
         description: 每个场景预热秒数
         required: true
@@ -78,13 +83,16 @@ jobs:
         run: |
           cmake --preset linux-clang-release
           cmake --build --preset linux-clang-release --parallel 2
+          echo "BASELINE_COMPILER=$(clang --version | head -n 1)" >> "$GITHUB_ENV"
 
       - name: 构建原版 Skynet
+        if: ${{ !inputs.skyuv_only }}
         run: |
           cmake -E copy_directory 3rd/skynet "$RUNNER_TEMP/skynet"
           make -C "$RUNNER_TEMP/skynet" linux CC=clang -j2
 
       - name: 准备原版基准服务
+        if: ${{ !inputs.skyuv_only }}
         run: |
           cmake -E copy tests/fixtures/skyuv_benchmark_actor_ping_pong.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_actor_ping_pong.lua"
           cmake -E copy tests/fixtures/skyuv_benchmark_actor_peer.lua "$RUNNER_TEMP/skynet/service/skyuv_benchmark_actor_peer.lua"
@@ -95,7 +103,6 @@ jobs:
           cmake -E copy examples/upstream-benchmark-tcp-echo.conf "$RUNNER_TEMP/skynet/benchmark-tcp-echo.conf"
           cmake -E copy examples/upstream-benchmark-tcp-backpressure.conf "$RUNNER_TEMP/skynet/benchmark-tcp-backpressure.conf"
           cmake -E copy examples/upstream-benchmark-udp-echo.conf "$RUNNER_TEMP/skynet/benchmark-udp-echo.conf"
-          echo "BASELINE_COMPILER=$(clang --version | head -n 1)" >> "$GITHUB_ENV"
 
       - name: 采集主机和版本信息
         run: >-
@@ -108,6 +115,7 @@ jobs:
       - name: 采集 Actor ping-pong
         run: >-
           prlimit --as=2147483648 -- python3 benchmarks/compare_actor.py
+          ${{ inputs.skyuv_only && '--skyuv-only' || '' }}
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-actor.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -120,6 +128,7 @@ jobs:
       - name: 采集 TCP 长连接
         run: >-
           prlimit --as=2147483648 -- python3 benchmarks/compare_tcp.py
+          ${{ inputs.skyuv_only && '--skyuv-only' || '' }}
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -133,6 +142,7 @@ jobs:
       - name: 采集 TCP 短连接
         run: >-
           prlimit --as=2147483648 -- python3 benchmarks/compare_tcp.py
+          ${{ inputs.skyuv_only && '--skyuv-only' || '' }}
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -146,6 +156,7 @@ jobs:
       - name: 采集 TCP 背压
         run: >-
           prlimit --as=2147483648 -- python3 benchmarks/compare_tcp.py
+          ${{ inputs.skyuv_only && '--skyuv-only' || '' }}
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-backpressure.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -160,6 +171,7 @@ jobs:
       - name: 采集 UDP request/reply
         run: >-
           prlimit --as=2147483648 -- python3 benchmarks/compare_udp.py
+          ${{ inputs.skyuv_only && '--skyuv-only' || '' }}
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-udp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
