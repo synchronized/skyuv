@@ -33,6 +33,8 @@ Release workflow 在三平台构建、交付测试和 SHA-256 复核全部通过
 - 更新 `docs/versions/README.md`、`docs/README.md` 及必要的发布指南链接。
 
 当前发布版和正式版准备状态见[版本索引](../versions/README.md)。
+`v0.2.0` 的逐项完成状态、剩余门槛和发布说明草稿见
+[版本准备清单](../versions/v0.2.0.md#验收与准备清单)。
 
 ## 2. 准备并审查版本提交
 
@@ -71,7 +73,8 @@ gh workflow run release.yml --ref main `
 ```
 
 例如预览版需填写 `tag=v0.2.0-beta.2`。也可以在 GitHub Actions 页面选中 `main`，填写相同参数。
-正式运行时，工作流依次构建 Windows、Linux 和 macOS 发行包，执行 `delivery` 测试并复核全部
+正式运行时，工作流构建 Windows、Linux 和 macOS 发行包；Windows 执行完整 CTest，
+Linux/macOS 执行 `delivery` 测试，并复核全部
 SHA-256；三平台全部成功后才创建 GitHub Release。包含连字符的版本会创建为 Pre-release。
 
 持续查看工作流直到最终结论。任一平台失败时，先修复问题、更新版本准备提交并重新验证；不要

@@ -5,7 +5,7 @@
 本文说明如何使用 skyuv 的 Windows、Linux 和 macOS 免安装运行时压缩包，以及如何把已有
 Skynet 服务迁移到该目录结构。本文只描述已经由三平台候选发布流程验证的能力。
 
-首个发行包是运行时组件，不提供稳定的 C 开发 SDK，也不承诺第三方二进制 Lua 模块 ABI。
+Runtime 发行归档是运行时组件，不提供稳定的 C 开发 SDK，也不承诺第三方二进制 Lua 模块 ABI。
 
 ## 前置条件
 从源码生成本地发行包见 [打包指南](packaging.md)；下文说明取得归档后的使用方式。
@@ -111,7 +111,8 @@ Windows 使用：
 5. 逐项验证网络服务、定时器、消息顺序和关闭流程，再替换生产入口。
 
 若业务包含自编译 Lua C 模块，需要使用目标平台重新构建，并自行保证其 Lua ABI、依赖库和
-运行库与当前发行包兼容。首个版本不发布公共头文件，因此该能力不属于正式 SDK 承诺。
+运行库与当前发行包兼容。Runtime 归档不包含开发头文件；源码消费与 Development 安装导出见
+[CMake 消费计划及完成记录](../plans/009-cmake-consumer-integration.md)，它们不构成稳定 SDK 承诺。
 
 ## 新目录模式（当前源码）
 
@@ -143,8 +144,61 @@ Windows 使用：
 另有 `<pidfile>.lock` 协调文件会保留，运行期间不得删除、替换 PID 或协调文件。该机制
 要求本地文件系统支持 `flock`；不承诺网络文件系统或外部程序篡改目录时的协调语义。
 日志重开失败会报告路径并保留旧文件，后续重开成功才切换。
-解压包测试现已覆盖新模式的包外日志、日志重开和 Unix daemon；Unix 还将解压程序树设为
-只读进行验收。此入口不代表计划已完成或正式版已验收，Windows 只读 ACL 等验证仍需补齐。
+解压包测试覆盖新模式的包外日志、日志重开和 Unix daemon；Unix 使用只读权限，Windows 使用
+真实只读 ACL 验证程序树仍可读取和执行。计划 008 已完成，正式 v0.2.0 仍处于准备阶段。
+验证证据见[Windows Actions 专项记录](../records/windows-v0.2.0-actions-acceptance.md)。
+
+## 从 beta.4 迁移到新目录模式
+
+以下步骤用于当前源码或后续包含新入口的发行包；不要直接对已发布 beta.4 执行新选项。
+旧入口可继续使用。迁移时先保留现有程序和业务数据备份，再显式切换入口。
+
+| 项目 | 旧入口 | `--runtime-paths` |
+| --- | --- | --- |
+| 模块相对路径 | 启动后的工作目录 | 安装根 |
+| 配置 `include` | 兼容旧加载行为 | 当前包含文件所在目录 |
+| 相对文件日志 | 启动后的工作目录 | 日志根，默认配置目录下 `log/` |
+| 相对 Unix PID | 启动后的工作目录 | 运行根，默认配置目录下 `run/` |
+
+先以随包最小配置验证目录分离。Linux/macOS 示例中将安装路径替换为实际路径：
+
+```sh
+install_root="/absolute/path/to/skyuv"
+deploy_root="$PWD/deploy space"
+mkdir -p "$deploy_root/config space"
+cp "$install_root/examples/skyuv.conf" "$deploy_root/config space/node.conf"
+# 在模板现有 logger 设置之后覆盖，启用文件日志。
+printf '\nlogger = "node.log"\n' >> "$deploy_root/config space/node.conf"
+"$install_root/bin/skyuv" --runtime-paths \
+  --log-root "$deploy_root/log space" --run-root "$deploy_root/run space" \
+  "$deploy_root/config space/node.conf"
+```
+
+PowerShell 对应示例：
+
+```powershell
+$installRoot = (Resolve-Path "C:\path\to\skyuv").Path
+$deployRoot = Join-Path (Get-Location) "deploy space"
+$configRoot = Join-Path $deployRoot "config space"
+New-Item -ItemType Directory -Force $configRoot | Out-Null
+$configFile = Join-Path $configRoot "node.conf"
+Copy-Item (Join-Path $installRoot "examples/skyuv.conf") $configFile
+Add-Content $configFile "`nlogger = 'node.log'"
+& (Join-Path $installRoot "bin/skyuv.exe") --runtime-paths `
+  --log-root (Join-Path $deployRoot "log space") `
+  --run-root (Join-Path $deployRoot "run space") $configFile
+```
+
+最小配置完成后正常退出，日志应位于包外 `log space/node.log`，前台模式不创建运行目录。
+随后再替换 `start`、业务服务搜索路径及参数。外置业务服务目录需显式加入 `luaservice`，
+外置公共 Lua 库目录需加入 `lua_path`，不要假定所有相对路径都改为配置目录。
+
+Unix 需要 daemon 时可在配置中设置 `daemon = "node.pid"`，PID 使用所选运行根；Windows
+继续拒绝 daemon。日志/PID 文件名含子目录时先创建这些子目录。升级或停止服务时不要删除
+活跃实例的 `.lock` 文件；清理整个部署目录前应确认所有实例已退出。
+
+回退时先停止新实例，再恢复旧启动命令及旧配置。旧入口不会使用新模式的默认日志/运行根，
+不要让新旧实例并行使用同一组日志与 PID 路径。
 
 ## 平台差异与限制
 
