@@ -149,6 +149,11 @@ UDP 首轮为 705.01%；短连接首轮逐轮 p99 最大 56.762 毫秒，汇总 
 说明必须联合检查逐轮尾延迟。新测试覆盖中位数不变但单轮骤降/长尾、缺少旧逐轮数据、零值
 以及非法非有限指标。该补强不引入性能硬阈值。
 
+报告补强提交 `46e81c1` 已通过本地 CMake 配置、严格构建和 `benchmark.baseline_noise`，
+以及 [Linux 完整矩阵](https://github.com/synchronized/skyuv/actions/runs/38725518477) 与
+[macOS Debug/Release](https://github.com/synchronized/skyuv/actions/runs/38725518576)。
+本轮未重新执行 Windows；未修改平台运行时代码。
+
 结论仍为噪声未收敛；下一步需要在保持正式 2 worker 参数的条件下重复观测，并补足可以归因
 等待时间的调度证据，不能用本次单 worker 或亲和性结果替换正式基线。
 
