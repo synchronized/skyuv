@@ -7,7 +7,7 @@
 [`../records/delivery-candidate-validation.md`](../records/delivery-candidate-validation.md)。
 
 固定 Runner、自身参考基线和自动复测提示已按计划 006 验收，
-当前继续进行正式版本候选验证与发布收口；
+正式候选 `111e570` 已通过[最终验证](../records/v0.2.0-candidate-validation.md)，当前等待正式发布与公开资产核验；
 原版波动定位不再作为发布条件。
 发行包已支持从任意工作目录启动；安装树和解压包测试均从包外目录验证该行为。
 配置、日志和 PID 的可写目录约定已拆分为

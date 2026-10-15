@@ -50,6 +50,8 @@
 
 ## 实施记录
 
+- [`records/v0.2.0-candidate-validation.md`](records/v0.2.0-candidate-validation.md)：正式候选三平台验收、下载后校验与尚未发布边界。
+
 - [`records/skyuv-self-baseline.md`](records/skyuv-self-baseline.md)：固定 VMware 的 skyuv 自身双窗口参考基线及人工复测参考线。
 
 - [`records/windows-v0.2.0-actions-acceptance.md`](records/windows-v0.2.0-actions-acceptance.md)：Windows 新路径、真实只读 ACL、独立 Lua 动态加载与三平台发行演练。
