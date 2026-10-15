@@ -33,8 +33,8 @@ Release workflow 在三平台构建、交付测试和 SHA-256 复核全部通过
 - 更新 `docs/versions/README.md`、`docs/README.md` 及必要的发布指南链接。
 
 当前发布版和正式版准备状态见[版本索引](../versions/README.md)。
-`v0.2.0` 的逐项完成状态、剩余门槛和发布说明草稿见
-[版本准备清单](../versions/v0.2.0.md#验收与准备清单)。
+已发布 `v0.2.0` 的范围和验收结果见
+[版本说明](../versions/v0.2.0.md#验收结果)。
 
 ## 2. 准备并审查版本提交
 

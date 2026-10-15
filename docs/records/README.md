@@ -5,6 +5,8 @@
 
 ## 交付与运行时
 
+- [`2026-10-15-v0.2.0-release-acceptance.md`](2026-10-15-v0.2.0-release-acceptance.md)：v0.2.0 正式发布、三平台结果及公开资产校验。
+
 - [`v0.2.0-candidate-validation.md`](v0.2.0-candidate-validation.md)：正式候选三平台验收、下载后校验与尚未发布边界。
 
 - [`windows-v0.2.0-actions-acceptance.md`](windows-v0.2.0-actions-acceptance.md)：Windows 新路径、真实只读 ACL、独立 Lua 动态加载与三平台发行演练。

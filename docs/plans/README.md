@@ -26,7 +26,7 @@
 | 004 | [Socket 语义兼容](004-socket-semantics.md) | 已完成 | 003 |
 | 005 | [Lua 模块与运行环境](005-lua-runtime.md) | 已完成 | 004 |
 | 006 | [性能和稳定性](006-performance-stability.md) | 已完成 | 005 |
-| 007 | [跨平台交付](007-cross-platform-delivery.md) | 进行中 | 006 |
+| 007 | [跨平台交付](007-cross-platform-delivery.md) | 已完成 | 006 |
 | 008 | [配置、日志与 PID 路径约定](008-runtime-paths.md) | 已完成 | 007（不依赖固定性能基线） |
 | 009 | [CMake 第三方消费与 Lua C 模块接入](009-cmake-consumer-integration.md) | 已完成 | 005、007 |
 | 010 | [Windows 构建诊断治理](010-windows-build-diagnostics.md) | 已完成 | 可独立推进，不依赖固定性能基线 |

@@ -25,24 +25,24 @@ jemalloc；macOS 和 Windows 使用系统分配器。
 Linux：
 
 ```shell
-sha256sum --check skyuv-0.1.0-beta.1-linux-x86-64.tar.gz.sha256
-tar -xzf skyuv-0.1.0-beta.1-linux-x86-64.tar.gz
+sha256sum --check skyuv-0.2.0-linux-x86-64.tar.gz.sha256
+tar -xzf skyuv-0.2.0-linux-x86-64.tar.gz
 ```
 
 macOS：
 
 ```shell
-shasum -a 256 skyuv-0.1.0-beta.1-darwin-arm64.tar.gz
-cat skyuv-0.1.0-beta.1-darwin-arm64.tar.gz.sha256
-tar -xzf skyuv-0.1.0-beta.1-darwin-arm64.tar.gz
+shasum -a 256 skyuv-0.2.0-darwin-arm64.tar.gz
+cat skyuv-0.2.0-darwin-arm64.tar.gz.sha256
+tar -xzf skyuv-0.2.0-darwin-arm64.tar.gz
 ```
 
 PowerShell：
 
 ```powershell
-Get-FileHash .\skyuv-0.1.0-beta.1-windows-amd64.zip -Algorithm SHA256
-Get-Content .\skyuv-0.1.0-beta.1-windows-amd64.zip.sha256
-Expand-Archive .\skyuv-0.1.0-beta.1-windows-amd64.zip
+Get-FileHash .\skyuv-0.2.0-windows-amd64.zip -Algorithm SHA256
+Get-Content .\skyuv-0.2.0-windows-amd64.zip.sha256
+Expand-Archive .\skyuv-0.2.0-windows-amd64.zip
 ```
 
 macOS 和 PowerShell 示例需要人工比较输出的哈希值与 `.sha256` 文件首列是否一致。实际文件名
@@ -68,14 +68,14 @@ licenses/    许可证和依赖版本清单
 Linux 和 macOS：
 
 ```shell
-cd skyuv-0.1.0-beta.1-<系统>-<架构>
+cd skyuv-0.2.0-<系统>-<架构>
 ./bin/skyuv examples/skyuv.conf
 ```
 
 Windows PowerShell：
 
 ```powershell
-Set-Location .\skyuv-0.1.0-beta.1-windows-amd64
+Set-Location .\skyuv-0.2.0-windows-amd64
 .\bin\skyuv.exe examples\skyuv.conf
 ```
 
@@ -114,9 +114,9 @@ Windows 使用：
 运行库与当前发行包兼容。Runtime 归档不包含开发头文件；源码消费与 Development 安装导出见
 [CMake 消费计划及完成记录](../plans/009-cmake-consumer-integration.md)，它们不构成稳定 SDK 承诺。
 
-## 新目录模式（当前源码）
+## 新目录模式（v0.2.0 起）
 
-当前源码提供显式的 `--runtime-paths` 入口；已发布的 beta.4 发行包尚不包含该入口。
+v0.2.0 提供显式的 `--runtime-paths` 入口；beta.4 及更早发行包不包含该入口。
 旧命令行继续保留上述工作目录行为。新模式可将业务配置和运行数据放在安装树之外：
 
 ```shell
@@ -145,12 +145,12 @@ Windows 使用：
 要求本地文件系统支持 `flock`；不承诺网络文件系统或外部程序篡改目录时的协调语义。
 日志重开失败会报告路径并保留旧文件，后续重开成功才切换。
 解压包测试覆盖新模式的包外日志、日志重开和 Unix daemon；Unix 使用只读权限，Windows 使用
-真实只读 ACL 验证程序树仍可读取和执行。计划 008 已完成，正式 v0.2.0 仍处于准备阶段。
+真实只读 ACL 验证程序树仍可读取和执行；该能力已随 v0.2.0 正式发布。
 验证证据见[Windows Actions 专项记录](../records/windows-v0.2.0-actions-acceptance.md)。
 
 ## 从 beta.4 迁移到新目录模式
 
-以下步骤用于当前源码或后续包含新入口的发行包；不要直接对已发布 beta.4 执行新选项。
+以下步骤用于 v0.2.0 发行包；不要直接对 beta.4 或更早发行包执行新选项。
 旧入口可继续使用。迁移时先保留现有程序和业务数据备份，再显式切换入口。
 
 | 项目 | 旧入口 | `--runtime-paths` |

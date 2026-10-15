@@ -228,8 +228,8 @@ skyuv 提供自己的接口，内部映射到 libuv：
 已完成自动复测提示验收，暂不自动拒绝合并。原版波动定位已转为可选研究，不作为发布条件，详见[计划 006](plans/006-performance-stability.md)。阶段 6 已完成
 工程实现、三平台候选发行包验收、Windows 静态 CRT 和全新环境启动验证。配置/日志/PID 路径
 与 CMake consumer 独立 Lua `require` 已完成三平台验收，见[Windows Actions 记录](records/windows-v0.2.0-actions-acceptance.md)。
-自身性能参考策略与自动复测提示已验收，后续收口为正式版本候选验证与 Release 验收；这些任务属于后续
-[`versions/v0.2.0.md`](versions/v0.2.0.md) 收口范围。
+自身性能参考策略、自动复测提示与正式发布已完成；
+[`v0.2.0`](versions/v0.2.0.md) 三平台公开资产已复核，后续改进另立计划。
 
 ### 阶段 0：建立 Linux 兼容基线
 

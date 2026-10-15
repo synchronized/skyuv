@@ -11,8 +11,8 @@
 3. [`plans/README.md`](plans/README.md)：查看当前阶段的实施计划和验收项。
 4. [`LUA_RUNTIME_MATRIX.md`](LUA_RUNTIME_MATRIX.md)：查看 Lua C 模块与运行环境的真实接入状态。
 5. [`versions/README.md`](versions/README.md)：查看当前版本范围、发布状态和版本文档。
-6. [`versions/v0.2.0-beta.4.md`](versions/v0.2.0-beta.4.md)：查看当前预览版范围和限制。
-7. [`versions/v0.2.0.md`](versions/v0.2.0.md)：查看正式版剩余任务和发布门槛。
+6. [`versions/v0.2.0.md`](versions/v0.2.0.md)：查看当前正式版范围、验收和限制。
+7. [`versions/v0.2.0-beta.4.md`](versions/v0.2.0-beta.4.md)：查看此前预览版范围和验证历史。
 8. [`plans/009-cmake-consumer-integration.md`](plans/009-cmake-consumer-integration.md)：了解 CMake 子项目、安装导出和外部 Lua C 模块接入计划。
 
 ## 路线图与计划
@@ -49,6 +49,8 @@
 - [`guides/performance-runner.md`](guides/performance-runner.md)：部署并预检固定 Linux 性能 Runner。
 
 ## 实施记录
+
+- [`records/2026-10-15-v0.2.0-release-acceptance.md`](records/2026-10-15-v0.2.0-release-acceptance.md)：v0.2.0 正式发布、三平台结果及公开资产校验。
 
 - [`records/v0.2.0-candidate-validation.md`](records/v0.2.0-candidate-validation.md)：正式候选三平台验收、下载后校验与尚未发布边界。
 

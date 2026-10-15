@@ -2,16 +2,13 @@
 
 ## 状态
 
-进行中。工程实现、三平台候选 artifact、Windows 静态 CRT 和全新 Windows Sandbox 验收均已
-完成；`v0.1.0` 及后续 Beta 已发布，当前继续处理 `v0.2.0` 的自身性能验收和正式发布收口。候选结果见
-[`../records/delivery-candidate-validation.md`](../records/delivery-candidate-validation.md)。
+已完成。工程实现、三平台候选验收、Windows 静态 CRT 与全新环境启动验证，以及
+`v0.2.0` 正式发布和公开资产复核均已完成。最终证据见
+[正式发布记录](../records/2026-10-15-v0.2.0-release-acceptance.md)。
 
-固定 Runner、自身参考基线和自动复测提示已按计划 006 验收，
-正式候选 `111e570` 已通过[最终验证](../records/v0.2.0-candidate-validation.md)，当前等待正式发布与公开资产核验；
-原版波动定位不再作为发布条件。
 发行包已支持从任意工作目录启动；安装树和解压包测试均从包外目录验证该行为。
 配置、日志和 PID 的可写目录约定已拆分为
-[`008-runtime-paths.md`](008-runtime-paths.md)，该专项不依赖固定 Runner，可先行完成设计和实现。
+[`008-runtime-paths.md`](008-runtime-paths.md)，该专项已完成独立验收。
 
 ## 背景与目标
 
@@ -104,8 +101,8 @@ skyuv/
 8. 已完成：增加版本一致性、SHA-256 实值和第三方许可证完整性检查；
 9. 已完成：建立手动 Release 工作流，上传三平台产物与校验和，并提供受版本约束的可选发布；
 10. 已完成：编写安装、启动、迁移和平台限制指南；
-11. 部分完成：候选 artifact 已通过三平台全量验收，Windows 全新环境验证也已完成；完成阶段 5
-    skyuv 自身性能验收及其他版本门槛后，创建正式 Release 并收口本阶段；原版波动定位不阻塞。
+11. 已完成：候选验收、自身性能参考策略、三平台正式发布和公开资产复核均通过；
+    原版波动定位保留为可选研究。
 
 ## 测试与验收
 
@@ -135,7 +132,7 @@ skyuv/
 Windows 已选择静态 CRT，并通过跨模块内存所有权测试、PE 导入审计和全新 Sandbox 启动验证，
 详见 [`../records/windows-static-crt-ownership-audit.md`](../records/windows-static-crt-ownership-audit.md)。
 
-## v0.2.0 Linux 交付补充
+## v0.2.0 Linux 交付补充（发布前阶段记录）
 
 当前 Runtime 安装与解压包的新目录模式、外置日志和 Unix daemon 已通过 Linux 完整矩阵；
 记录见 [Linux 功能与交付收口](../records/linux-v0.2.0-closure.md)。此结果不代替固定机

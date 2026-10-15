@@ -4,6 +4,9 @@ skyuv = Skynet + libuv。
 
 skyuv 旨在使用 libuv 替换 Skynet 中依赖 Linux 的底层能力，使这个经典的游戏服务器框架能够运行在 Windows、macOS 和 Linux 上，同时保留原生的 Actor 并发模型、消息队列和服务调度机制。
 
+当前正式版为 [v0.2.0](https://github.com/synchronized/skyuv/releases/tag/v0.2.0)；使用与迁移见
+[运行时发行包指南](docs/guides/runtime-distribution.md)。
+
 ## 项目目标
 
 - 使用 libuv 实现跨平台网络与事件驱动能力。
@@ -37,7 +40,7 @@ skyuv/
 └── tests/               # 跨平台测试
 ```
 
-当前已完成 Linux 兼容基线、跨平台基础层、libuv TCP 最小闭环、常用 Socket 语义兼容，以及 Lua 模块和运行环境。Windows、Linux 和 macOS 均可启动便携 Skynet，并通过 client.socket、gate、harbor、cluster、共享数据和常用 Lua C 模块测试；Linux 会自动对照原版 epoll 与 libuv 版的关键 TCP/UDP 行为。Unix 支持接管已连接 TCP socket fd，Windows 受上游 `int fd` ABI 限制而明确返回失败。已完成三平台长时稳定性验证，并建立固定 VMware 的自身参考基线；正式版收口状态见
+当前已完成 Linux 兼容基线、跨平台基础层、libuv TCP 最小闭环、常用 Socket 语义兼容，以及 Lua 模块和运行环境。Windows、Linux 和 macOS 均可启动便携 Skynet，并通过 client.socket、gate、harbor、cluster、共享数据和常用 Lua C 模块测试；Linux 会自动对照原版 epoll 与 libuv 版的关键 TCP/UDP 行为。Unix 支持接管已连接 TCP socket fd，Windows 受上游 `int fd` ABI 限制而明确返回失败。已完成三平台长时稳定性验证，并建立固定 VMware 的自身参考基线；版本范围与验收结果见
 [v0.2.0](docs/versions/v0.2.0.md)。
 
 ## 获取源码
