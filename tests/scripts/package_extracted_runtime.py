@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import os
 import signal
@@ -207,12 +208,29 @@ end)
 	command = [str(executable), "--runtime-paths", "--log-root", str(log_root),
 		"--run-root", str(run_root), str(config)]
 	modes = {}
+	acl_identity = None
 	if os.name != "nt":
 		for path in [package_root, *package_root.rglob("*")]:
 			if not path.is_symlink():
 				modes[path] = stat.S_IMODE(path.stat().st_mode)
 				path.chmod(modes[path] & ~0o222)
 	try:
+		if os.name == "nt":
+			identity = subprocess.check_output(["whoami", "/user", "/fo", "csv", "/nh"], text=True)
+			acl_identity = "*" + next(csv.reader(identity.strip().splitlines()))[1]
+			# 仅对临时解压树拒绝当前身份写入，保留读取、执行和恢复 ACL 的权限。
+			subprocess.run(["icacls", str(package_root), "/deny",
+				f"{acl_identity}:(OI)(CI)(WD,AD,WEA,WA)", "/T", "/Q"],
+				check=True, capture_output=True)
+			for probe, mode in ((package_root / "write probe", "wb"),
+				(package_root / "licenses/versions.txt", "ab")):
+				try:
+					with probe.open(mode):
+						pass
+				except PermissionError:
+					continue
+				raise RuntimeError(f"只读 ACL 未阻止写入：{probe}")
+		run_smoke(executable, callers[0])
 		for caller in callers:
 			log_file.unlink(missing_ok=True)
 			result = subprocess.run(command, cwd=caller, capture_output=True, timeout=15)
@@ -253,6 +271,9 @@ end)
 						raise RuntimeError("解压包 daemon 退出后未清理 PID")
 				assert Path(str(pid_file) + ".lock").is_file()
 	finally:
+		if acl_identity is not None:
+			subprocess.run(["icacls", str(package_root), "/remove:d", acl_identity,
+				"/T", "/Q"], check=True, capture_output=True)
 		for path, mode in modes.items():
 			path.chmod(mode)
 	print("PACKAGE_RUNTIME_PATHS_OK")

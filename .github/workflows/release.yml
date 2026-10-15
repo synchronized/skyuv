@@ -24,6 +24,8 @@ jobs:
   windows:
     name: Windows x64 Release
     runs-on: windows-2022
+    env:
+      PYTHONUTF8: "1"
     steps:
       - name: 检出源码
         uses: actions/checkout@v5
@@ -40,8 +42,8 @@ jobs:
       - name: 构建 Windows 验收目标并部署运行目录
         run: cmake --build --preset windows-vs2022-release
 
-      - name: 验证安装与归档
-        run: ctest --preset windows-vs2022-release -L delivery
+      - name: 验证 Windows 完整测试、动态模块与只读 ACL 解压树
+        run: ctest --preset windows-vs2022-release --output-on-failure
 
       - name: 生成发行包
         run: >-
