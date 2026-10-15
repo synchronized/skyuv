@@ -7,6 +7,9 @@
 作为 `v0.2.0` 的高优先级收口任务跟踪，不阻塞当前 `v0.1.0` 的运行时发布或不依赖权威性能
 数据的开发任务。
 
+skyuv 自身双窗口参考基线及人工复测参考线已独立记录，见
+[自身基线](skyuv-self-baseline.md)；原版配对与正式门槛仍待收口。
+
 ## 权威性规则
 
 - `self-hosted-fixed` 使用标签 `self-hosted`、`linux`、`x64`、`skyuv-benchmark`，其结果可作为基线候选；

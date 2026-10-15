@@ -50,6 +50,8 @@
 
 ## 实施记录
 
+- [`records/skyuv-self-baseline.md`](records/skyuv-self-baseline.md)：固定 VMware 的 skyuv 自身双窗口参考基线及人工复测参考线。
+
 - [`records/windows-v0.2.0-actions-acceptance.md`](records/windows-v0.2.0-actions-acceptance.md)：Windows 新路径、真实只读 ACL、独立 Lua 动态加载与三平台发行演练。
 
 - [`records/build-project-layout.md`](records/build-project-layout.md)：三平台完整构建统一生成 project 运行树及验证。

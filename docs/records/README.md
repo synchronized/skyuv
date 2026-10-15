@@ -23,6 +23,8 @@
 
 ## Lua、性能与稳定性
 
+- [`skyuv-self-baseline.md`](skyuv-self-baseline.md)：固定 VMware 的 skyuv 自身双窗口参考基线及人工复测参考线。
+
 - [`lua-runtime-stage-4.md`](lua-runtime-stage-4.md)：Lua 模块接入和跨平台验证。
 - [`performance-baseline.md`](performance-baseline.md)：固定 Linux 性能基线状态。
 - [`stability-soak-stage-5.md`](stability-soak-stage-5.md)：三平台稳定性 Soak 验证。

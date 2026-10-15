@@ -169,6 +169,9 @@ Linux/macOS CI；Windows 使用本机 MSVC 完整验证。
   和 3606.95 秒，共完成 957 轮 `stability` CTest，失败轮次与缺失日志均为 0；详细结果见
   [`阶段 5 三平台长时稳定性记录`](../records/stability-soak-stage-5.md)。
 
+已补齐独立的 [skyuv 自身参考基线](../records/skyuv-self-baseline.md)：同提交两个成功窗口、
+五场景及首批人工复测参考线已记录；不替代原版配对稳定性，也不自动完成步骤 11 的硬门槛。
+
 ## 测试与验收
 
 正确性门槛：
