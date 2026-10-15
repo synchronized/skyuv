@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import hashlib
 import os
 import platform
 import shutil
@@ -13,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 
-REQUIRED_TOOLS = ("clang", "cmake", "ninja", "make", "git", "python3")
+REQUIRED_TOOLS = ("clang", "cmake", "ninja", "make", "git", "python3", "prlimit")
 MINIMUM_MEMORY_BYTES = 8 * 1024**3
 MINIMUM_DISK_BYTES = 10 * 1024**3
 
@@ -59,12 +60,28 @@ def git_dirty(repository: Path) -> bool:
 		return True
 
 
+def machine_identity() -> str:
+	try:
+		return hashlib.sha256(Path("/etc/machine-id").read_bytes().strip()).hexdigest()
+	except OSError:
+		return "unavailable"
+
+
+def virtualization_vendor() -> str:
+	try:
+		return Path("/sys/class/dmi/id/sys_vendor").read_text().strip()
+	except OSError:
+		return "unavailable"
+
+
 def collect_snapshot(repository: Path) -> dict[str, Any]:
 	try:
 		load_average = os.getloadavg()[0]
 	except (AttributeError, OSError):
 		load_average = None
 	return {
+		"machine_identity": machine_identity(),
+		"virtualization_vendor": virtualization_vendor(),
 		"operating_system": platform.system(),
 		"architecture": platform.machine(),
 		"cpu_count": os.cpu_count() or 0,
@@ -77,7 +94,7 @@ def collect_snapshot(repository: Path) -> dict[str, Any]:
 	}
 
 
-def evaluate(snapshot: dict[str, Any]) -> tuple[list[str], list[str]]:
+def evaluate(snapshot: dict[str, Any], environment_policy: str = "standard") -> tuple[list[str], list[str]]:
 	errors = []
 	warnings = []
 	if snapshot.get("operating_system") != "Linux":
@@ -94,8 +111,18 @@ def evaluate(snapshot: dict[str, Any]) -> tuple[list[str], list[str]]:
 	if snapshot.get("git_dirty"):
 		errors.append("检出后的工作树不干净")
 	governor_values = snapshot.get("governors", [])
+	if environment_policy not in ("standard", "approved-vmware"):
+		errors.append("未知环境策略")
+	if environment_policy == "approved-vmware":
+		if snapshot.get("virtualization_vendor") != "VMware, Inc.":
+			errors.append("虚拟机例外仅适用于已确认的 VMware 环境")
+		if snapshot.get("machine_identity", "unavailable") == "unavailable":
+			errors.append("无法确定固定虚拟机身份")
 	if not governor_values:
-		errors.append("无法读取 CPU 调频策略")
+		if environment_policy == "approved-vmware":
+			warnings.append("已确认的 VMware 例外：不采集宿主机调频或电源计划，仅作为本固定虚拟机基线")
+		else:
+			errors.append("无法读取 CPU 调频策略")
 	elif len(set(governor_values)) != 1:
 		errors.append("各 CPU 核心的调频策略不一致")
 	elif governor_values[0] != "performance":
@@ -111,11 +138,13 @@ def main() -> int:
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--repository", type=Path, default=Path.cwd(), help="skyuv 仓库目录")
 	parser.add_argument("--output", type=Path, required=True, help="预检 JSON 输出路径")
+	parser.add_argument("--environment-policy", choices=("standard", "approved-vmware"), default="standard")
 	arguments = parser.parse_args()
 	snapshot = collect_snapshot(arguments.repository.resolve())
-	errors, warnings = evaluate(snapshot)
+	errors, warnings = evaluate(snapshot, arguments.environment_policy)
 	result = {
 		"schema_version": 1,
+		"environment_policy": arguments.environment_policy,
 		"timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"ready": not errors,
 		"errors": errors,

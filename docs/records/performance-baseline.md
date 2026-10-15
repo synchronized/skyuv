@@ -9,6 +9,8 @@
 ## 权威性规则
 
 - `self-hosted-fixed` 使用标签 `self-hosted`、`linux`、`x64`、`skyuv-benchmark`，其结果可作为基线候选；
+- 当前固定 VMware 经维护者于 2026-10-15 批准，可显式使用 `approved-vmware` 策略；
+  调频信息缺失作为环境限制记录，结论仅适用于该虚拟机。配置见[Runner 指南](../guides/performance-runner.md)。
 - `github-hosted` 仅用于验证构建、配对、结果结构和 artifact 上传，不用于性能结论；
 - 正式基线必须使用 Release、相同 jemalloc 策略、相同 Clang 版本与相同负载参数；
 - 至少在两个独立时段采集，确认噪声范围后才记录性能差异或设置回归阈值。

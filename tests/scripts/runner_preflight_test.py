@@ -50,6 +50,16 @@ def main() -> int:
 	errors, warnings = runner_preflight.evaluate(warning_snapshot)
 	assert errors == []
 	assert len(warnings) == 2
+	missing = valid_snapshot()
+	missing.update({"governors": [], "virtualization_vendor": "VMware, Inc.", "machine_identity": "fixed-test-vm"})
+	assert runner_preflight.evaluate(missing)[0], "默认策略错误接受缺失调频信息"
+	errors, warnings = runner_preflight.evaluate(missing, "approved-vmware")
+	assert not errors and warnings
+	missing["virtualization_vendor"] = "Other"
+	assert runner_preflight.evaluate(missing, "approved-vmware")[0]
+	missing["virtualization_vendor"] = "VMware, Inc."
+	missing["git_dirty"] = True
+	assert runner_preflight.evaluate(missing, "approved-vmware")[0], "例外不应绕过工作树检查"
 	return 0
 
 

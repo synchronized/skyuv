@@ -11,6 +11,15 @@ from baseline_report import BENCHMARK_NAMES, cpu_summary, load_json
 
 
 ENVIRONMENT_KEYS = (
+	"environment_policy",
+	"machine_identity",
+	"memory_total_bytes",
+	"cmake",
+	"ninja",
+	"python",
+	"submodules",
+	"virtualization_vendor",
+	"benchmark_address_space_limit_bytes",
 	"runner_kind",
 	"runner_name",
 	"operating_system",

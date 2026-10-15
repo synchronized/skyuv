@@ -76,6 +76,7 @@ def generate_report(input_directory: Path) -> str:
 		"| 项目 | 值 |",
 		"| --- | --- |",
 		f"| Runner 类型 | {markdown_cell(environment.get('runner_kind', 'unknown'))} |",
+		f"| 环境策略 | {markdown_cell(environment.get('environment_policy', 'standard'))} |",
 		f"| 操作系统 | {markdown_cell(environment.get('operating_system', 'unknown'))} |",
 		f"| CPU | {cpu_summary(environment.get('cpu', 'unknown'))} |",
 		f"| 逻辑 CPU | {environment.get('cpu_count', 'unknown')} |",
@@ -85,6 +86,8 @@ def generate_report(input_directory: Path) -> str:
 		"## 配对结果",
 	]
 
+	if environment.get("environment_policy") == "approved-vmware":
+		lines.extend(["", "> 已批准固定 VMware 环境：未采集宿主机调频与电源计划，结论仅适用于此虚拟机。", ""])
 	for manifest_path in manifests:
 		manifest = load_json(manifest_path)
 		name = manifest.get("benchmark", manifest_path.parent.name)

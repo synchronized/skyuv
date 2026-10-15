@@ -11,6 +11,14 @@ on:
         options:
           - github-hosted
           - self-hosted-fixed
+      environment_policy:
+        description: standard 要求调频信息；approved-vmware 为已确认固定 VMware 的例外
+        required: true
+        default: standard
+        type: choice
+        options:
+          - standard
+          - approved-vmware
       warmup_seconds:
         description: 每个场景预热秒数
         required: true
@@ -63,6 +71,7 @@ jobs:
         run: >-
           python3 benchmarks/runner_preflight.py
           --repository .
+          --environment-policy "${{ inputs.environment_policy }}"
           --output "${{ env.BASELINE_OUTPUT }}/preflight.json"
 
       - name: 配置并构建 skyuv Release
@@ -91,13 +100,14 @@ jobs:
       - name: 采集主机和版本信息
         run: >-
           python3 benchmarks/baseline_environment.py
+          --environment-policy "${{ inputs.environment_policy }}"
           --runner-kind "${{ inputs.runner_kind }}"
           --authoritative "${{ env.BASELINE_AUTHORITATIVE }}"
           --output "${{ env.BASELINE_OUTPUT }}/environment.json"
 
       - name: 采集 Actor ping-pong
         run: >-
-          python3 benchmarks/compare_actor.py
+          prlimit --as=2147483648 -- python3 benchmarks/compare_actor.py
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-actor.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -109,7 +119,7 @@ jobs:
 
       - name: 采集 TCP 长连接
         run: >-
-          python3 benchmarks/compare_tcp.py
+          prlimit --as=2147483648 -- python3 benchmarks/compare_tcp.py
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -122,7 +132,7 @@ jobs:
 
       - name: 采集 TCP 短连接
         run: >-
-          python3 benchmarks/compare_tcp.py
+          prlimit --as=2147483648 -- python3 benchmarks/compare_tcp.py
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -135,7 +145,7 @@ jobs:
 
       - name: 采集 TCP 背压
         run: >-
-          python3 benchmarks/compare_tcp.py
+          prlimit --as=2147483648 -- python3 benchmarks/compare_tcp.py
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-tcp-backpressure.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"
@@ -149,7 +159,7 @@ jobs:
 
       - name: 采集 UDP request/reply
         run: >-
-          python3 benchmarks/compare_udp.py
+          prlimit --as=2147483648 -- python3 benchmarks/compare_udp.py
           --skyuv-executable build/linux-clang-release/src/skyuv
           --skyuv-config build/linux-clang-release/3rd/skyuv-benchmark-udp-echo.conf
           --upstream-executable "$RUNNER_TEMP/skynet/skynet"

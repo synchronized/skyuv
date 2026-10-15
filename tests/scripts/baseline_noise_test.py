@@ -71,6 +71,20 @@ def main() -> int:
 		assert "权威固定机比较" in report
 		assert "-10.00%" in report
 
+		for key in ("machine_identity", "environment_policy", "memory_total_bytes"):
+			environment_path = second / "environment.json"
+			environment = json.loads(environment_path.read_text())
+			environment[key] = "changed"
+			write_json(environment_path, environment)
+			try:
+				baseline_noise.compare_runs(first, second)
+			except ValueError as error:
+				assert key in str(error)
+			else:
+				raise AssertionError(f"环境字段 {key} 变化应被拒绝")
+			del environment[key]
+			write_json(environment_path, environment)
+
 		incompatible = root / "incompatible"
 		create_run(incompatible, 900.0, cpu="Model name: another-cpu")
 		try:
