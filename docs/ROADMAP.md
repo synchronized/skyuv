@@ -224,11 +224,11 @@ skyuv 提供自己的接口，内部映射到 libuv：
 ## 7. 分阶段路线图
 
 各阶段进入实施前会在 [`plans/`](plans/README.md) 中形成可执行计划。阶段 0 至阶段 4 已完成；
-阶段 5 已完成三平台正式长时稳定性验收；固定 Linux Runner 上的权威性能基线是高优先级未完成
-事项，但不阻塞与性能数据无关的开发。阶段 6 已完成
+阶段 5 已完成三平台正式长时稳定性验收及固定 VMware 自身参考基线；skyuv 自身回归验收
+继续收口。原版波动定位已转为可选研究，不作为发布条件，详见[计划 006](plans/006-performance-stability.md)。阶段 6 已完成
 工程实现、三平台候选发行包验收、Windows 静态 CRT 和全新环境启动验证。配置/日志/PID 路径
 与 CMake consumer 独立 Lua `require` 已完成三平台验收，见[Windows Actions 记录](records/windows-v0.2.0-actions-acceptance.md)。
-Beta 后续收口仍包括固定 Linux 稳定性能基线、回归阈值与正式 Release 验收；这些任务属于后续
+Beta 后续收口仍包括 skyuv 自身稳定性、回归策略与正式 Release 验收；这些任务属于后续
 [`versions/v0.2.0.md`](versions/v0.2.0.md) 收口范围。
 
 ### 阶段 0：建立 Linux 兼容基线
@@ -362,7 +362,8 @@ Beta 后续收口仍包括固定 Linux 稳定性能基线、回归阈值与正�
 - Actor 消息公平性；
 - Linux 原版与 skyuv 的吞吐、延迟、CPU 和内存对比。
 
-验收标准将在形成基线数据后确定，不预先承诺未经测量的性能比例。
+性能发布验收以 skyuv 自身基线与回归策略为准；原版对照只提供辅助证据，波动定位为可选研究。
+不预先承诺未经测量的性能比例。
 
 ### 阶段 6：跨平台交付
 
