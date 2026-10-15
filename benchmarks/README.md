@@ -174,3 +174,10 @@ python benchmarks/actor_multi_producer.py `
 读取待发送字节数；达到 4 MiB 后暂停生产，排空至阈值以下才继续。此预算用于避免慢接收端
 使基准自身无限分配内存，不改变被测网络层的队列策略。异步快照与在途命令可能造成短时
 超出阈值，采集时仍应监控峰值 RSS，并对基准进程设置独立资源限制。
+
+## 跨版本回归复测提示
+
+`baseline_regression.py` 接受两个同提交参考窗口和一个或两个候选窗口，允许候选提交变化，
+按已有自身参考线生成 JSON/Markdown 的 `within_reference`、`retest` 或 `investigate`。
+触线不自动拒绝合并；输入不完整或不可比时失败。使用方法和退出码见
+[Runner 指南](../docs/guides/performance-runner.md#跨版本自身回归检查)。

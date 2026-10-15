@@ -135,6 +135,11 @@ add_test(
 )
 set_tests_properties(benchmark.baseline_noise PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 add_test(
+  NAME benchmark.baseline_regression
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/baseline_regression_test.py"
+)
+set_tests_properties(benchmark.baseline_regression PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 30)
+add_test(
   NAME benchmark.runner_preflight
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/runner_preflight_test.py"
 )

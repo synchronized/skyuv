@@ -61,3 +61,35 @@
 ### 系统负载警告
 
 等待其他任务结束后重新运行。预检只检查开始时负载，正式采集期间仍需保证机器专用。
+
+## 跨版本自身回归检查
+
+`baseline_noise.py` 保持同提交噪声比较语义。新增 `baseline_regression.py` 用于候选提交与两份
+参考基线的跨版本检查；参考值和触线规则以[自身参考基线](../records/skyuv-self-baseline.md#首批人工复测参考线)
+为准。它不运行基准，只读取已保存的完整五场景数据。
+
+```sh
+python3 benchmarks/baseline_regression.py \
+  --reference-first /path/to/reference-first \
+  --reference-second /path/to/reference-second \
+  --candidate /path/to/candidate \
+  --output-json build/regression/report.json \
+  --output-markdown build/regression/report.md
+```
+
+参考窗口必须来自同一提交；候选允许不同提交，其他已记录的固定 Runner、工具链、子模块、
+内存、环境策略和负载参数必须一致。每场景需要预热、至少五轮完整成功样本及服务端 CPU/RSS。
+元数据缺失、脏工作树、Hosted Runner、参数不一致、缺失场景、非法指标和 UDP 丢包均拒绝比较。
+工具核对清单和原始结果中的参数；未完整写入元数据的 worker 数、夹具语义仍需人工确认等价，
+不能仅凭两个目录可比就断言任意代码改动的测量公平。
+
+输出状态：
+
+- `within_reference`：已检查的指标未触线，不证明长期稳定或正式版本已验收。
+- `retest`：至少一个候选窗口触线，保留数据并在空闲环境复测。
+- `investigate`：通过 `--candidate-repeat /path/to/repeat` 提供的另一候选窗口，在同一指标上也触线。
+  两候选窗口须为同一候选提交且时间不同；两个窗口触发不同指标时仍仅提示复测。
+
+有效报告无论是否触线均退出 0，且 JSON 标记 `blocking=false`；输入或数据校验失败退出 2。
+这实现自动复测提示，不实现自动拒绝合并。JSON 记录参考/候选提交、窗口、参考策略版本、
+已核对环境、参数、每指标参考值/参考线/候选值及逐轮波动；所有原始 artifact 仍须保留。
