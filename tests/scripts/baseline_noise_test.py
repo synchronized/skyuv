@@ -70,6 +70,31 @@ def main() -> int:
 		report = baseline_noise.render_markdown(comparison)
 		assert "权威固定机比较" in report
 		assert "-10.00%" in report
+		assert "无逐轮数据" in report
+		# 两时段中位数完全相同，仍需暴露单轮吞吐骤降与尾延迟突增。
+		for directory, slow in ((first, False), (second, True)):
+			path = directory / "tcp-echo/skyuv.json"
+			data = json.loads(path.read_text())
+			data["summary"]["throughput_ops_per_second_median"] = 1000.0
+			data["samples"] = [
+				{"throughput_ops_per_second": 100.0 if slow and index == 0 else 1000.0,
+				 "latency_ms": {"p99": 60.0 if slow and index == 0 else 0.3}}
+				for index in range(5)
+			]
+			write_json(path, data)
+		variation = baseline_noise.compare_runs(first, second)["comparisons"][0]
+		assert variation["metrics"]["throughput"]["change_percent"] == 0.0
+		assert variation["sample_variability"]["second"]["throughput"]["range_over_median_percent"] == 90.0
+		assert variation["sample_variability"]["second"]["latency_p99_ms"]["maximum"] == 60.0
+		assert "60.0000" in baseline_noise.render_markdown(baseline_noise.compare_runs(first, second))
+		assert baseline_noise.sample_variability({"samples": [{"throughput_bytes_per_second": 0}]})["throughput"]["range_over_median_percent"] is None
+		for invalid in (-1, float("nan"), float("inf"), True):
+			try:
+				baseline_noise.sample_variability({"samples": [{"throughput_ops_per_second": invalid}]})
+			except ValueError:
+				pass
+			else:
+				raise AssertionError("无效逐轮指标应被拒绝")
 
 		for key in ("machine_identity", "environment_policy", "memory_total_bytes"):
 			environment_path = second / "environment.json"

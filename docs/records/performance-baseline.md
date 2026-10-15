@@ -102,6 +102,56 @@ python3 benchmarks/baseline_noise.py --first first --second second \
   --output-json comparison.json --output-markdown comparison.md
 ```
 
+## 2026-10-15 噪声诊断与逐轮报告补强
+
+在同一虚拟机使用原版 Skynet Release/jemalloc 做额外短时诊断，每组预热 1 秒、3 轮、每轮
+5 秒、64 字节，UDP 与短连接各测三组；不作为正式配对基线。对照默认 2 worker、将服务端
+固定 CPU 0/客户端固定 CPU 1，以及保持默认亲和性但改为 1 worker。每次重新启动服务端，
+端口为 25585，配置只在本地构建副本生成，第三方源码未修改；不与原基线混合。
+
+| 场景 | 诊断变量 | 三轮吞吐（次/秒） | 三轮 p99（毫秒） |
+| --- | --- | --- | --- |
+| UDP | 默认 2 worker | 12915 / 17700 / 13125 | 0.192 / 0.133 / 0.170 |
+| UDP | 双端分别固定 CPU，2 worker | 14078 / 16384 / 15786 | 0.165 / 0.165 / 0.165 |
+| UDP | 1 worker | 12443 / 13898 / 11528 | 0.190 / 0.073 / 0.151 |
+| 短连接 | 默认 2 worker | 2932 / 4274 / 5237 | 0.403 / 0.382 / 0.348 |
+| 短连接 | 双端分别固定 CPU，2 worker | 831 / 699 / 649 | 59.998 / 63.260 / 67.914 |
+| 短连接 | 1 worker | 6107 / 7457 / 6995 | 0.360 / 0.300 / 0.316 |
+
+固定 CPU 并未一致改善两类场景，短连接反而出现明显长尾，因此没有把亲和性设置加入正式
+工作流。单 worker 的这组短连接较好，但只改变了负载条件，不能据此认定修复噪声；UDP
+本次也没有复现原先所有低吞吐轮次。各组最大请求延迟仍约 70 毫秒，个别短连接约 95 毫秒。
+
+诊断期间每 50 毫秒读取服务端各线程的 `/proc/<pid>/task/*/{schedstat,wchan}`，此观测本身
+可能扰动时序；内核 `sched_schedstats=0`，不能依赖这些读数准确归因调度等待。
+检查到用户服务共同祖先 cgroup 的 CPU 配额为无限，限流计数为零，Runner 服务报告
+`CPUQuotaPerSecUSec=infinity`；这只排除了已观察到的该类限流证据，不排除 Windows/VMware
+宿主调度影响。未修改宿主机电源策略、内核参数或 CPU 配额。
+
+可按以下方式复现短时负载（使用已构建的原版副本和对应配置，分别运行服务端和客户端）：
+
+```sh
+# 配置采用 examples/upstream-benchmark-udp-echo.conf；短连接改用 upstream-benchmark-tcp-echo.conf。
+# 固定亲和性诊断时分别在服务端与客户端命令前加 taskset -c 0、taskset -c 1。
+SKYUV_BENCHMARK_PORT=25585 SKYUV_BENCHMARK_MESSAGE_SIZE=64 ./skynet diagnostic.conf
+python3 benchmarks/udp_request_reply.py --implementation upstream --build-type Release \
+  --allocator jemalloc --compiler 'clang 23.1.1' --port 25585 \
+  --message-size 64 --warmup 1 --duration 5 --iterations 3 --output diagnostic.json
+# 短连接客户端改用 benchmarks/tcp_short_connection.py；单 worker 修改副本配置 thread = 1。
+```
+
+原始诊断 JSON、日志与线程快照保存在本机忽略目录 `build/noise-diagnosis/`，不是 Actions
+artifact，也未提交生成目录。诊断服务/客户端继承 2 GiB 地址空间限制。
+
+本轮同时修复比较报告的观测盲区：保留两个时段各自逐轮吞吐和 p99 的轮数、最小值、最大值、
+中位数及极差比，不再仅展示两时段总体统计。历史原版短连接首轮吞吐极差比为 176.03%，
+UDP 首轮为 705.01%；短连接首轮逐轮 p99 最大 56.762 毫秒，汇总 p99 却只有约 0.459 毫秒，
+说明必须联合检查逐轮尾延迟。新测试覆盖中位数不变但单轮骤降/长尾、缺少旧逐轮数据、零值
+以及非法非有限指标。该补强不引入性能硬阈值。
+
+结论仍为噪声未收敛；下一步需要在保持正式 2 worker 参数的条件下重复观测，并补足可以归因
+等待时间的调度证据，不能用本次单 worker 或亲和性结果替换正式基线。
+
 ## 2026-10-14 本机探索性对照与背压负载修复
 
 本次在 Arch Linux x86_64、4 个逻辑 CPU、约 16 GiB 内存上，以 Clang 23.1.1、Release 和

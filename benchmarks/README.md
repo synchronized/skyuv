@@ -22,6 +22,9 @@ TCP 与 UDP 清单还分别记录共同 Python 客户端的 CPU 时间和峰值 
 吞吐、延迟、CPU、峰值 RSS 及相对差异；JSON 始终是权威数据源，不手工维护报告数据。
 固定机完成两个独立时段采集后，使用 `baseline_noise.py` 比较两个 artifact 目录；工具会先检查
 Runner、CPU、工具链、频率策略、提交和场景参数一致，再输出结构化 JSON 与 Markdown 漂移报告。
+报告同时展示逐轮吞吐与逐轮 p99 的最小值、最大值和极差/中位数比例，防止总体中位数或合并
+延迟分位数掩盖异常轮次。极差比例是观测指标，不自动判定验收通过；旧结果缺少 samples 时明确
+显示不可用，中位数为零时不计算比例。
 固定 Runner 在采集前由 `runner_preflight.py` 检查平台、架构、工具、内存、磁盘、工作树和调频
 策略；部署步骤与故障处理见 [`固定 Linux 性能 Runner 配置指南`](../docs/guides/performance-runner.md)。
 

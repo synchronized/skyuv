@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import statistics
 from pathlib import Path
 from typing import Any
 
@@ -59,6 +61,35 @@ def environment_signature(environment: dict[str, Any]) -> dict[str, Any]:
 	}
 
 
+def sample_variability(result: dict[str, Any]) -> dict[str, Any]:
+	"""保留逐轮波动，避免中位数或合并延迟掩盖异常轮次。"""
+	values: dict[str, list[float]] = {"throughput": [], "latency_p99_ms": []}
+	for sample in result.get("samples", []):
+		metrics = {
+			"throughput": sample.get("throughput_ops_per_second", sample.get("throughput_bytes_per_second")),
+			"latency_p99_ms": sample.get("latency_ms", {}).get("p99"),
+		}
+		for name, value in metrics.items():
+			if value is None:
+				continue
+			if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+				raise ValueError(f"逐轮指标无效：{name}")
+			values[name].append(float(value))
+	summary = {}
+	for name, observations in values.items():
+		if not observations:
+			continue
+		median = statistics.median(observations)
+		summary[name] = {
+			"count": len(observations),
+			"minimum": min(observations),
+			"maximum": max(observations),
+			"median": median,
+			"range_over_median_percent": (max(observations) - min(observations)) / median * 100 if median else None,
+		}
+	return summary
+
+
 def load_run(directory: Path) -> tuple[dict[str, Any], dict[tuple[str, str], dict[str, Any]]]:
 	environment = load_json(directory / "environment.json")
 	measurements: dict[tuple[str, str], dict[str, Any]] = {}
@@ -78,6 +109,7 @@ def load_run(directory: Path) -> tuple[dict[str, Any], dict[tuple[str, str], dic
 			measurements[(benchmark, entry["implementation"])] = {
 				"parameters": manifest.get("parameters", {}),
 				"throughput_unit": "ops/s" if "throughput_ops_per_second_median" in summary else "B/s",
+				"sample_variability": sample_variability(result),
 				"metrics": {
 					"throughput": throughput,
 					"latency_p50_ms": latency.get("p50"),
@@ -136,6 +168,7 @@ def compare_runs(first_directory: Path, second_directory: Path) -> dict[str, Any
 			"implementation": implementation,
 			"throughput_unit": first_item["throughput_unit"],
 			"metrics": metrics,
+			"sample_variability": {"first": first_item["sample_variability"], "second": second_item["sample_variability"]},
 		})
 
 	return {
@@ -181,6 +214,21 @@ def render_markdown(comparison: dict[str, Any]) -> str:
 				f"| {label} | {format_value(metric['first'])} | "
 				f"{format_value(metric['second'])} | {format_change(metric['change_percent'])} |"
 			)
+		lines.extend([
+			"",
+			"逐轮波动（极差比 = (最大值 − 最小值) / 中位数；这是观测量，不是验收阈值）：",
+			"",
+			"| 时段 | 指标 | 轮数 | 最小值 | 最大值 | 极差比 |",
+			"| --- | --- | ---: | ---: | ---: | ---: |",
+		])
+		for window, label in (("first", "第一时段"), ("second", "第二时段")):
+			variability = item["sample_variability"][window]
+			if not variability:
+				lines.append(f"| {label} | 无逐轮数据 | — | — | — | — |")
+			for name, metric in variability.items():
+				lines.append(f"| {label} | {'逐轮吞吐' if name == 'throughput' else METRIC_NAMES[name]} | {metric['count']} | "
+					f"{format_value(metric['minimum'])} | {format_value(metric['maximum'])} | "
+					f"{format_change(metric['range_over_median_percent'])} |")
 	lines.extend([
 		"",
 		"## 解读约束",
