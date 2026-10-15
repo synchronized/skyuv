@@ -6,7 +6,7 @@
 环境、机器身份、工具链、提交与参数一致性检查通过。可以作为当前固定虚拟机的自身参考基线；
 网络逐轮波动仍明显，暂不启用自动合并硬门槛。该结果不包含原版 Skynet 性能结论，
 原版波动定位经维护者确认已转为可选研究，不阻塞发布；skyuv 自身稳定性和回归验收仍按
-[计划 006](../plans/006-performance-stability.md)继续推进。
+[计划 006](../plans/006-performance-stability.md)的已验收策略持续执行。
 
 ## 环境与采集
 
@@ -106,4 +106,9 @@ python3 benchmarks/baseline_noise.py --first first --second second \
 使用本记录已保存的五场景数据，把第二参考窗口作为候选进行自检，结果为 `within_reference`。
 复制数据并将 TCP 长连接吞吐注入降低 30%、标为合成候选提交后，结果为 `retest`；原始数据
 未修改。这用于验证工具读取和触线行为，不是新增的跨版本性能测量。
-本地 CMake 配置、严格构建及三个基准报告/比较测试通过；三平台远端验证后补充最终证据。
+本地 CMake 配置、严格构建及三个基准报告/比较测试通过。提交 `bcb5027` 的
+[Linux 完整矩阵](https://github.com/synchronized/skyuv/actions/runs/38750441100)、
+[macOS Debug/Release](https://github.com/synchronized/skyuv/actions/runs/38750441010) 和
+[三平台发行演练](https://github.com/synchronized/skyuv/actions/runs/38750441248) 全部成功。
+计划 006 按维护者确认的非阻断复测提示范围完成；长期采样、误报率评估和将来可能的硬门槛
+继续作为后续改进，不表示已经证明长期分布或启用自动拒绝合并。
