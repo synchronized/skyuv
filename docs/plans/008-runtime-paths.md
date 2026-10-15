@@ -2,8 +2,9 @@
 
 ## 状态
 
-进行中。入口及根目录解析开始实施；配置加载、logger 和 Unix daemon 源码审计及旧入口路径
-基准测试已建立。接口与实施进度见下文。本计划不依赖固定 Linux Runner 的性能基线，可独立推进。
+已完成。新路径模式、logger 与 Unix PID 生命周期已实现并通过 Linux/macOS 验证；
+2026-10-15 Windows Actions 完整测试及只读 ACL 验收通过。
+证据见[Windows Actions 验收记录](../records/windows-v0.2.0-actions-acceptance.md)。
 
 ## 背景
 
@@ -173,9 +174,8 @@ macOS 保留上游不 fork 的兼容行为，Windows 保留明确拒绝。并发
    与日志重开失败恢复已通过 Linux/macOS 验证。
 3. 已补齐根目录、覆盖顺序、错误路径、日志重开失败恢复及 PID 生命周期测试；
    适配补丁只应用到构建副本，不直接修改第三方源码。
-4. Unix 只读安装树、真实 daemon 和 Linux/macOS 矩阵已通过；继续补齐 Windows 新模式与
-   只读 ACL 验收。解压包新模式已通过 Linux/macOS 完整 CI；
-   三平台未验证项不得记为完成。
+4. Unix 只读安装树、真实 daemon 和 Linux/macOS 矩阵已通过；Windows Actions 已通过
+   新模式、daemon 拒绝和真实只读 ACL 验收。三平台发行演练与相关完整测试均成功。
 
 设计审计与验证记录见 [运行路径入口审计](../records/runtime-paths-entry-audit.md)，
 解压包专项结果见 [Linux 功能与交付收口](../records/linux-v0.2.0-closure.md)。

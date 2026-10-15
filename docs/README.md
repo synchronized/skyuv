@@ -50,6 +50,8 @@
 
 ## 实施记录
 
+- [`records/windows-v0.2.0-actions-acceptance.md`](records/windows-v0.2.0-actions-acceptance.md)：Windows 新路径、真实只读 ACL、独立 Lua 动态加载与三平台发行演练。
+
 - [`records/build-project-layout.md`](records/build-project-layout.md)：三平台完整构建统一生成 project 运行树及验证。
 
 - [`records/linux-v0.2.0-closure.md`](records/linux-v0.2.0-closure.md)：v0.2.0 Linux 功能、动态模块、解压包验收及正式性能基线剩余条件。

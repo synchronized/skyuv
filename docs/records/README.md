@@ -5,6 +5,7 @@
 
 ## 交付与运行时
 
+- [`windows-v0.2.0-actions-acceptance.md`](windows-v0.2.0-actions-acceptance.md)：Windows 新路径、真实只读 ACL、独立 Lua 动态加载与三平台发行演练。
 - [`build-project-layout.md`](build-project-layout.md)：三平台构建运行目录统一。
 
 - [`linux-v0.2.0-closure.md`](linux-v0.2.0-closure.md)：v0.2.0 Linux 功能和交付收口与性能基线外部条件。
