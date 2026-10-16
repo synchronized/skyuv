@@ -50,6 +50,8 @@
 
 ## 实施记录
 
+- [`records/2026-10-16-windows-local-regression.md`](records/2026-10-16-windows-local-regression.md)：v0.2.0 本机 Windows Debug/Release、共享 libuv 与近期 Linux 改动的对应回归。
+
 - [`records/2026-10-15-v0.2.0-release-acceptance.md`](records/2026-10-15-v0.2.0-release-acceptance.md)：v0.2.0 正式发布、三平台结果及公开资产校验。
 
 - [`records/v0.2.0-candidate-validation.md`](records/v0.2.0-candidate-validation.md)：正式候选三平台验收、下载后校验与尚未发布边界。
